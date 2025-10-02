@@ -1,0 +1,19 @@
+﻿<!-- Loading Component -->
+<div class="center">
+    <div class="loader">
+        <span>@Message</span>
+    </div>
+</div>
+
+
+@code
+{
+    string Message { get; set; } = "loading...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(5000);
+        Message = "not found...";
+        StateHasChanged();
+    }
+}

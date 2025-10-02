@@ -1,0 +1,28 @@
+﻿<!-- Page Header -->
+<div class="bg-header"></div>
+<div class="@App?.GetContentClass() page-header">
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item"><a href="admin/home"><i class="me-2 text-white bi bi-house-fill"></i></a></li>
+			<li class="breadcrumb-item active" aria-current="page">@Title</li>
+		</ol>
+	</nav>
+
+	@if (!string.IsNullOrEmpty(AddButtonText))
+    {
+        <div class="ms-auto text-end">
+            <a type="button" class="btn btn-primary rounded-pill btn-sm" href="admin/@AddButtonLink"><i class="bi bi-plus-circle me-3"></i>@AddButtonText</a>
+        </div>
+    }
+</div>
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+    
+    [Parameter] public string? Title { get; set; } = string.Empty;
+
+    [Parameter] public string? AddButtonText { get; set; } = string.Empty;
+
+    [Parameter] public string? AddButtonLink { get; set; } = string.Empty;
+}

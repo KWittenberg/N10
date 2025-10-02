@@ -1,0 +1,11 @@
+﻿<nav aria-label="breadcrumb">
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="admin/home"><i class="me-2 text-white bi bi-house-fill"></i></a></li>
+		<li class="breadcrumb-item active" aria-current="page">@Item</li>
+	</ol>
+</nav>
+
+
+@code {
+	[Parameter] public string? Item { get; set; } = string.Empty;
+}

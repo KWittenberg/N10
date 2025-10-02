@@ -1,0 +1,39 @@
+﻿@* @page "/{*Path:nonfile}" *@
+
+
+<!-- Error 404 -->
+<div class="container text-white py-5 mb-lg-3">
+    <div class="row justify-content-center pt-lg-4 text-center">
+        <div class="col-lg-5 col-md-7 col-sm-9">
+            <img class="d-block mx-auto mb-3" src=@Placeholder.E404 width="404" alt="404 Error">
+            <h1 class="mb-4 h1-shadow">404 error</h1>
+            <h3 class="mb-4">Page not found!</h3>
+            <h5 class="text-muted">We can't seem to find the page you are looking for:</h5>
+            <h6 class="text-primary">@Path</h6>
+            <p class="mt-5 text-muted">Here are some helpful links instead:</p>
+        </div>
+    </div>
+    <div class="mt-4 row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="row justify-content-center">
+                <div class="col-sm-4 mb-3">
+                    <a class="card h-100 border-0 shadow-sm bg-page-t text-decoration-none" href="/">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-center align-items-center">
+                                <i class="mb-0 fs-4 bi bi-house text-primary me-2"></i>
+                                <div class="ps-3">
+                                    <h5 class="mb-0">Homepage</h5><span class="text-muted">Return to homepage</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public string Path { get; set; } = string.Empty;
+}

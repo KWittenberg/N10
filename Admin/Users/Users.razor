@@ -1,0 +1,106 @@
+﻿@page "/admin/users"
+
+@attribute [Authorize(Roles = "Admin")]
+
+@inject IUserRepository Repository
+
+<title>@Title</title>
+
+<_PageHeader Title="@Title" AddButtonText="Add User" AddButtonLink="user" />
+
+@if (IsProcessing || Entities is null)
+{
+	<_Loading />
+}
+else
+{
+	<div class="@App?.GetContentClass()">
+		<div class="quickgrid-wrapper-sm table-responsive">
+			<QuickGrid Class="py-2 table table-striped table-hover align-middle" Items="Entities" Pagination="PaginationState">
+				<TemplateColumn Title="Avatar" Align="Align.Center">
+					<img class="rounded-circle" style="width: 2rem" src="@(string.IsNullOrEmpty(context.AvatarUrl) ? Placeholder.AvatarUrl : context.AvatarUrl)" alt="Avatar">
+				</TemplateColumn>
+				<TemplateColumn Title="Roles" Align="Align.Center">
+					@foreach (var role in context.Roles!)
+					{
+						<div class="py-3 text-center">
+							@{
+								var roleColor = (role.Name == "Admin") ? "bg-danger" : "bg-primary";
+							}
+							<span class="badge rounded-pill @roleColor m-0">@role.Name</span>
+						</div>
+					}
+				</TemplateColumn>
+				<PropertyColumn Property="x => x.FirstName" Title="First Name" Align="Align.Center" Sortable="true" />
+				<PropertyColumn Property="x => x.LastName" Title="Last Name" Align="Align.Center" Sortable="true" />
+				<PropertyColumn Property="x => x.Email" Title="Email" Align="Align.Center" Sortable="true" />
+				
+				@if (App!.IsExpanded)
+				{
+					<PropertyColumn Property="x => x.CompanyName" Title="Company" Align="Align.Center" Sortable="true" />
+					<TemplateColumn Title="EmailConfirmed" Align="Align.Center">
+						<div class="d-flex justify-content-center">
+							<input class="form-check form-check-input text-warning" type="checkbox" checked="@context.EmailConfirmed">
+						</div>
+					</TemplateColumn>
+					<PropertyColumn Property="x => x.PhoneNumber" Title="Phone" Align="Align.Center" Sortable="true"/>
+					<TemplateColumn Title="PhoneConfirmed" Align="Align.Center">
+						<div class="d-flex justify-content-center">
+							<input class="form-check form-check-input text-warning" type="checkbox" checked="@context.PhoneNumberConfirmed">
+						</div>
+					</TemplateColumn>
+				}
+				<TemplateColumn Title="Actions" Align="Align.Center">
+					<a class="me-2" href="admin/user/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
+					<a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
+				</TemplateColumn>
+			</QuickGrid>
+			<div class="quickgrid-pagination">
+				<Paginator State="PaginationState" />
+			</div>
+		</div>
+	</div>
+}
+
+
+@code {
+	[CascadingParameter] AppState? App { get; set; }
+
+	IQueryable<UserDto>? Entities;
+
+	const string Title = "Users";
+
+	bool IsProcessing { get; set; } = true;
+
+	readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 15 };
+
+
+	#region ---> INITIALIZATION
+	protected override async Task OnInitializedAsync() => await LoadEntities();
+
+	async Task LoadEntities()
+	{
+		var result = await Repository.GetAllAsync();
+		if (result.Success && result.Data is not null) Entities = result.Data;
+
+		IsProcessing = false;
+		StateHasChanged();
+	}
+	#endregion
+
+	#region ---> DELETE
+	void ShowDelete(UserDto input)
+	{
+	    App?.ShowDeleteConfirmation($"{input.FirstName} {input.LastName}", input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+	}
+
+	async Task ConfirmDelete(Guid id)
+	{
+	    var result = await Repository.DeleteAsync(id);
+	    if (result.Success) await LoadEntities();
+
+	    await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+	}
+	#endregion
+
+}
