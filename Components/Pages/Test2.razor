@@ -1,0 +1,85 @@
+﻿@page "/test2"
+
+@* @inject ICurrentUserService CurrentUserService *@
+
+<h3>Welcome @App?.CurrentUser?.FirstName</h3>
+
+@* @inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>User Profile</h3>
+
+@if (isUserLoaded)
+{
+	@if (currentUser is not null)
+	{
+		<p>FirstName: @currentUser.FirstName</p>
+		<p>LastName: @currentUser.LastName</p>
+		<p>Email: @currentUser.Email</p>
+
+		<h5>Roles:</h5>
+		@if (userRoles.Any())
+		{
+			<ul>
+				@foreach (var role in userRoles)
+				{
+					<li>@role</li>
+				}
+			</ul>
+		}
+		else
+		{
+			<p>User has no roles.</p>
+		}
+	}
+	else
+	{
+		<p>User is not logged in.</p>
+	}
+}
+else
+{
+	<p>Loading user data...</p>
+} *@
+
+
+
+@code {
+	[CascadingParameter] AppState? App { get; set; }
+	
+	
+	// private UserDto? currentUser;
+
+	// protected override async Task OnInitializedAsync()
+	// {
+	// 	currentUser = await CurrentUserService.GetUserAsync();
+	// }
+}
+
+
+
+
+@* @code {
+	private ApplicationUser? currentUser;
+	private IList<string> userRoles = new List<string>();
+	private bool isUserLoaded = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity is not null && user.Identity.IsAuthenticated)
+		{
+			// 1. Dohvati korisnika
+			currentUser = await UserManager.GetUserAsync(user);
+
+			if (currentUser is not null)
+			{
+				// 2. Dohvati njegove role
+				userRoles = await UserManager.GetRolesAsync(currentUser);
+			}
+		}
+		isUserLoaded = true;
+	}
+} *@

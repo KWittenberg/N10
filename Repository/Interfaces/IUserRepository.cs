@@ -4,14 +4,14 @@ public interface IUserRepository
 {
     Guid GetCurrentUserId();
     //Task<UserDto> GetCurrentUser();
-    //Task<ServiceResponse<UserDto>> GetCurrentUserAsync();
+    Task<Result<UserDto>> GetCurrentUserAsync();
 
 
 
     //Task<Result<List<UserDto>>> GetAllToListAsync();
     Task<Result<IQueryable<UserDto>>> GetAllAsync();
 
-    //Task<Result<UserDto>> GetByIdAsync(Guid id);
+    Task<Result<UserDto>> GetByIdAsync(Guid id);
 
 
 

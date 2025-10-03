@@ -42,4 +42,13 @@
 
 	void ToggleSidebar() => SidebarShow = !SidebarShow;
 	void ToggleThemeDark() => ThemeDark = !ThemeDark;
+
+
+
+	
+
+	protected override async Task OnInitializedAsync()
+	{
+		await App.InitializeCurrentUserAsync();
+	}
 }

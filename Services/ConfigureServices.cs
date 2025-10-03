@@ -14,10 +14,10 @@ public static class ConfigureServices
         services.AddConfigureCulture();
         services.AddConfigureValidators();
 
-        
-        services.AddSingleton<AppState>();
+        //services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<AppState>(); // services.AddSingleton<AppState>();
         services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-        
+
         services.AddTransient<ISeedService, SeedService>();
 
 

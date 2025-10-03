@@ -11,7 +11,7 @@ public static class ConfigureValidators
 
         // koristiš abstraction (SOLID princip)
         services.AddScoped<IValidator<RoleInput>, RoleInputValidator>();
-        //services.AddScoped<IValidator<UserInput>, UserInputValidator>();
+        services.AddScoped<IValidator<UserInput>, UserInputValidator>();
 
 
         return services;

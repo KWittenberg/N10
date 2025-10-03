@@ -1,9 +1,73 @@
 ﻿namespace N10.Services;
 
-public class AppState(IHttpContextAccessor contextAccessor, IServiceScopeFactory scopeFactory)
+public class AppState(AuthenticationStateProvider authStateProvider,
+                        UserManager<ApplicationUser> userManager,
+                        RoleManager<IdentityRole<Guid>> roleManager
+                        // IHttpContextAccessor contextAccessor, IServiceScopeFactory scopeFactory
+                        )
 {
     #region CurrentUser
-    public UserDto? CurrentUser { get; private set; }
+    public UserDto? CurrentUser => _currentUser;
+    public bool IsAuthenticated => _currentUser is not null;
+
+
+    private UserDto? _currentUser;
+    private bool _isLoaded;
+
+
+    public async Task InitializeCurrentUserAsync()
+    {
+        if (_isLoaded) return;
+
+        try
+        {
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var principal = authState.User;
+
+            if (principal?.Identity?.IsAuthenticated != true)
+            {
+                _isLoaded = true;
+                return;
+            }
+
+            var user = await userManager.GetUserAsync(principal);
+            if (user is null)
+            {
+                _isLoaded = true;
+                return;
+            }
+
+            // Dohvati role names
+            var roleNames = await userManager.GetRolesAsync(user);
+
+            // Dohvati pune role preko RoleManager-a
+            var roles = new List<RoleDto>();
+            foreach (var roleName in roleNames)
+            {
+                var role = await roleManager.FindByNameAsync(roleName);
+                if (role is not null) roles.Add(role.ToDto());
+            }
+
+            _currentUser = user.ToDto();
+            _currentUser.Roles = roles;
+
+            _isLoaded = true;
+        }
+        catch
+        {
+            _isLoaded = true;
+        }
+    }
+
+    public void Clear()
+    {
+        _currentUser = null;
+        _isLoaded = false;
+    }
+    #endregion
+
+    #region CurrentUserOLD
+    //public UserDto? CurrentUser { get; private set; }
 
     //public async Task LoadCurrentUser()
     //{
@@ -25,11 +89,11 @@ public class AppState(IHttpContextAccessor contextAccessor, IServiceScopeFactory
     //    CurrentUser = output;
     //}
 
-    public Guid GetCurrentUserId()
-    {
-        var userIdClaim = contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
-    }
+    //public Guid GetCurrentUserId()
+    //{
+    //    var userIdClaim = contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //    return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
+    //}
     #endregion
 
 

@@ -5,3 +5,67 @@
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+
+@inject IUserRepository Repository
+
+<title>@Title</title>
+
+<_PageHeader Title="@Title" AddButtonText="Add User" AddButtonLink="user" />
+
+@if (IsProcessing || Entity is null)
+{
+	<_Loading />
+}
+else
+{
+	<div class="@App?.GetContentClass()">
+		@Entity?.FirstName
+		@Entity?.LastName
+		
+		@foreach (var role in Entity?.Roles!)
+		{
+			<div class="py-3 text-center">
+				@{
+					var roleColor = (role.Name == "Admin") ? "bg-danger" : "bg-primary";
+				}
+				<span class="badge rounded-pill @roleColor m-0">@role.Name</span>
+			</div>
+		}
+		
+
+	</div>
+}
+
+
+@code {
+	[CascadingParameter] AppState? App { get; set; }
+
+	IQueryable<UserDto>? Entities;
+
+	UserDto? Entity;
+
+	const string Title = "Users";
+
+	bool IsProcessing { get; set; } = true;
+
+	readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 15 };
+
+
+	Guid UserKejo = new Guid("82B1C80B-4799-47B2-4A31-08DDFD1D1396");
+
+
+	#region ---> INITIALIZATION
+	protected override async Task OnInitializedAsync() => await LoadEntities();
+
+	async Task LoadEntities()
+	{
+		//var result = await Repository.GetByIdAsync(UserKejo);
+		var result = await Repository.GetCurrentUserAsync();
+		if (result.Success && result.Data is not null) Entity = result.Data;
+
+		IsProcessing = false;
+		StateHasChanged();
+	}
+	#endregion
+}

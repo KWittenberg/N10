@@ -24,7 +24,7 @@ public class UserInput
 
     public string? City { get; set; } = string.Empty;
 
-    public string? Address { get; set; } = string.Empty;
+    public string? Street { get; set; } = string.Empty;
 }
 
 

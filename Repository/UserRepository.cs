@@ -4,15 +4,16 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
                             ApplicationDbContext context,
                             IHttpContextAccessor contextAccessor,
                             UserManager<ApplicationUser> userManager,
-                            IWebHostEnvironment webHostEnvironment
-                            //UserInputValidator validator
-                            ) : IUserRepository
+                            IWebHostEnvironment webHostEnvironment,
+                            AuthenticationStateProvider authStateProvider,
+                            IValidator<UserInput> validator) : IUserRepository
 {
 
 
     static readonly string AvatarFolder = Path.Combine("img", "avatar");
 
 
+    #region GET CurrentUser
     //public Guid GetCurrentUserId() => Guid.Parse(contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Guid.Empty.ToString());
     //public Guid UserId => contextAccessor.HttpContext?.User.GetUserId() ?? throw new ApplicationException("User context is unavailable");
     //public Guid GetCurrentUserId() => Guid.TryParse(contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId) ? userId : Guid.Empty;
@@ -23,66 +24,237 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
         return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
     }
 
-    //public async Task<UserDto> GetCurrentUser()
+    public async Task<Result<UserDto>> GetCurrentUserAsync()
+    {
+        try
+        {
+            // Get the current user's ClaimsPrincipal
+            // var principal = contextAccessor.HttpContext?.User;
+
+            // 
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var principal = authState.User;
+
+            // if (principal.Identity is null || !principal.Identity.IsAuthenticated) return;
+            if (principal is null) return Result<UserDto>.Error("User context unavailable");
+
+            var user = await userManager.GetUserAsync(principal);
+            if (user is null) return Result<UserDto>.Error("CurrentUser not found");
+
+            // Vraća samo imena rola, bez Id!
+            var roles = await userManager.GetRolesAsync(user);
+
+            //var roleDtos = await context.Roles.Where(r => roles.Contains(r.Name!)).Select(r => r.ToDto()).ToListAsync();
+            //var userDto = await user.ToDtoAsync(context);  // Iz UserMapping (sa roles)
+
+            var userDto = user.ToDto();
+            userDto.Roles = roles.Select(r => new RoleDto { Name = r }).ToList();
+
+            return Result<UserDto>.Ok(userDto);
+        }
+        catch (Exception ex)
+        {
+            return Result<UserDto>.Error($"Error: {ex.Message}");
+        }
+    }
+
+
+    public UserDto? CurrentUser { get; private set; }
+    private Task? InitTask;
+
+    // Metoda koja dohvaća i postavlja korisnika, ali samo jednom po potrebi
+    public Task InitializeAsync()
+    {
+        // Koristimo _initTask da spriječimo višestruko dohvaćanje unutar istog requesta
+        InitTask ??= LoadCurrentUserAsync();
+        return InitTask;
+    }
+
+    private async Task LoadCurrentUserAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+
+        if (principal.Identity is null || !principal.Identity.IsAuthenticated) return;
+
+        var user = await userManager.GetUserAsync(principal);
+        if (user is null) return; // Korisnik iz cookija ne postoji u bazi, npr. obrisan je
+
+
+        var roles = await userManager.GetRolesAsync(user);
+
+        // Ovdje ide tvoja logika mapiranja.
+        // Pretpostavljam da imaš extension metodu ili Mapster/AutoMapper konfiguraciju.
+        CurrentUser = new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            // ... mapiraj ostala svojstva
+            Roles = roles.Select(r => new RoleDto { Name = r }).ToList() // Primjer mapiranja
+        };
+    }
+    #endregion
+
+
+
+    #region CRUD
+    //public async Task<Result<IQueryable<UserDto>>> GetAllQueryableAsync()
     //{
-    //    // Guid userId = contextAccessor.HttpContext?.User.GetUserId() ?? Guid.Empty; //pozivanje iz extension metode
+    //    try
+    //    {
+    //        var query = userManager.Users.AsNoTracking().Select(UserMapping.ToDtoExpression).AsQueryable();
 
-    //    Guid userId = GetCurrentUserId(); // lokalna metoda
+    //        if (!await query.AnyAsync()) return Result<IQueryable<UserDto>>.Error("No users found!");
 
-    //    // with UserManager
-    //    //var user = await userManager.FindByIdAsync(userId);
-    //    //if (user is null) return new UserDto();
-
-    //    await using var db = await dbFactory.CreateDbContextAsync();
-
-    //    var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
-    //    if (user is null) return new UserDto();
-
-    //    var userRoleIds = db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
-    //    var userRoles = db.Roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
-
-    //    var output = user.Adapt<UserDto>();
-    //    output.Roles = userRoles.Select(r => r.Adapt<RoleDto>()).ToList();
-
-    //    return output;
+    //        return Result<IQueryable<UserDto>>.Ok(query);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return Result<IQueryable<UserDto>>.Error($"Error: {ex.Message}");
+    //    }
     //}
 
-    //public async Task<ServiceResponse<UserDto>> GetCurrentUserAsync()
+    public async Task<Result<UserDto>> GetByIdAsync(Guid id)
+    {
+        try
+        {
+            var entity = await userManager.FindByIdAsync(id.ToString());
+            if (entity is null) return Result<UserDto>.Error("User not found");
+
+            var roles = await userManager.GetRolesAsync(entity);
+
+            var userDto = entity.ToDto();
+            userDto.Roles = roles.Select(r => new RoleDto { Name = r }).ToList();
+
+            //var roleDtos = await userManager.Users.Context.Roles.Where(r => roles.Contains(r.Name!)).Select(r => r.ToDto()).ToListAsync();
+
+            //var roles = await context.UserRoles.Where(ur => ur.UserId == entity.Id).Join(context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new RoleDto
+            //{
+            //    Id = r.Id,
+            //    Name = r.Name ?? string.Empty
+            //}).ToListAsync();
+
+            //var userDto = entity.ToDto();
+            //userDto.Roles = roleDtos;
+
+
+            return Result<UserDto>.Ok(userDto);
+        }
+        catch (Exception ex)
+        {
+            return Result<UserDto>.Error($"Error: {ex.Message}");
+        }
+    }
+
+    public async Task<Result> AddAsync(UserInput input)
+    {
+        try
+        {
+            var validateInput = await validator.ValidateAsync(input);
+            if (!validateInput.IsValid) return Result.Error(string.Join(Environment.NewLine, validateInput.Errors.Select(e => e.ErrorMessage)));
+
+            var user = input.ToEntity();
+            var result = await userManager.CreateAsync(user, input.Password);
+            if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+
+            // Opcionalno: await userManager.AddToRoleAsync(user, ApplicationRole.User);
+
+            return Result.Ok("User added!");
+        }
+        catch (Exception ex)
+        {
+            return Result.Error($"Error: {ex.Message}");
+        }
+    }
+
+    public async Task<Result> UpdateAsync(Guid id, UserInput input)
+    {
+        try
+        {
+            var validateInput = await validator.ValidateAsync(input);
+            if (!validateInput.IsValid) return Result.Error(string.Join(Environment.NewLine, validateInput.Errors.Select(e => e.ErrorMessage)));
+
+            var user = await userManager.FindByIdAsync(id.ToString());
+            if (user is null) return Result.Error("User not found");
+
+            user.UpdateFromInput(input);  // Iz UserMapping, ažuriraj properties (bez lozinke ovdje)
+
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+
+            return Result.Ok("User updated!");
+        }
+        catch (Exception ex)
+        {
+            return Result.Error($"Error: {ex.Message}");
+        }
+    }
+
+    public async Task<Result> DeleteAsync(Guid id)
+    {
+        try
+        {
+            var user = await userManager.FindByIdAsync(id.ToString());
+            if (user is null) return Result.Error("User not found");
+
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                var filePath = Path.Combine(webHostEnvironment.WebRootPath, user.AvatarUrl.Replace("/", "\\"));
+                if (File.Exists(filePath)) File.Delete(filePath);
+            }
+
+            var result = await userManager.DeleteAsync(user);
+            if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+
+            return Result.Ok("User deleted!");
+        }
+        catch (Exception ex)
+        {
+            return Result.Error($"Error: {ex.Message}");
+        }
+    }
+
+    // Avatar metode ostaju iste - direktan pristup OK
+
+    // Role metode: Već su dobre sa UserManager, ali optimizuj GetRolesByUserIdAsync
+    //public async Task<Result<List<RoleDto>>> GetRolesByUserIdAsync(Guid userId)
     //{
-    //    await using var db = await dbFactory.CreateDbContextAsync();
+    //    try
+    //    {
+    //        var user = await userManager.FindByIdAsync(userId.ToString());
+    //        if (user is null) return Result<List<RoleDto>>.Error("User not found");
 
-    //    Guid userId = GetCurrentUserId();
+    //        var roleNames = await userManager.GetRolesAsync(user);
+    //        if (!roleNames.Any()) return Result<List<RoleDto>>.Ok(new List<RoleDto>());
 
-    //    //var user = await userManager.FindByIdAsync(userId);
-    //    //var user = await db.Users.FindAsync(userId); //Error - Slow loading
+    //        //var roles = await userManager.Users.Context.Roles.Where(r => roleNames.Contains(r.Name!)).Select(r => r.ToDto()).ToListAsync();
+    //        var roles = await userManager.GetRolesAsync(user);
 
-    //    var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
-    //    if (user is null) return new ServiceResponse<UserDto>(HttpStatusCode.NotFound, "CurrentUser - Not found!");
+    //        return Result<List<RoleDto>>.Ok(roles);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return Result<List<RoleDto>>.Error($"Error: {ex.Message}");
+    //    }
+    //}
 
-    //    var userRoleIds = db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
-    //    var userRoles = db.Roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
+    // Ostale role metode ostaju
 
-    //    var output = user.Adapt<UserDto>();
-    //    output.Roles = userRoles.Select(r => r.Adapt<RoleDto>()).ToList();
-
-    //    return new ServiceResponse<UserDto>(HttpStatusCode.OK, "OK", output);
+    //public async Task<bool> IsUserAvailableAsync(string email)
+    //{
+    //    var user = await userManager.FindByEmailAsync(email);
+    //    return user != null;  // True ako postoji (available? Čini se da je suprotno od imena - možda rename u IsEmailTakenAsync)
     //}
 
 
 
+    #endregion
 
 
 
-    //public async Task<Result<List<UserDto>>> GetAllToListAsync()
-    //{
-    //    await using var db = await dbFactory.CreateDbContextAsync();
 
-    //    var entities = await db.Users.OrderBy(x => x.LastName).ToListAsync();
-    //    if (!entities.Any()) return Result<List<UserDto>>.Error("Users not found!");
-    //    var outputs = entities.Adapt<List<UserDto>>();
-
-    //    return Result<List<UserDto>>.Ok(outputs);
-    //}
 
     public async Task<Result<IQueryable<UserDto>>> GetAllAsync()
     {
@@ -130,73 +302,11 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
 
 
 
-    //public async Task<Result<UserDto>> GetByIdNoMapsterAsync(Guid id)
-    //{
-    //    try
-    //    {
-    //        await using var db = await dbFactory.CreateDbContextAsync();
-
-    //        var user = await userManager.FindByIdAsync(id.ToString());
-    //        if (user == null) return Result<UserDto>.Error("User not found!");
-
-    //        var roles = await db.UserRoles
-    //            .Where(ur => ur.UserId == user.Id)
-    //            .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new RoleDto(r.Id, r.Name))
-    //            .ToListAsync();
-
-    //        var userDto = new UserDto
-    //        {
-    //            Id = user.Id,
-    //            AvatarUrl = user.AvatarUrl,
-    //            FirstName = user.FirstName,
-    //            LastName = user.LastName,
-    //            CompanyName = user.CompanyName,
-    //            Email = user.Email,
-    //            PhoneNumber = user.PhoneNumber,
-    //            DateOfBirth = user.DateOfBirth,
-    //            Country = user.Country,
-    //            Zip = user.Zip,
-    //            City = user.City,
-    //            Street = user.Street,
-    //            EmailConfirmed = user.EmailConfirmed,
-    //            Roles = roles
-    //        };
-
-    //        return Result<UserDto>.Ok(userDto);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return Result<UserDto>.Error($"Database error: {ex.Message}");
-    //    }
-    //}
-
-    //public async Task<Result<UserDto>> GetByIdAsync(Guid id)
-    //{
-    //    try
-    //    {
-    //        await using var db = await dbFactory.CreateDbContextAsync();
-
-    //        var user = await userManager.FindByIdAsync(id.ToString());
-    //        if (user == null) return Result<UserDto>.Error("User not found!");
-
-    //        var roles = await db.UserRoles.Where(ur => ur.UserId == user.Id)
-    //                                        .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Adapt<RoleDto>())
-    //                                        .ToListAsync();
-
-    //        var userDto = user.Adapt<UserDto>();
-    //        userDto.Roles = roles;
-
-    //        return Result<UserDto>.Ok(userDto);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return Result<UserDto>.Error($"Database error: {ex.Message}");
-    //    }
-    //}
 
 
 
-    public async Task<Result> AddAsync(UserInput input)
+
+    public async Task<Result> AddAsyncOld(UserInput input)
     {
         //var validateInput = await validator.ValidateAsync(input);
         //if (!validateInput.IsValid) return Result.Error(validateInput.ToString());
@@ -211,7 +321,7 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
         user.Country = input.Country;
         user.Zip = input.Zip;
         user.City = input.City;
-        user.Street = input.Address;
+        user.Street = input.Street;
         user.UserName = input.Email;
 
         var result = await userManager.CreateAsync(user, input.Password);
@@ -222,7 +332,7 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
         return Result.Ok("User - Added!");
     }
 
-    public async Task<Result> UpdateAsync(Guid id, UserInput input)
+    public async Task<Result> UpdateAsyncOld(Guid id, UserInput input)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
 
@@ -240,7 +350,7 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
         entity.Country = input.Country;
         entity.Zip = input.Zip;
         entity.City = input.City;
-        entity.Street = input.Address;
+        entity.Street = input.Street;
 
         db.Users.Update(entity);
         await db.SaveChangesAsync();
@@ -248,7 +358,7 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
         return Result.Ok("User - Updated!");
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsyncOld(Guid id)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
 
@@ -496,6 +606,131 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
         return await db.Users.AsNoTracking().AnyAsync(x => x.Email!.ToLower().Equals(email.ToLower()));
     }
 }
+
+
+#region OLD Commented
+//public async Task<UserDto> GetCurrentUser()
+//{
+//    // Guid userId = contextAccessor.HttpContext?.User.GetUserId() ?? Guid.Empty; //pozivanje iz extension metode
+
+//    Guid userId = GetCurrentUserId(); // lokalna metoda
+
+//    // with UserManager
+//    //var user = await userManager.FindByIdAsync(userId);
+//    //if (user is null) return new UserDto();
+
+//    await using var db = await dbFactory.CreateDbContextAsync();
+
+//    var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
+//    if (user is null) return new UserDto();
+
+//    var userRoleIds = db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
+//    var userRoles = db.Roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
+
+//    var output = user.Adapt<UserDto>();
+//    output.Roles = userRoles.Select(r => r.Adapt<RoleDto>()).ToList();
+
+//    return output;
+//}
+
+//public async Task<ServiceResponse<UserDto>> GetCurrentUserAsync()
+//{
+//    await using var db = await dbFactory.CreateDbContextAsync();
+
+//    Guid userId = GetCurrentUserId();
+
+//    //var user = await userManager.FindByIdAsync(userId);
+//    //var user = await db.Users.FindAsync(userId); //Error - Slow loading
+
+//    var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
+//    if (user is null) return new ServiceResponse<UserDto>(HttpStatusCode.NotFound, "CurrentUser - Not found!");
+
+//    var userRoleIds = db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
+//    var userRoles = db.Roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
+
+//    var output = user.Adapt<UserDto>();
+//    output.Roles = userRoles.Select(r => r.Adapt<RoleDto>()).ToList();
+
+//    return new ServiceResponse<UserDto>(HttpStatusCode.OK, "OK", output);
+//}
+
+//public async Task<Result<List<UserDto>>> GetAllToListAsync()
+//{
+//    await using var db = await dbFactory.CreateDbContextAsync();
+
+//    var entities = await db.Users.OrderBy(x => x.LastName).ToListAsync();
+//    if (!entities.Any()) return Result<List<UserDto>>.Error("Users not found!");
+//    var outputs = entities.Adapt<List<UserDto>>();
+
+//    return Result<List<UserDto>>.Ok(outputs);
+//}
+
+//public async Task<Result<UserDto>> GetByIdNoMapsterAsync(Guid id)
+//{
+//    try
+//    {
+//        await using var db = await dbFactory.CreateDbContextAsync();
+
+//        var user = await userManager.FindByIdAsync(id.ToString());
+//        if (user == null) return Result<UserDto>.Error("User not found!");
+
+//        var roles = await db.UserRoles
+//            .Where(ur => ur.UserId == user.Id)
+//            .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new RoleDto(r.Id, r.Name))
+//            .ToListAsync();
+
+//        var userDto = new UserDto
+//        {
+//            Id = user.Id,
+//            AvatarUrl = user.AvatarUrl,
+//            FirstName = user.FirstName,
+//            LastName = user.LastName,
+//            CompanyName = user.CompanyName,
+//            Email = user.Email,
+//            PhoneNumber = user.PhoneNumber,
+//            DateOfBirth = user.DateOfBirth,
+//            Country = user.Country,
+//            Zip = user.Zip,
+//            City = user.City,
+//            Street = user.Street,
+//            EmailConfirmed = user.EmailConfirmed,
+//            Roles = roles
+//        };
+
+//        return Result<UserDto>.Ok(userDto);
+//    }
+//    catch (Exception ex)
+//    {
+//        return Result<UserDto>.Error($"Database error: {ex.Message}");
+//    }
+//}
+
+//public async Task<Result<UserDto>> GetByIdAsync(Guid id)
+//{
+//    try
+//    {
+//        await using var db = await dbFactory.CreateDbContextAsync();
+
+//        var user = await userManager.FindByIdAsync(id.ToString());
+//        if (user == null) return Result<UserDto>.Error("User not found!");
+
+//        var roles = await db.UserRoles.Where(ur => ur.UserId == user.Id)
+//                                        .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Adapt<RoleDto>())
+//                                        .ToListAsync();
+
+//        var userDto = user.Adapt<UserDto>();
+//        userDto.Roles = roles;
+
+//        return Result<UserDto>.Ok(userDto);
+//    }
+//    catch (Exception ex)
+//    {
+//        return Result<UserDto>.Error($"Database error: {ex.Message}");
+//    }
+//}
+
+#endregion
+
 
 public static class IdentityExtensions
 {
