@@ -1,0 +1,73 @@
+﻿@inject AppState App
+@implements IDisposable
+
+<!-- Delete Modal Component -->
+<div class="modal fade @ModalClass bg-transparent60" tabindex="-1" style="display:@(Show ? "block" : "none");" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="m-4">
+                        <svg viewBox="0 0 60 60" class="error-xmark">
+                            <circle class="xmark-circle" cx="30" cy="30" r="25" fill="none" />
+                            <path class="xmark-check" fill="none" d="M20 20 L40 40 M40 20 L20 40" />
+                        </svg>
+                    </div>
+                    <div class="mt-5">
+                        <h4>Are you sure ?</h4>
+                        <p>Do you really want to delete these record:</p>
+                    </div>
+                    <div class="mt-2">
+                        <h5>@Title</h5>
+                        <h7 class="text-uppercase">@Message</h7>
+                    </div>
+                    <div class="mt-5 mb-4">
+                        <button type="button" class="btn btn-secondary w-25 shadow" @onclick="Hide">Cancel</button>
+                        <button type="button" class="btn btn-danger w-25 shadow" @onclick="Delete">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    bool Show = false;
+
+    string ModalClass = string.Empty;
+
+    string? Title { get; set; } = string.Empty;
+
+    string? Message { get; set; } = string.Empty;
+
+    EventCallback OnDelete { get; set; }
+
+
+    protected override void OnInitialized() => App.OnShowDeleteConfirmation += ShowDeleteConfirmation;
+    
+    void ShowDeleteConfirmation(string? title, string? message, EventCallback onDelete)
+    {
+        Show = true;
+        ModalClass = "show d-block";
+        Title = title;
+        Message = message;
+        OnDelete = onDelete;
+        StateHasChanged();
+    }
+
+    async Task Delete()
+    {
+        Hide();
+        await OnDelete.InvokeAsync(null);
+    }
+
+    void Hide()
+    {
+        Show = false;
+        ModalClass = string.Empty;
+        StateHasChanged();
+    }
+
+    public void Dispose() => App.OnShowDeleteConfirmation -= ShowDeleteConfirmation;
+}

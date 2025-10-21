@@ -256,7 +256,7 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
 
 
 
-    public async Task<Result<IQueryable<UserDto>>> GetAllAsync()
+    public async Task<Result<IQueryable<UserDto>>> GetAllQueryableAsync()
     {
         try
         {
@@ -276,6 +276,15 @@ public class UserRepository(IDbContextFactory<ApplicationDbContext> dbFactory,
                 Zip = x.Zip,
                 City = x.City,
                 Street = x.Street,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude,
+                PlaceId = x.PlaceId,
+                IsActive = x.IsActive,
+                IsDeleted = x.IsDeleted,
+                CreatedId = x.CreatedId,
+                CreatedUtc = x.CreatedUtc,
+                LastModifiedId = x.LastModifiedId,
+                LastModifiedUtc = x.LastModifiedUtc,
                 //Roles = context.UserRoles.Where(ur => ur.UserId == x.Id)
                 //                                .Join(context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new RoleDto(r.Id, r.Name!))
                 //                                .ToList()

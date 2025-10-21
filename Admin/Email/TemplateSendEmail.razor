@@ -1,0 +1,102 @@
+﻿@using System.Text.RegularExpressions
+<!-- Send Email -->
+<div bgcolor="#ffffff">
+    <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tbody>
+            <tr>
+                <td align="left" valign="top" bgcolor="#ffffff" class="bodywrap" style="width:640px;color:#000000;font-family:'Segoe UI',SegoeUI,Arial,sans-serif;font-size:15px;line-height:18px">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%!important">
+                        <tbody>
+                            <tr>
+                                <td bgcolor="#ffffff" width="5%">&nbsp;&nbsp;&nbsp;</td>
+                                <td align="left" valign="top" bgcolor="#ffffff" width="90%" style="color:#4f4f4f;letter-spacing:-0.01em;font-family:'Segoe UI',SegoeUI,Arial,sans-serif;font-size:20px;line-height:18px;padding:30px 0 10px 0">
+                                    <strong> BoltaShop</strong>
+                                    <br>
+                                    <span align="left" valign="top" bgcolor="#ffffff" width="90%" style="color:#4f4f4f;letter-spacing:-0.01em;font-family:'Segoe UI',SegoeUI,Arial,sans-serif;font-size:12px;line-height:18px;">
+                                        ... your destination for the best shopping!
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%">
+                        <tbody>
+                            <tr>
+                                <td align="left" valign="top" width="100%" height="100">
+                                    <img src="https://picsum.photos/640/250" alt="image" border="0" width="640" height="250" style="width:640px;height:250px" class="photo CToWUd a6T" data-bit="iit" tabindex="0">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tbody>
+            <tr>
+                <td align="left" valign="top" bgcolor="#ffffff" class="bodywrap" style="width:640px;color:#000000;font-family:'Segoe UI',SegoeUI,Arial,sans-serif;font-size:15px;line-height:18px">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%!important">
+                        <tbody>
+                            <tr>
+                                <td bgcolor="#ffffff" width="5%">&nbsp;&nbsp;&nbsp;</td>
+                                <td align="left" valign="top" bgcolor="#ffffff" width="90%" style="color:#4f4f4f;letter-spacing:-0.01em;font-family:'Segoe UI',SegoeUI,Arial,sans-serif;font-size:12px;line-height:18px;padding:30px 0 20px">
+                                    @* <strong> Hi</strong>
+                                    <br><br> *@
+                                    @* @(new MarkupString(Message)) *@
+                                    @(new MarkupString(UpdatedMessage))
+                                    @* @Message *@
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" align="center">
+        <tbody>
+            <tr>
+                <td align="left" valign="top" bgcolor="#ffffff" class="bodywrap" style="width: 640px; color: #ffffff; font-family: 'Segoe UI',SegoeUI,Arial,sans-serif; font-size: 15px; line-height: 18px; padding: 50px 0 ">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%!important">
+                        <tbody>
+                            <tr>
+                                <td bgcolor="#f2f2f2" width="5%">
+                                    &nbsp;&nbsp;&nbsp;
+                                </td>
+                                <td align="left" valign="top" bgcolor="#f2f2f2" width="90%" style="color:#1a1a1a;letter-spacing:-0.01em;font-family:'Segoe UI',SegoeUI,Arial,sans-serif;font-size:12px;line-height:18px;padding:30px 0">
+                                    <br>
+                                    Thanks again, If you have any questions simply reply to this email, and we would be more than happy to reply. :)
+                                    <br />
+                                    <br />
+                                    Copyright © 2024 by BoltaShop. All rights reserved.
+                                    <br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+@code {
+    [Parameter] public string? Message { get; set; } = string.Empty;
+
+    //private string UpdatedMessage => Regex.Replace(Message, "<h1>", "<h1 style=\"color: black;\">");
+
+    string UpdatedMessage
+    {
+        get
+        {
+            string processed = Regex.Replace(Message, "<h1>", "<h1 style=\"color: black;\">");
+            processed = Regex.Replace(processed, "<h2>", "<h2 style=\"color: black;\">");
+            processed = Regex.Replace(processed, "<h3>", "<h3 style=\"color: black;\">");
+            processed = Regex.Replace(processed, "<h4>", "<h4 style=\"color: black;\">");
+            return processed;
+        }
+    }
+}

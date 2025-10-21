@@ -72,7 +72,16 @@ public static class UserMapping
             Country = entity.Country ?? string.Empty,
             Zip = entity.Zip ?? string.Empty,
             City = entity.City ?? string.Empty,
-            Street = entity.Street ?? string.Empty
+            Street = entity.Street ?? string.Empty,
+            Latitude = entity.Latitude,
+            Longitude = entity.Longitude,
+            PlaceId = entity.PlaceId,
+            IsActive = entity.IsActive,
+            IsDeleted = entity.IsDeleted,
+            CreatedId = entity.CreatedId,
+            CreatedUtc = entity.CreatedUtc,
+            LastModifiedId = entity.LastModifiedId,
+            LastModifiedUtc = entity.LastModifiedUtc
         };
     }
 

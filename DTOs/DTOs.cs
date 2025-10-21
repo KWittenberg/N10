@@ -167,4 +167,4 @@ public record WishlistDto(Guid Id, Guid ApplicationUserId, Guid ProductId);
 
 //public record DashboardDto(List<ScreenDto> Screens, List<ScreenChartDto> ScreenCharts, int UserCount, int ScreenCount, int ContentCount);
 
-//public record DashboardDto(int Manufacturers, int Brands, int Products, int Orders, int Users, int Categories, int Authors, int Coupons, List<OrderChartDto> OrderCharts);
+public record DashboardDto(int? RoleCount, int? UserCount);

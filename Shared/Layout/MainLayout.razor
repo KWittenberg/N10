@@ -7,7 +7,13 @@
 <div class="page" data-bs-theme="@(ThemeDark ? "dark" : "light")" style="background-color: @(ThemeDark ? "#313641" : "white")">
 
 	<CascadingValue Value="@App">
-		@if (SidebarShow)
+        
+		<Toast />
+		<Progress></Progress>
+		<Confirmation />
+		<DeleteConfirmation />
+        
+        @if (SidebarShow)
 		{
 			<div class="sidebar">
 				<NavMenu />

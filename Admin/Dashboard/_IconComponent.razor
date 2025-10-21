@@ -1,0 +1,33 @@
+﻿<div class="widget" data-icon="@Icon">
+    <div class="stats-content">
+        <div class="stats-title">@Title</div>
+        <div class="stats-number">@Value</div>
+        
+        <div class="progress" role="progressbar" aria-valuenow="@Progress" aria-valuemin="0" aria-valuemax="100" style="height: 2px">
+            <div class="progress-bar progress-bar-striped bg-white" style="width: @Progress%"></div>
+        </div>
+        <div class="stats-desc">Predicted value @PredictedValue</div>
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter] public string? Icon { get; set; } = string.Empty;
+    
+    [Parameter] public string Title { get; set; } = string.Empty;
+    
+    [Parameter] public int? Value { get; set; }
+    
+    [Parameter] public int? PredictedValue { get; set; }
+    
+    int? Progress { get; set; }
+    
+    
+
+    
+    protected override void OnInitialized()
+    {
+        Progress = Value * 100 / PredictedValue;
+    }
+}

@@ -5,7 +5,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
 
     //public DbSet<Content> Contents { get; set; }
-    
+
 
 
     protected override void OnModelCreating(ModelBuilder builder)

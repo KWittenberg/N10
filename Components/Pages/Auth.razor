@@ -1,13 +1,20 @@
 ﻿@page "/auth"
 
-@using Microsoft.AspNetCore.Authorization
-
 @attribute [Authorize]
 
 <PageTitle>Auth</PageTitle>
 
-<h1>You are authenticated</h1>
 
-<AuthorizeView>
-    Hello @context.User.Identity?.Name!
-</AuthorizeView>
+<div class="mt-5 @App?.GetContentClass()">
+    <h1>You are authenticated</h1>
+
+    <AuthorizeView>
+        Hello @context.User.Identity?.Name!
+    </AuthorizeView>
+</div>
+
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+}

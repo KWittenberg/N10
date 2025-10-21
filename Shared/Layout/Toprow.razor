@@ -1,4 +1,4 @@
-<div class="top-row">
+<div class="top-row navStyle">
 
 	<div class="px-3 d-flex justify-content-center align-content-center">
 		<i class="bi @(SidebarShow ? "bi-chevron-left" : "bi-list")" @onclick="OnToggleSidebar"></i>
@@ -6,10 +6,25 @@
 
 
 
-	<div class="px-3 d-flex justify-content-center align-content-center">
+	<div class="px-3 d-flex justify-content-center align-content-center gap-2">
 		<i class="bi @(App!.IsExpanded ? "bi bi-distribute-horizontal" : "bi bi-distribute-vertical")" @onclick="OnChangeContent"></i>
 		<i class="bi @(ThemeDark ? "bi bi-lightbulb-fill" : "bi bi-lightbulb-off-fill")" @onclick="OnToggleThemeDark"></i>
+        <a href="themes"><i class="bi bi-palette"></i></a>
 
+		
+		<div class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">@Language</a>
+			<ul class="dropdown-menu">
+				<li><a class="dropdown-item" href="" @onclick="SetCroatian">Croatian</a></li>
+				<li><a class="dropdown-item" href="" @onclick="SetEnglish">English</a></li>
+				<li><hr class="dropdown-divider"></li>
+				<li><a class="dropdown-item" href="#">Something else here</a></li>
+			</ul>
+		</div>
+		
+		@* <_LanguageSwitcher /> *@
+		
+		
 		<AuthorizeView>
 			<Authorized>
 				<div class="nav-item px-3 d-flex justify-content-center align-content-center">
@@ -27,6 +42,8 @@
 				</div>
 			</Authorized>
 		</AuthorizeView>
+		
+		
 	</div>
 
 	@* <a href="#" target="_blank">About</a> *@
@@ -48,4 +65,33 @@
 	[Parameter] public bool ThemeDark { get; set; }
 
 	[Parameter] public EventCallback OnToggleThemeDark { get; set; }
+
+	string Language = "Croatian";
+
+
+
+	void SetCroatian()
+	{
+		Language = "Croatian";
+		ChangeCulture("hr-HR");
+		StateHasChanged();
+	}
+
+	void SetEnglish()
+	{
+		Language = "English";
+		ChangeCulture("en-US");
+		StateHasChanged();
+	}
+
+
+
+	void ChangeCulture(string culture)
+	{
+		// Response.Cookies.Append(
+		// 	CookieRequestCultureProvider.DefaultCookieName,
+		// 	CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+		// 	new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
+		// );
+	}
 }

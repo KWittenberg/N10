@@ -1,0 +1,51 @@
+﻿@page "/test/culture"
+
+@inject IStringLocalizer<TestCulture> Localizer
+
+
+<PageTitle>TEST Culture</PageTitle>
+
+<div class="mt-5 text-center">
+    <h1>@Localizer["Title"]</h1>
+    @Localizer["Subtitle"]
+
+    
+
+    <div class="mt-5">
+        <p>Current Culture: <b>@CultureInfo.CurrentCulture.DisplayName @CultureInfo.CurrentCulture.Name</b></p>
+        <p>Current UI Culture: <b>@CultureInfo.CurrentUICulture.DisplayName @CultureInfo.CurrentUICulture.Name</b></p>
+        <p>Localizer null: <b>@(Localizer is null)</b></p>
+        
+        @foreach (var culture in new[] { "hr-HR", "en-US" })
+        {
+            <div class="mt-5">
+                <h4>Testing <b>@culture</b></h4>
+                @{
+                    var testCulture = new CultureInfo(culture);
+                    var currentCulture = CultureInfo.CurrentCulture;
+                    CultureInfo.CurrentCulture = testCulture;
+                    CultureInfo.CurrentUICulture = testCulture;
+                }
+                <p>@Localizer["FirstTitle"].Value</p>
+                <p>@Localizer["FirstSubtitle"].Value</p>
+                @{
+                    CultureInfo.CurrentCulture = currentCulture;
+                    CultureInfo.CurrentUICulture = currentCulture;
+                }
+            </div>
+        }
+    </div>
+
+    <div class="mt-5">
+        <h3>@CultureInfo.CurrentCulture.DisplayName</h3>
+        <p>@CultureInfo.CurrentCulture.Name</p>
+    </div>
+
+    <div class="mt-5">
+        <h1>@Localizer["FirstName"]</h1>
+        <p>@Localizer["LastName"]</p>
+        <p>@DateTime.Now</p>
+    </div>
+
+</div>
+

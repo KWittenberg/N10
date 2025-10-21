@@ -1,108 +1,93 @@
 ﻿@page "/admin/roles"
-
 @attribute [Authorize(Roles = "Admin")]
-
 @inject IRoleRepository Repository
 
 <title>@Title</title>
 
-<_PageHeader Title="@Title" AddButtonText="Add Role" AddButtonLink="role" />
+<_PageHeader Title="@Title" AddButtonText="Add Role" OnAddButtonClick="() => Show = !Show" />
+<_RoleInputModal Show="Show" OnAddEventCallback="LoadEntities" />
 
 @if (IsProcessing || Entities is null)
 {
-	<_Loading />
+    <_Loading />
 }
 else
 {
-	@* <div class="@App?.GetContentClass()">
-		<div class="row mb-5">
-			<div class="pt-5 col d-flex justify-content-end">
-				@if (Input is not null)
-				{
-					<EditForm Enhance Model=@Input OnValidSubmit=@HandleValidSubmit>
-						<div class="input-group">
-							<InputText class="form-control rounded-pill input-custom" @bind-Value="Input.Name" placeholder="new Role" required />
-							<button class="btn btn-primary rounded-pill" style="z-index: 1100;" type="submit">Add</button>
-						</div>
-					</EditForm>
-				}
-			</div>
-		</div>
-	</div> *@
+    <div class="mt-5 @App?.GetContentClass()">
 
-	<div class="mt-5 @App?.GetContentClass()">
-		<div class="quickgrid-wrapper table-responsive">
-			<QuickGrid Class="table table-striped table-hover align-middle" Items="Entities">
-				<PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
-				<PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
-				<PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
-				<PropertyColumn Property="x => x.ConcurrencyStamp" Title="ConcurrencyStamp" Align="Align.Center" Sortable="true" />
-				<TemplateColumn Title="Actions" Align="Align.Center">
-					<a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
-				</TemplateColumn>
-			</QuickGrid>
-		</div>
-	</div>
+        @* @if (Input is not null)
+        {
+            <EditForm Enhance Model=@Input OnValidSubmit=@HandleValidSubmit>
+                <div class="input-group">
+                    <InputText class="form-control" @bind-Value="Input.Name" placeholder="Add new role" required />
+                    <button class="btn btn-primary" type="submit">ADD</button>
+                </div>
+            </EditForm>
+        } *@
+        <div class="mt-5 quickgrid-wrapper table-responsive">
+            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities">
+                <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.ConcurrencyStamp" Title="ConcurrencyStamp" Align="Align.Center" Sortable="true" />
+                <TemplateColumn Title="Actions" Align="Align.Center">
+                    @* <HeaderTemplate>
+                        <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="() => ShowRoleInputModal = !ShowRoleInputModal">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Add Role
+                        </button>
+                        </HeaderTemplate>*@ 
+                        <ChildContent>
+                        <a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
+                    </ChildContent>
+
+                </TemplateColumn>
+            </QuickGrid>
+        </div>
+    </div>
 }
 
 
 @code {
-	#region ---> START
-	[CascadingParameter] AppState? App { get; set; }
+    #region ---> START
+    [CascadingParameter] AppState? App { get; set; }
 
-	IQueryable<RoleDto>? Entities;
+    IQueryable<RoleDto>? Entities;
 
-	const string Title = "Roles";
+    const string Title = "Roles";
 
-	bool IsProcessing { get; set; } = true;
+    bool IsProcessing { get; set; } = true;
+
+    bool Show { get; set; } = false;
 
 
-	protected override async Task OnInitializedAsync() => await LoadEntities();
 
-	async Task LoadEntities()
-	{
-		var result = await Repository.GetAllQueryableAsync();
-		if (!result.Success || result.Data is null) return;
+    protected override async Task OnInitializedAsync() => await LoadEntities();
 
-		Entities = result.Data;
-		IsProcessing = false;
-		StateHasChanged();
-	}
-	#endregion
+    async Task LoadEntities()
+    {
+        var result = await Repository.GetAllQueryableAsync();
+        if (!result.Success || result.Data is null) return;
 
-	#region ---> INPUT FORM
-	RoleInput? Input { get; set; }
+        Entities = result.Data;
+        IsProcessing = false;
+        StateHasChanged();
+    }
+    #endregion
 
-	protected override void OnParametersSet() => Input = new RoleInput() { Name = string.Empty };
+    #region ---> DELETE
+    void ShowDelete(RoleDto input)
+    {
+        App?.ShowDeleteConfirmation(input.Name, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+    }
 
-	async Task HandleValidSubmit()
-	{
-		ArgumentNullException.ThrowIfNull(Input);
+    async Task ConfirmDelete(Guid id)
+    {
+        var result = await Repository.DeleteAsync(id);
+        if (result.Success) await LoadEntities();
 
-		var result = await Repository.AddAsync(Input);
-		if (result.Success)
-		{
-			Input = new RoleInput();
-			await LoadEntities();
-		}
-		await App!.ShowToast(result.Message, result.Success ? "success" : "error");
-	}
-	#endregion
-
-	#region ---> DELETE
-	void ShowDelete(RoleDto input)
-	{
-		App?.ShowDeleteConfirmation(input.Name, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
-	}
-
-	async Task ConfirmDelete(Guid id)
-	{
-		var result = await Repository.DeleteAsync(id);
-		if (result.Success) await LoadEntities();
-
-		await App!.ShowToast(result.Message, result.Success ? "success" : "error");
-	}
-	#endregion
-
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+    #endregion
 
 }

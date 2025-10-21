@@ -1,0 +1,29 @@
+﻿<div style="max-width: 600px; margin: 0 auto;">
+
+    <div class="mt-5 text-center">
+        <h3><a href="#">BoltaShop</a></h3>
+        <p class="text-secondary-emphasis fs-xs text-decoration-none d-none d-md-inline">Thank you for visiting BoltaShop, your destination for the best shopping!</p>
+    </div>
+
+    <div class="mt-5 text-center">
+        <img src="img/email.png" alt="" style="width: 150px; max-width: 600px; height: auto; margin: auto; display: block;">
+    </div>
+
+    <div class="mt-5 text-center">
+        <div class="" style="padding: 0 2.5em; text-align: center;">
+            <h2>Please verify your email</h2>
+            <h6>Amazing deals, updates, interesting news right in your inbox</h6>
+            <a href="@VerifyLink" class="mt-5 btn btn-primary">Verify my email!</a>
+        </div>
+    </div>
+
+    @* <div class="mt-5 text-center">
+    <p>No longer want to receive these email? You can <a class="ms-2" href="#" style="color: rgba(0,0,0,.8);"> unsubscribe here!</a></p>
+    </div> *@
+</div>
+
+
+@code
+{
+    [Parameter] public string? VerifyLink { get; set; } = string.Empty;
+}

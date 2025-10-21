@@ -17,6 +17,7 @@ public class SeedService(ApplicationDbContext db,
         await SeedRoles();
         await SeedAdminUser();
         //await SeedDemoUsersAsync("../Services/SeedData/DemoUsers.json", 10);
+        await SeedDemoUsersAsync("Services/SeedData/DemoUsers.json", 2);
     }
 
     async Task MigrateDatabaseAsync()
@@ -71,6 +72,8 @@ public class SeedService(ApplicationDbContext db,
             var adminRole = await roleManager.FindByNameAsync(ApplicationRole.Admin) ?? throw new Exception("Admin Role Not Found!");
             adminUser = new ApplicationUser
             {
+                AvatarUrl = adminOptions.Value.Avatar,
+
                 FirstName = adminOptions.Value.FirstName,
                 LastName = adminOptions.Value.LastName,
                 CompanyName = adminOptions.Value.CompanyName,
@@ -82,11 +85,21 @@ public class SeedService(ApplicationDbContext db,
                 PhoneNumber = adminOptions.Value.PhoneNumber,
                 PhoneNumberConfirmed = true,
 
-                AvatarUrl = adminOptions.Value.Avatar,
                 Country = adminOptions.Value.Country,
                 Zip = adminOptions.Value.Zip,
                 City = adminOptions.Value.City,
-                Street = adminOptions.Value.Street
+                Street = adminOptions.Value.Street,
+
+                Latitude = adminOptions.Value.Latitude,
+                Longitude = adminOptions.Value.Longitude,
+                PlaceId = adminOptions.Value.PlaceId,
+
+                IsActive = true,
+                IsDeleted = false,
+                CreatedUtc = DateTime.UtcNow,
+                LastModifiedUtc = DateTime.UtcNow,
+                CreatedId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                LastModifiedId = Guid.Parse("00000000-0000-0000-0000-000000000001")
             };
 
             await userStore.SetUserNameAsync(adminUser, adminOptions.Value.Email, CancellationToken.None);
@@ -139,10 +152,29 @@ public class SeedService(ApplicationDbContext db,
                 user.PhoneNumberConfirmed = true;
 
                 user.AvatarUrl = $"/img/avatar/{random.Next(1, 11).ToString("D2")}.jpg";
-                user.Country = data.Countries[random.Next(data.Countries.Count)];
-                user.Zip = random.Next(10000, 50000).ToString();
-                user.City = data.Cities[random.Next(data.Cities.Count)];
-                user.Street = data.Streets[random.Next(data.Streets.Count)] + " " + random.Next(1, 200);
+
+                var location = data.Locations[random.Next(data.Locations.Count)];
+
+                user.Country = location.Country;
+                user.Zip = location.Zip;
+                user.City = location.City;
+                user.Street = location.Street;
+
+                //user.Country = data.Countries[random.Next(data.Countries.Count)];
+                //user.Zip = random.Next(10000, 50000).ToString();
+                //user.City = data.Cities[random.Next(data.Cities.Count)];
+                //user.Street = data.Streets[random.Next(data.Streets.Count)] + " " + random.Next(1, 200);
+
+                user.Latitude = location.Latitude;
+                user.Longitude = location.Longitude;
+                user.PlaceId = location.PlaceId;
+
+                user.IsActive = true;
+                user.IsDeleted = false;
+                user.CreatedId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                user.CreatedUtc = DateTime.UtcNow;
+                user.LastModifiedId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                user.LastModifiedUtc = DateTime.UtcNow;
 
                 var result = await userManager.CreateAsync(user, adminOptions.Value.Password);
                 if (!result.Succeeded) throw new Exception($"Error in creating User {Environment.NewLine}{string.Join(Environment.NewLine, result.Errors.Select(e => e.Description))}");

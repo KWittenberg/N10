@@ -2,5 +2,5 @@
 
 public interface IEmailService
 {
-    Task<ServiceResponse> SendEmail(EmailDto input);
+    Task<Result> SendEmail(EmailInput input);
 }

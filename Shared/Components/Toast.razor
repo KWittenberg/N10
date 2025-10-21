@@ -1,0 +1,60 @@
+﻿@inject AppState App
+@implements IDisposable
+
+<!-- Toast -->
+@if (Show)
+{
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body @TextClass">
+            <i class="@IconClass"></i>@Message
+        </div>
+    </div>
+}
+
+
+@code {
+    bool Show = false;
+
+    string? Message { get; set; } = string.Empty;
+
+    string? IconClass { get; set; } = "bi bi-check-circle";
+
+    string? TextClass { get; set; } = "text-success";
+
+
+
+    protected override void OnInitialized() => App.OnShowToast += ShowToast;
+
+    async Task ShowToast(string message, string type)
+    {
+        Message = message;
+
+        IconClass = type switch
+        {
+            "success" => "bi bi-check-circle",
+            "error" => "bi bi-x-circle",
+            "info" => "bi bi-info-circle",
+            "warning" => "bi bi-exclamation-circle",
+            _ => "bi bi-check-circle"
+        };
+
+        TextClass = type switch
+        {
+            "success" => "text-success",
+            "error" => "text-danger",
+            "info" => "text-info",
+            "warning" => "text-warning",
+            _ => "text-success"
+        };
+
+        Show = true;
+        StateHasChanged();
+
+        // Toast će nestati nakon 2 sekunde
+        await Task.Delay(2000);
+        Show = false;
+        StateHasChanged();
+    }
+
+    public void Dispose() => App.OnShowToast -= ShowToast;
+}

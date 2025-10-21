@@ -29,16 +29,15 @@
 </div>
 
 @code {
-    private ApplicationUser? user;
-    private string? username;
-    private string? phoneNumber;
+    ApplicationUser? user;
+    string? username;
+    string? phoneNumber;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    [CascadingParameter] HttpContext HttpContext { get; set; } = default!;
 
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
+    [SupplyParameterFromForm] InputModel Input { get; set; } = default!;
 
+    
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();

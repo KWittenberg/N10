@@ -9,7 +9,7 @@ public interface IUserRepository
 
 
     //Task<Result<List<UserDto>>> GetAllToListAsync();
-    Task<Result<IQueryable<UserDto>>> GetAllAsync();
+    Task<Result<IQueryable<UserDto>>> GetAllQueryableAsync();
 
     Task<Result<UserDto>> GetByIdAsync(Guid id);
 

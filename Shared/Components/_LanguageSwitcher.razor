@@ -1,0 +1,26 @@
+@inject NavigationManager NavigationManager
+
+<div class="language-switcher">
+    <select @bind="Culture" class="form-select">
+        <option value="hr-HR">Hrvatski</option>
+        <option value="en-US">Engleski</option>
+        <option value="de-DE">Njemaèki</option>
+        <option value="it-IT">Talijanski</option>
+    </select>
+</div>
+
+@code {
+    private string Culture
+    {
+        get => CultureInfo.CurrentCulture.Name;
+        set
+        {
+            if (CultureInfo.CurrentCulture.Name != value)
+            {
+                var uri = new Uri(NavigationManager.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureQuery = $"?culture={Uri.EscapeDataString(value)}";
+                NavigationManager.NavigateTo($"{uri}{cultureQuery}", forceLoad: true);
+            }
+        }
+    }
+}

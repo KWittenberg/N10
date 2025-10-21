@@ -1,0 +1,46 @@
+﻿@inject AppState App
+@implements IDisposable
+
+<!-- Progress -->
+<div class="modal fade @ModalClass" tabindex="-1" style="display:@(Show ? "block" : "none");" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="center">
+                <div class="loader">
+                    <span>@Message</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    bool Show = false;
+
+    string ModalClass = string.Empty;
+
+    string? Message { get; set; } = string.Empty;
+
+
+    protected override void OnInitialized() => App.OnShowProgress += ShowProgress;
+    
+    async Task ShowProgress(string? message)
+    {
+        Show = true;
+        ModalClass = "show d-block";
+        Message = message;
+        StateHasChanged();
+        await Task.Delay(100);
+        Hide();
+    }
+
+    void Hide()
+    {
+        Show = false;
+        ModalClass = string.Empty;
+        StateHasChanged();
+    }
+
+    public void Dispose() => App.OnShowProgress -= ShowProgress;
+}

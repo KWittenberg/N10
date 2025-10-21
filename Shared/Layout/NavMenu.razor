@@ -3,122 +3,132 @@
 @inject NavigationManager NavigationManager
 
 <div class="top-row ps-3 navbar navbar-dark">
-	<div class="container-fluid">
-		<a class="navbar-brand" href="" @onclick="ToggleAdminMenu">.NET 10</a>
-	</div>
+    <div class="container-fluid">
+        <AuthorizeView>
+            <Authorized>
+                <div class="navbar-brand" style="cursor: pointer;" @onclick="ToggleAdminMenu">.NET 10</div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="navbar-brand" style="cursor: none;">Guest</div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
 </div>
-
-
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-	<nav class="nav flex-column">
+    <nav class="nav flex-column">
 
-		@if (ShowAdminMenu)
-		{
-			<div class="nav-item">
-				<NavLink class="nav-link" href="admin/roles" Match="NavLinkMatch.All">Roles</NavLink>
-			</div>
-			<div class="nav-item">
-				<NavLink class="nav-link" href="admin/users" Match="NavLinkMatch.All">Users</NavLink>
-			</div>
-		}
+        @if (ShowAdminMenu)
+        {
+            <div class="mt-2 mb-2 p-2 border-bottom">
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="admin/roles" Match="NavLinkMatch.All">
+                        <span class="bi bi-x-diamond-fill" aria-hidden="true"></span>Roles
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="admin/users" Match="NavLinkMatch.All">
+                        <span class="bi bi-people-fill" aria-hidden="true"></span>Users
+                    </NavLink>
+                </div>
 
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="admin/email">
+                        <span class="bi bi-envelope-fill" aria-hidden="true"></span> Send Email
+                    </NavLink>
+                </div>
+            </div>
+        }
 
+        <div class="mt-2 nav-item">
+            <NavLink class="nav-link" href="admin" Match="NavLinkMatch.All">
+                <span class="bi bi-columns-gap" aria-hidden="true"></span> Dashboard
+            </NavLink>
+        </div>
+        
+        <div class="nav-item">
+            <NavLink class="nav-link" href="counter">
+                <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Counter
+            </NavLink>
+        </div>
 
+        <div class="nav-item">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested" aria-hidden="true"></span> Weather
+            </NavLink>
+        </div>
 
+        <div class="nav-item">
+            <NavLink class="nav-link" href="auth">
+                <span class="bi bi-lock" aria-hidden="true"></span> Auth Required
+            </NavLink>
+        </div>
 
-
-
-
-		<div class="nav-item">
-			<NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-				<span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
-			</NavLink>
-		</div>
-
-		<div class="nav-item">
-			<NavLink class="nav-link" href="counter">
-				<span class="bi bi-plus-square-fill" aria-hidden="true"></span> Counter
-			</NavLink>
-		</div>
-
-		<div class="nav-item">
-			<NavLink class="nav-link" href="weather">
-				<span class="bi bi-list-nested" aria-hidden="true"></span> Weather
-			</NavLink>
-		</div>
-
-		<div class="nav-item">
-			<NavLink class="nav-link" href="auth">
-				<span class="bi bi-lock" aria-hidden="true"></span> Auth Required
-			</NavLink>
-		</div>
-
-		<AuthorizeView>
-			<Authorized>
-				<div class="nav-item">
-					<NavLink class="nav-link" href="Account/Manage">
-						<span class="bi bi-person-fill" aria-hidden="true"></span> @context.User.Identity?.Name
-					</NavLink>
-				</div>
-				<div class="nav-item">
-					<form action="Account/Logout" method="post">
-						<AntiforgeryToken />
-						<input type="hidden" name="ReturnUrl" value="@currentUrl" />
-						<button type="submit" class="nav-link">
-							<span class="bi bi-arrow-bar-left" aria-hidden="true"></span> Logout
-						</button>
-					</form>
-				</div>
-			</Authorized>
-			<NotAuthorized>
-				<div class="nav-item">
-					<NavLink class="nav-link" href="Account/Register">
-						<span class="bi bi-person" aria-hidden="true"></span> Register
-					</NavLink>
-				</div>
-				<div class="nav-item">
-					<NavLink class="nav-link" href="Account/Login">
-						<span class="bi bi-person-badge" aria-hidden="true"></span> Login
-					</NavLink>
-				</div>
-			</NotAuthorized>
-		</AuthorizeView>
-	</nav>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="Account/Manage">
+                        <span class="bi bi-person-fill" aria-hidden="true"></span> @context.User.Identity?.Name
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="nav-link">
+                            <span class="bi bi-arrow-bar-left" aria-hidden="true"></span> Logout
+                        </button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="Account/Register">
+                        <span class="bi bi-person" aria-hidden="true"></span> Register
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="Account/Login">
+                        <span class="bi bi-person-badge" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
 </div>
 
 @code {
 
-	bool ShowAdminMenu = false;
-	bool IsAdminSubmenuOpen = false;
+    bool ShowAdminMenu = false;
+    bool IsAdminSubmenuOpen = false;
 
-	void ToggleAdminMenu() => ShowAdminMenu = !ShowAdminMenu;
-	void ToggleAdminSubmenu() => IsAdminSubmenuOpen = !IsAdminSubmenuOpen;
-
-
+    void ToggleAdminMenu() => ShowAdminMenu = !ShowAdminMenu;
+    void ToggleAdminSubmenu() => IsAdminSubmenuOpen = !IsAdminSubmenuOpen;
 
 
 
 
 
-	private string? currentUrl;
 
-	protected override void OnInitialized()
-	{
-		currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-		NavigationManager.LocationChanged += OnLocationChanged;
-	}
 
-	private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-	{
-		currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-		StateHasChanged();
-	}
+    private string? currentUrl;
 
-	public void Dispose()
-	{
-		NavigationManager.LocationChanged -= OnLocationChanged;
-	}
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
 }

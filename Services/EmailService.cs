@@ -7,17 +7,23 @@ namespace N10.Services;
 
 public class EmailService(IOptions<GmailOptions> gmail) : IEmailService
 {
-    public async Task<ServiceResponse> SendEmail(EmailDto input)
+    public async Task<Result> SendEmail(EmailInput input)
     {
-        var email = new MimeMessage();
+        MimeMessage email = new();
         email.From.Add(MailboxAddress.Parse(gmail.Value.Username));
         email.To.Add(MailboxAddress.Parse(input.To));
         email.Subject = input.Subject;
         email.Body = new TextPart(TextFormat.Html) { Text = input.Body };
 
-        using var smtp = new SmtpClient();
+        using SmtpClient smtp = new();
+
+        // Use local SMTP server for testing
+        // await smtp.ConnectAsync("localhost", 1024);
+
+        // Gmail SMTP
         await smtp.ConnectAsync(gmail.Value.Host, 587, SecureSocketOptions.StartTls);
         await smtp.AuthenticateAsync(gmail.Value.Username, gmail.Value.Password);
+
         await smtp.SendAsync(email);
         //var sendResponse = await smtp.SendAsync(email);
         await smtp.DisconnectAsync(true);
@@ -26,7 +32,7 @@ public class EmailService(IOptions<GmailOptions> gmail) : IEmailService
         //    : new ServiceResponse(HttpStatusCode.OK, $"Email Sent Successfully - {DateTime.Now.ToString("f")}");
 
 
-        return new ServiceResponse(HttpStatusCode.OK, $"Email Sent Successfully - {DateTime.Now.ToString("f")}");
+        return Result.Ok($"Email Sent Successfully - {DateTime.Now:f}");
     }
 
     //public Task SendEmail(string to, string subject, string body)

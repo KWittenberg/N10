@@ -1,0 +1,40 @@
+﻿.widget {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background-color: rgba(75, 192, 192, 1);
+    box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5);
+    padding: 1rem;
+}
+
+    .widget::before {
+        content: attr(data-icon);
+        position: absolute;
+        font-size: 8rem;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.3);
+        right: -0.25rem;
+        bottom: -2.7rem;
+        z-index: 0;
+    }
+
+.stats-content {
+    position: relative;
+    z-index: 1;
+}
+
+.stats-title {
+    font-size: 0.75rem;
+    color: whitesmoke;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: whitesmoke;
+}
+
+.stats-desc {
+    font-size: 0.5rem;
+    color: gray;
+}

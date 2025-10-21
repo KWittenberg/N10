@@ -1,0 +1,101 @@
+﻿@page "/admin/email"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject IJSRuntime JsRuntime
+@inject IEmailService EmailService
+@* @inject IHtmlToStringService htmlToString *@
+
+<PageTitle>@Title</PageTitle>
+
+<_PageHeader Title="@Title" />
+
+<!-- Page Content -->
+<div class="mt-5 @App?.GetContentClass()">
+    <div class="row">
+        <section class="col-md-6">
+            @if (Input! is not null)
+            {
+                <EditForm Enhance Model=@Input OnValidSubmit=@HandleValidSubmit>
+                    <div class="">
+                        <div class="p-3" style="border: 0.5px dashed gray;">
+                            <div class="">
+                                <div class="">
+                                    <div class="">
+                                        <label class="">To *</label>
+                                        <InputText @bind-Value="Input.To" class="form-control form-control-sm" type="email" aria-required="true" placeholder=" to..." required />
+                                    </div>
+                                    <div class="">
+                                        <label class="">Subject *</label>
+                                        <InputText @bind-Value="Input.Subject" class="form-control form-control-sm" aria-required="true" placeholder=" subject..." required />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @* <SfRichTextEditor @bind-Value="Input.Body" CssClass="mt-3" Height="25vh" EnableResize="true" placeholder=" body..." /> *@
+
+                    <div class="mt-5">
+                        <div id="@SummernoteId"></div>
+                    </div>
+
+
+                    <div class="mt-4 text-end">
+                        <a href="/" class="btn btn-outline-dark btn-sm">Back</a>
+                        <button class="btn btn-outline-primary btn-sm w-50" type="submit"><i class="ci-mail me-2"></i>Send Email</button>
+                    </div>
+                </EditForm>
+            }
+
+        </section>
+        <section class="col-md-6">
+            <TemplateSendEmail Message="@Input.Body" />
+        </section>
+    </div>
+</div>
+
+
+<!-- Title & Buttons -->
+@* <div class="d-none d-lg-flex justify-content-between align-items-center pt-lg-3 pb-4 pb-lg-5 mb-lg-3 mt-min70">
+    <h4 class="text-primary mt-1 ms-3 mb-0">@Title</h4>
+    <div class="align-content-end">
+        <a href="/" class="btn btn-outline-dark btn-sm">Back</a>
+        <button type="submit" class="btn btn-outline-primary btn-sm"><i class="ci-mail me-2"></i>Send Email</button>
+    </div>
+</div> *@
+
+
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    const string Title = "Send Email";
+
+    const string SummernoteId = "s-send-email";
+
+    EmailInput Input { get; set; } = new();
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JsRuntime.InvokeVoidAsync("addSummernote", SummernoteId, string.Empty);
+    }
+
+    async Task HandleValidSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(Input);
+
+        EmailInput email = new();
+
+        email.To = Input.To;
+        email.Subject = Input.Subject;
+        var content = await JsRuntime.InvokeAsync<string>("getSummernote", SummernoteId);
+
+        var parameters = new Dictionary<string, object?> { { "Message", Input.Body } };
+        //email.Body = await htmlToString.RenderComponent<TemplateSendEmail>(parameters);
+
+        var result = await EmailService.SendEmail(email);
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+}

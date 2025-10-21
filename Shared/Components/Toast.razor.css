@@ -1,0 +1,26 @@
+﻿.toast {
+    margin-top: 1.5rem !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border: none;
+    background-color: transparent !important;
+    z-index: var(--z-toast);
+}
+
+.toast-body {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    height: 3em;
+    border: none;
+    border-radius: 2rem;
+    background-color: whitesmoke !important;
+}
+
+    .toast-body i {
+        margin-left: 0.5rem !important;
+        margin-right: 1rem !important;
+        font-size: calc(1.275rem + 0.3vw) !important;
+    }
