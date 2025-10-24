@@ -4,7 +4,7 @@ public static class CssClasses
 {
     public static class Layout
     {
-        public const string Container = "container";
+        public const string Container = "container-xxl";
         public const string Expanded = "ps-5 pe-5";
     }
 

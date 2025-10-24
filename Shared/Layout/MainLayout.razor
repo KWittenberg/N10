@@ -2,59 +2,41 @@
 
 @inject AppState App
 
+<div class="page">
+    <CascadingValue Value="@App">
+        <Toast />
+        <Progress></Progress>
+        <Confirmation />
+        <DeleteConfirmation />
+        <Settings />
 
-@* <div class="page" data-bs-theme="@(ThemeDark ? "dark" : "light")" style="background-image: url('/img/bg/9.Simple Gray.jpg')"> *@
-<div class="page" data-bs-theme="@(ThemeDark ? "dark" : "light")" style="background-color: @(ThemeDark ? "#313641" : "white")">
-
-	<CascadingValue Value="@App">
-        
-		<Toast />
-		<Progress></Progress>
-		<Confirmation />
-		<DeleteConfirmation />
-        
         @if (SidebarShow)
-		{
-			<div class="sidebar">
-				<NavMenu />
-			</div>
-		}
+        {
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+        }
 
+        <main>
+            <Toprow SidebarShow="SidebarShow" OnToggleSidebar="ToggleSidebar"
+                    OnChangeContent="App.OnChangeContent" />
 
-		<main>
-			<Toprow SidebarShow="SidebarShow" OnToggleSidebar="ToggleSidebar"
-					OnChangeContent="App.OnChangeContent"
-					ThemeDark="ThemeDark" OnToggleThemeDark="ToggleThemeDark" />
-
-			@Body
-		</main>
-	</CascadingValue>
+            @Body
+        </main>
+    </CascadingValue>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
-	An unhandled error has occurred.
-	<a href="." class="reload">Reload</a>
-	<span class="dismiss">🗙</span>
+    An unhandled error has occurred.<a href="" class="reload">Reload</a><span class="dismiss">🗙</span>
 </div>
-
-
 
 
 @code
 {
-	bool SidebarShow = true;
-	bool ThemeDark = true;
+    bool SidebarShow = true;
+
+    void ToggleSidebar() => SidebarShow = !SidebarShow;
 
 
-	void ToggleSidebar() => SidebarShow = !SidebarShow;
-	void ToggleThemeDark() => ThemeDark = !ThemeDark;
-
-
-
-	
-
-	protected override async Task OnInitializedAsync()
-	{
-		await App.InitializeCurrentUserAsync();
-	}
+    protected override async Task OnInitializedAsync() => await App.InitializeCurrentUserAsync();
 }

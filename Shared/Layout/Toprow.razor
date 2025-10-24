@@ -8,8 +8,7 @@
 
 	<div class="px-3 d-flex justify-content-center align-content-center gap-2">
 		<i class="bi @(App!.IsExpanded ? "bi bi-distribute-horizontal" : "bi bi-distribute-vertical")" @onclick="OnChangeContent"></i>
-		<i class="bi @(ThemeDark ? "bi bi-lightbulb-fill" : "bi bi-lightbulb-off-fill")" @onclick="OnToggleThemeDark"></i>
-        <a href="themes"><i class="bi bi-palette"></i></a>
+		<a href="themes"><i class="bi bi-palette"></i></a>
 
 		
 		<div class="nav-item dropdown">
@@ -62,13 +61,9 @@
 	[Parameter] public EventCallback OnChangeContent { get; set; }
 
 
-	[Parameter] public bool ThemeDark { get; set; }
-
-	[Parameter] public EventCallback OnToggleThemeDark { get; set; }
+	
 
 	string Language = "Croatian";
-
-
 
 	void SetCroatian()
 	{

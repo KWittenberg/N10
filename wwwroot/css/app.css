@@ -3,12 +3,13 @@
     --kw-body-font: 'Montserrat', sans-serif;
     --kw-body-font-size: 1rem;
     --kw-body-font-size-sm: 0.8rem;
+    --kw-body-bg-light: #fff;
+    --kw-body-bg-dark: #212529;
     --kw-dark-color: #212121;
     --kw-light-color: #deeefb;
 }
 
 html, body {
-    /*font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;*/
     font-family: var(--kw-body-font);
     font-size: var(--kw-body-font-size);
     height: 100%;
@@ -23,7 +24,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--kw-title-font);
 }
 
-.p-sm {
+p-sm, .p-sm {
     font-size: var(--kw-body-font-size-sm) !important;
 }
 

@@ -22,7 +22,9 @@
     --cf-theme-850: var(--cf-code-magic-850);
     /* dark backgrounds */
     --cf-theme-900: var(--cf-code-magic-900);
-   
+    
+    
+    
     /* #region code-magic */
     --cf-code-magic-core: #f2c864; /* yellow accent */
     --cf-code-magic-100: hsl(192, 77%, 79%); /* turqoise */
@@ -193,6 +195,10 @@
     /* #endregion gray */
 }
 
+h1, h2, h3, h4, h5, h6 {
+    color: var(--cf-theme-core);
+}
+
 a {
     color: var(--cf-theme-500);
 }
@@ -212,17 +218,6 @@ a {
     --bs-btn-disabled-border-color: var(--cf-theme-600);
 }
 
-.btn-dark {
-    --bs-btn-bg: var(--cf-theme-850);
-    --bs-btn-border-color: var(--cf-theme-850);
-    --bs-btn-hover-bg: var(--cf-theme-800);
-    --bs-btn-hover-border-color: var(--cf-theme-800);
-    --bs-btn-active-bg: var(--cf-theme-700);
-    --bs-btn-active-border-color: var(--cf-theme-700);
-    --bs-btn-disabled-bg: var(--cf-theme-850);
-    --bs-btn-disabled-border-color: var(--cf-theme-850);
-}
-
 .btn-light {
     --bs-btn-bg: var(--cf-theme-100);
     --bs-btn-border-color: var(--cf-theme-100);
@@ -234,6 +229,16 @@ a {
     --bs-btn-disabled-border-color: var(--cf-theme-100);
 }
 
+.btn-dark {
+    --bs-btn-bg: var(--cf-theme-850);
+    --bs-btn-border-color: var(--cf-theme-850);
+    --bs-btn-hover-bg: var(--cf-theme-800);
+    --bs-btn-hover-border-color: var(--cf-theme-800);
+    --bs-btn-active-bg: var(--cf-theme-700);
+    --bs-btn-active-border-color: var(--cf-theme-700);
+    --bs-btn-disabled-bg: var(--cf-theme-850);
+    --bs-btn-disabled-border-color: var(--cf-theme-850);
+}
 
 [data-cf-theme="code-magic"] {
     --cf-theme-core: var(--cf-code-magic-core);

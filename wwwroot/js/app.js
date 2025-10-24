@@ -1,3 +1,31 @@
+window.getBootstrapTheme = () => {
+    const element = document.querySelector('[data-bs-theme]');
+    return element ? element.getAttribute('data-bs-theme') : 'light';
+}
+
+window.setBootstrapTheme = (theme) => {
+    document.querySelector('[data-bs-theme]').setAttribute('data-bs-theme', theme);
+}
+
+window.toggleBootstrapTheme = () => {
+    const currentTheme = window.getBootstrapTheme();
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    window.setBootstrapTheme(newTheme);
+    return newTheme;
+}
+
+// Set theme function
+window.setTheme = (theme) => {
+    // We'll find the element that has the attribute data-cf-theme
+    // and update it to the new theme name.
+    document.querySelector('[data-cf-theme]').setAttribute('data-cf-theme', theme);
+}
+
+
+
+
+
+
 // Init Bootstrap5 Tooltips
 function initializeTooltips() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -87,11 +115,3 @@ function initializeOrdersChart(canvasId, labels, totals) {
     });
 }
 // END initializeOrdersChart
-
-
-
-window.setTheme = (theme) => {
-    // We'll find the element that has the attribute data-cf-theme
-    // and update it to the new theme name.
-    document.querySelector('[data-cf-theme]').setAttribute('data-cf-theme', theme);
-}

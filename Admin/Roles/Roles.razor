@@ -29,7 +29,7 @@ else
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.ConcurrencyStamp" Title="ConcurrencyStamp" Align="Align.Center" Sortable="true" />
+                @* <PropertyColumn Property="x => x.ConcurrencyStamp" Title="ConcurrencyStamp" Align="Align.Center" Sortable="true" /> *@
                 <TemplateColumn Title="Actions" Align="Align.Center">
                     @* <HeaderTemplate>
                         <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="() => ShowRoleInputModal = !ShowRoleInputModal">
