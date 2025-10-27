@@ -19,18 +19,16 @@
                     <div class="d-flex gap-0 align-items-center">
                         @foreach (string weight in Weights)
                         {
-                            <div style="background-color: var(--cf-theme-@weight); width:16px; height: 16px;"></div>
+                            <div style="background-color: var(--cf-theme-@weight); width:24px; height: 24px;"></div>
                         }
                     </div>
                     <div class="my-3">
-                        <button class="btn btn-primary m-2">Primary</button>
-                        <button class="btn btn-secondary m-2">Secondary</button>
-                        <button class="btn btn-light m-2">Light</button>
-                        <button class="btn btn-dark m-2">Dark</button>
+                        <button class="btn btn-sm btn-primary">Primary</button>
+                        <button class="btn btn-sm btn-secondary">Secondary</button>
+                        <button class="btn btn-sm btn-light">Light</button>
+                        <button class="btn btn-sm btn-dark">Dark</button>
                     </div>
-                    <div>
-                        Text with a <a href="#">clickable link</a> in the middle.
-                    </div>
+                    <p-sm>Text with a <a href="#">clickable link</a> in the middle.</p-sm>
                 </div>
             </div>
         }

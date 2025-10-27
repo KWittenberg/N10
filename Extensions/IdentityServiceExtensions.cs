@@ -17,10 +17,30 @@ public static class IdentityServiceExtensions
             })
             .AddIdentityCookies();
 
-        // Add database
-        var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+        // ✅ Add database
+        var connectionIndex = 3; // Set: [0]Development [1]Remote [2]Production [3]PostgreSQL [4]MySQL
+        var connectionName = new[] { "Development", "Remote", "Production", "PostgreSQL", "MySQL" };
+        var connectionString = configuration.GetConnectionString(connectionName[connectionIndex]) ?? throw new InvalidOperationException("Connection not found!");
+
+        services.AddDbContextFactory<ApplicationDbContext>(options =>
+        {
+            if (connectionIndex == 3) options.UseNpgsql(connectionString);
+            // else if (connectionIndex == 4) options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            else options.UseSqlServer(connectionString);
+        }, ServiceLifetime.Scoped);
+
+        // services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
+
         // services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
+        // ✅ Identity koristi transient DbContext
+        //services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString),
+        //    contextLifetime: ServiceLifetime.Transient,  // 👈 OVO JE KLJUČNO!
+        //    optionsLifetime: ServiceLifetime.Singleton);
+
+
+
+
         services.AddDatabaseDeveloperPageExceptionFilter();
 
         services.AddIdentityCore<ApplicationUser>(options =>
