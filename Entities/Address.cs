@@ -1,4 +1,4 @@
-﻿namespace Meetups.Entities;
+﻿namespace N10.Entities;
 
 public class Address : BaseEntity<Guid>
 {

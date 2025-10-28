@@ -1,6 +1,4 @@
-﻿using Meetups.Entities;
-
-namespace N10.Entities;
+﻿namespace N10.Entities;
 
 public class Contact : BaseAuditableEntity<Guid>
 {
@@ -30,5 +28,5 @@ public class Contact : BaseAuditableEntity<Guid>
     public virtual Address? Address { get; set; }
 
 
-    public virtual ICollection<Category> Categories { get; set; } = [];
+    public virtual ICollection<ContactCategory> Categories { get; set; } = [];
 }
