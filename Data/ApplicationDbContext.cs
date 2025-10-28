@@ -3,10 +3,13 @@ namespace N10.Data;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor contextAccessor)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
-
-    //public DbSet<Content> Contents { get; set; }
-
-
+    #region Note Entities
+    public DbSet<Note> Notes { get; set; }
+    public DbSet<NoteFolder> NoteFolders { get; set; }
+    public DbSet<NoteShare> NoteShares { get; set; }
+    public DbSet<NoteImage> NoteImages { get; set; }
+    public DbSet<NoteAttachment> NoteAttachments { get; set; }
+    #endregion
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

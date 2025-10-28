@@ -1,6 +1,6 @@
 ﻿namespace N10.Enums;
 
-public enum NoteFormat
+public enum NoteContentType
 {
     PlainText = 0,
     Markdown = 1,
