@@ -8,6 +8,8 @@ public static class ConfigureRepositories
 
         services.AddScoped<IUserRepository, UserRepository>();
 
+        services.AddScoped<INoteRepository, NoteRepository>();
+
 
         return services;
     }
