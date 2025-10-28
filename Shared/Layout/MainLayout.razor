@@ -1,5 +1,4 @@
 ﻿@inherits LayoutComponentBase
-
 @inject AppState App
 
 <div class="page">
@@ -18,8 +17,7 @@
         }
 
         <main>
-            <Toprow SidebarShow="SidebarShow" OnToggleSidebar="ToggleSidebar"
-                    OnChangeContent="App.OnChangeContent" />
+            <Toprow SidebarShow="SidebarShow" OnToggleSidebar="ToggleSidebar" OnChangeContent="App.OnChangeContent" />
 
             @Body
         </main>

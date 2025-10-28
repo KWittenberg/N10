@@ -2,9 +2,7 @@
 
 public interface IRoleRepository
 {
-    Task<Result<IQueryable<RoleDto>>> GetAllQueryableAsync();
-
-    Task<Result<List<RoleDto>>> GetAllListAsync();
+    Task<Result<List<RoleDto>>> GetAllAsync();
 
     Task<Result<RoleDto>> GetByIdAsync(Guid id);
 

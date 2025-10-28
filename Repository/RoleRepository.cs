@@ -2,115 +2,68 @@
 
 public class RoleRepository(RoleManager<IdentityRole<Guid>> roleManager, IValidator<RoleInput> validator) : IRoleRepository
 {
-    public async Task<Result<IQueryable<RoleDto>>> GetAllQueryableAsync()
+    private readonly RoleManager<IdentityRole<Guid>> _roleManager = roleManager;
+    private readonly IValidator<RoleInput> _validator = validator;
+
+    public async Task<Result<List<RoleDto>>> GetAllAsync()
     {
-        try
-        {
-            var query = roleManager.Roles.AsNoTracking().OrderBy(x => x.Name).Select(RoleMapping.ToDtoExpression).AsQueryable();
-            if (!await query.AnyAsync()) return Result<IQueryable<RoleDto>>.Error("Roles not found!");
+        // Use expression-based projection so EF projects to SQL (efficient)
+        var dtos = await _roleManager.Roles.AsNoTracking().OrderBy(x => x.Name)
+            .Select(RoleMapping.ToDtoExpression) // Expression<Func<IdentityRole<Guid>, RoleDto>>
+            .ToListAsync();
 
-            return Result<IQueryable<RoleDto>>.Ok(query);
-        }
-        catch (Exception ex)
-        {
-            return Result<IQueryable<RoleDto>>.Error($"Error: {ex.Message}");
-        }
-    }
+        if (dtos is null || dtos.Count == 0) return Result<List<RoleDto>>.Error("Roles not found!");
 
-    public async Task<Result<List<RoleDto>>> GetAllListAsync()
-    {
-        try
-        {
-            var entities = await roleManager.Roles.OrderBy(x => x.Name).ToListAsync();
-            if (!entities.Any()) return Result<List<RoleDto>>.Error("Roles not found!");
-
-            return Result<List<RoleDto>>.Ok(entities.ToDtoList());
-
-            // Alternative without RoleMapping
-            // return Result<List<RoleDto>>.Ok(entities.Select(e => e.ToDto()).ToList());
-        }
-        catch (Exception ex)
-        {
-            return Result<List<RoleDto>>.Error($"Error: {ex.Message}");
-        }
+        return Result<List<RoleDto>>.Ok(dtos);
     }
 
     public async Task<Result<RoleDto>> GetByIdAsync(Guid id)
     {
-        try
-        {
-            var entity = await roleManager.FindByIdAsync(id.ToString());
-            if (entity is null) return Result<RoleDto>.Error("Role not found!");
+        var role = await _roleManager.FindByIdAsync(id.ToString());
+        if (role is null) return Result<RoleDto>.Error("Role not found!");
 
-            return Result<RoleDto>.Ok(entity.ToDto());
-        }
-        catch (Exception ex)
-        {
-            return Result<RoleDto>.Error($"Error: {ex.Message}");
-        }
+        return Result<RoleDto>.Ok(role.ToDto());
     }
 
     public async Task<Result> AddAsync(RoleInput input)
     {
-        try
-        {
-            var validateInput = await validator.ValidateAsync(input);
-            if (!validateInput.IsValid) return Result.Error(string.Join(Environment.NewLine, validateInput.Errors.Select(e => e.ErrorMessage)));
+        var validation = await _validator.ValidateAsync(input);
+        if (!validation.IsValid) return Result.Error(string.Join(Environment.NewLine, validation.Errors.Select(e => e.ErrorMessage)));
 
-            var role = new IdentityRole<Guid>(input.Name);
-            var result = await roleManager.CreateAsync(role);
-            if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+        var role = input.ToEntity();
+        var result = await _roleManager.CreateAsync(role);
+        if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
 
-            return Result.Ok("Role added!");
-        }
-        catch (Exception ex)
-        {
-            return Result.Error($"Unexpected error: {ex.Message}");
-        }
+        return Result.Ok("Role added!");
     }
 
     public async Task<Result> UpdateAsync(Guid id, RoleInput input)
     {
-        try
-        {
-            var validateInput = await validator.ValidateAsync(input);
-            if (!validateInput.IsValid) return Result.Error(string.Join(Environment.NewLine, validateInput.Errors.Select(e => e.ErrorMessage)));
+        var validation = await _validator.ValidateAsync(input);
+        if (!validation.IsValid) return Result.Error(string.Join(Environment.NewLine, validation.Errors.Select(e => e.ErrorMessage)));
 
-            var role = await roleManager.FindByIdAsync(id.ToString());
-            if (role is null) return Result.Error("Role not found!");
+        var role = await _roleManager.FindByIdAsync(id.ToString());
+        if (role is null) return Result.Error("Role not found!");
 
-            var existingRole = await roleManager.FindByNameAsync(input.Name);
-            if (existingRole != null && existingRole.Id != id) return Result.Error("Role with this name already exists!");
+        var existingRole = await _roleManager.FindByNameAsync(input.Name);
+        if (existingRole != null && existingRole.Id != id) return Result.Error("Role with this name already exists!");
 
-            role.UpdateFromInput(input);
-            var result = await roleManager.UpdateAsync(role);
+        role.UpdateFromInput(input);
+        var result = await _roleManager.UpdateAsync(role);
+        if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
 
-            if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
-
-            return Result.Ok("Role updated!");
-        }
-        catch (Exception ex)
-        {
-            return Result.Error($"Error: {ex.Message}");
-        }
+        return Result.Ok("Role updated!");
     }
 
     public async Task<Result> DeleteAsync(Guid id)
     {
-        try
-        {
-            var role = await roleManager.FindByIdAsync(id.ToString());
-            if (role is null) return Result.Error("Role not found!");
+        var role = await _roleManager.FindByIdAsync(id.ToString());
+        if (role is null) return Result.Error("Role not found!");
 
-            var result = await roleManager.DeleteAsync(role);
-            if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+        var result = await _roleManager.DeleteAsync(role);
+        if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
 
-            return Result.Ok("Role deleted!");
-        }
-        catch (Exception ex)
-        {
-            return Result.Error($"Error: {ex.Message}");
-        }
+        return Result.Ok("Role deleted!");
     }
 
 

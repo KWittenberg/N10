@@ -1,0 +1,154 @@
+﻿/*---------------------
+  START navbar
+-----------------------*/
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;
+    padding: 0 10px;
+    z-index: var(--z-navbar);
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    border-bottom-left-radius: var(--bs-border-radius-xxl) !important;
+    border-top-left-radius: var(--bs-border-radius-xxl) !important;
+    border-top-right-radius: var(--bs-border-radius-xxl) !important;
+    border-bottom-right-radius: var(--bs-border-radius-xxl) !important;
+    /*background-color: var(--bg-navbar);*/
+
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+    filter: saturate(110%) contrast(110%) brightness(95%);
+    box-shadow: 0 -1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+    .navbar a {
+        text-decoration: none !important;
+        color: white;
+    }
+
+.logo {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    padding: 0;
+}
+
+    .logo img {
+        object-fit: contain;
+        max-height: 2rem;
+        padding-right: 0.5rem;
+    }
+
+
+
+
+/*.navbarmenu {
+    text-decoration: none;
+    color: grey;
+    transition: all 0.8s ease;
+}
+
+    .navbarmenu:hover {
+        color: whitesmoke;
+        text-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+        font-weight: bold;
+        transform: scale(1.1);
+    }
+
+    .navbarmenu.active {
+        color: white !important;
+        font-weight: bold;
+        transform: scale(1.1);*/
+/*text-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);*/
+/*}
+
+    .navbarmenu i {
+        display: inline-block;
+        transition: transform 0.8s ease;
+    }
+
+    .navbarmenu:hover i {
+        color: whitesmoke;
+        text-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+        transform: scale(1.2) rotate(-5deg);
+    }
+
+    .navbarmenu.active i {
+        color: white !important;
+        transform: scale(1.2);
+        text-shadow: 0px 0px 5px rgba(255, 255, 255, 0.5);
+    }*/
+
+/*---------------------
+  Dropdown Menu
+-----------------------*/
+.dropdown-menu {
+    top: 50px !important; /* Pomiče dropdown 50px ispod dugmeta */
+    z-index: 1050; /* Viši z-index za prikaz iznad navbara */
+    position: absolute; /* Osiguraj da se pozicija dropdowna prilagodi */
+    border: 0.5px dashed gray;
+}
+
+.dropdown-item {
+    color: grey; /* Inicijalna boja teksta */
+    transition: color 0.3s ease; /* Animacija promjene boje */
+}
+
+    .dropdown-item:hover {
+        color: whitesmoke; /* Boja teksta na hover */
+        background-color: transparent; /* Bez promjene pozadine */
+    }
+
+/*---------------------
+  Logout
+-----------------------*/
+.logout-button {
+    color: grey; /* Inicijalna boja teksta */
+    background-color: transparent; /* Bez pozadinske boje */
+    border: none; /* Bez okvira */
+    transition: color 0.3s ease; /* Animacija promene boje */
+}
+
+    .logout-button:hover {
+        color: whitesmoke; /* Boja teksta na hover */
+    }
+
+
+
+
+.navbar-login {
+    padding: 0;
+    padding-right: 10px;
+    font-size: 0.75rem;
+    color: gray !important;
+    text-decoration: none;
+    background: none;
+    border: 0;
+}
+
+    .navbar-login:hover {
+        color: whitesmoke !important;
+        transition: color 0.3s ease;
+    }
+
+
+/*---------------------
+  ShoppingCart Icon
+-----------------------*/
+.icon-add-number {
+    position: absolute !important;
+    top: -2px !important;
+    left: 100% !important;
+    transform: translate(-20%, -50%) !important;
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #e7ab3c;
+    /*width: 0.8rem;*/ /* Širina kruga */
+    /*height: 0.8rem;*/ /* Visina kruga */
+    /*border-radius: 50%;
+    background-color: whitesmoke;*/
+}

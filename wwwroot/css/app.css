@@ -96,7 +96,27 @@ h1:focus {
 /*---------------------
   START
 -----------------------*/
+.flex-center-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
 
+.flex-center-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    height: 100vh;
+}
+
+.flex-evenly-center {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0;
+}
 
 /*---------------------
   Icon Success for Modal

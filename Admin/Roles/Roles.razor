@@ -25,7 +25,7 @@ else
             </EditForm>
         } *@
         <div class="mt-5 quickgrid-wrapper table-responsive">
-            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities">
+            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()">
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
@@ -52,7 +52,7 @@ else
     #region ---> START
     [CascadingParameter] AppState? App { get; set; }
 
-    IQueryable<RoleDto>? Entities;
+    List<RoleDto>? Entities;
 
     const string Title = "Roles";
 
@@ -66,7 +66,7 @@ else
 
     async Task LoadEntities()
     {
-        var result = await Repository.GetAllQueryableAsync();
+        var result = await Repository.GetAllAsync();
         if (!result.Success || result.Data is null) return;
 
         Entities = result.Data;

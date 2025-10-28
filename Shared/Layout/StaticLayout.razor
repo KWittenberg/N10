@@ -1,0 +1,19 @@
+﻿@inherits LayoutComponentBase
+@inject  NavigationManager NavigationManager
+
+<!-- StaticLayout -->
+<page data-bs-theme="dark">
+    <main>
+        @Body
+    </main>
+</page>
+
+@code
+{
+    [CascadingParameter] HttpContext? HttpContext { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (HttpContext is null) NavigationManager.Refresh(forceReload: true);
+    }
+}

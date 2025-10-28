@@ -1,0 +1,92 @@
+﻿
+
+<!-- NavBar -->
+@* <div class="navbar container" style="background-image: url('@(string.IsNullOrEmpty(App.Background?.ImageUrl) ? Placeholder.BackgroundUrl : App.Background?.ImageUrl)')"> *@
+<div class="navbar container">
+    <a class="logo" href="/">
+        <img src="img/logo/net-core.png" alt="logo">
+        <span class="d-none d-md-inline">.NET<b>10</b></span>
+    </a>
+
+    <div class="d-flex justify-content-center align-items-center gap-3">
+        <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+            <span class="d-none d-md-inline">Home</span>
+        </NavLink>
+        <NavLink class="nav-link" href="shop" Match="NavLinkMatch.All">
+            <span class="d-md-none" data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Shop">
+                <i class="fs-4 bi bi-archive-fill"></i>
+            </span>
+            <span class="d-none d-md-inline">Shop</span>
+        </NavLink>
+        <NavLink class="nav-link" href="authors" Match="NavLinkMatch.All">
+            <span class="d-md-none"
+                  data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Authors">
+                <i class="fs-4 bi bi-person-lines-fill"></i>
+            </span><span class="d-none d-md-inline">Authors</span>
+        </NavLink>
+        <NavLink class="nav-link" href="coupons" Match="NavLinkMatch.All">
+            <span class="d-md-none" data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Coupons">
+                <i class="fs-4 bi bi-cash"></i>
+            </span><span class="d-none d-md-inline">Coupons</span>
+        </NavLink>
+    </div>
+
+    <div class="d-flex justify-content-end align-items-center">
+        <AuthorizeView>
+            <NotAuthorized>
+                <a class="navbar-login" href="Account/Login">Login</a>
+                <a class="navbar-login" href="Account/Register">Register</a>
+            </NotAuthorized>
+            <Authorized>
+                <div class="d-flex justify-content-center align-items-center gap-3">
+                    <NavLink class="nav-link" href="Wishlist" Match="NavLinkMatch.All">
+                        <i class="fs-6 bi bi-heart-fill" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="custom-tooltip" data-bs-title="Wishlist"></i>
+                    </NavLink>
+                    <a class="nav-link" href="shoppingcart/@App?.CurrentUser?.Id">
+                        <i class="position-relative fs-6 bi bi bi-cart3" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="custom-tooltip" data-bs-title="Shopping Cart">
+                            @* <span class="icon-add-number">@App?.ShoppingCartQuantity</span> *@
+                        </i>
+                    </a>
+                    <div>
+                        <a type="button" data-bs-toggle="dropdown">
+                            <img class="rounded-circle"
+                                 src="@(string.IsNullOrEmpty(App?.CurrentUser?.AvatarUrl) ? Placeholder.AvatarUrl : App?.CurrentUser?.AvatarUrl)" style="width: 2rem;"
+                                 data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="custom-tooltip" data-bs-title="Account">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end bg-page-product shadow">
+                            <li><a class="dropdown-item text-end" href="Account/Manage">Account</a></li>
+                            <li><a class="dropdown-item text-end" href="orders">Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-item">
+                                <form action="Account/Logout" method="post" class="d-flex justify-content-end">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="" />
+                                    <button type="submit" class="ms-2 logout-button">
+                                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    // protected override void OnInitialized()
+    // {
+    //     App!.OnBackgroundChange += StateHasChanged;
+    //     App!.OnShoppingCartQuantityChange += StateHasChanged;
+    // }
+
+    // public void Dispose()
+    // {
+    //     App!.OnBackgroundChange -= StateHasChanged;
+    //     App!.OnShoppingCartQuantityChange -= StateHasChanged;
+    // }
+}

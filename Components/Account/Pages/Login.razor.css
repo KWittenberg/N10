@@ -1,0 +1,104 @@
+﻿.login {
+    min-height: 100vh;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    .login .login-container {
+        max-width: 390px;
+        padding: 1rem 2.5rem;
+        position: relative;
+        flex: 1;
+        border-radius: 10px;
+        background-color: rgba(0,0,0,0.20);
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .login .login-header {
+        margin-bottom: 20px;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+.logo {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+
+    .logo img {
+        width: 40px;
+        margin-right: 1rem;
+    }
+
+    .logo span {
+        margin-top: 0.4rem;
+        font-size: 40px;
+        letter-spacing: 1.2px;
+    }
+
+.icon {
+    font-size: 36px;
+}
+
+.login-content {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+    .login-content label {
+        margin-bottom: 0.3rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+/*.form-control {
+    text-align: center;
+    border: none;
+    border-radius: 0;
+    border-bottom: 0.1rem solid whitesmoke;
+    background-color: transparent !important;
+}*/
+
+/*.form-control::placeholder {
+        text-align: center;
+        color: whitesmoke;
+    }
+
+    .form-control:focus {
+        outline: none !important;
+    }*/
+
+
+
+
+
+
+
+
+
+
+
+.login-remember-me {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.login-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+a {
+    /*padding: 0 0.5rem;*/
+    font-size: 0.75rem;
+    text-decoration: none;
+}

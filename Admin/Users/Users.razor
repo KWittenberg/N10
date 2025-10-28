@@ -14,7 +14,7 @@ else
 {
     <div class="@App?.GetContentClass()">
         <div class="quickgrid-wrapper-sm table-responsive">
-            <QuickGrid Class="table table-striped table-hover align-middle p-sm" Items="Entities" Pagination="PaginationState">
+            <QuickGrid TGridItem="UserDto" Class="table table-striped table-hover align-middle p-sm" ItemsProvider="LoadUsers" Pagination="PaginationState">
                 @* <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" /> *@
                 <TemplateColumn Title="Avatar" Align="Align.Center">
                     <img class="rounded-circle" style="width: 2rem" src="@(string.IsNullOrEmpty(context.AvatarUrl) ? Placeholder.AvatarUrl : context.AvatarUrl)" alt="Avatar">
@@ -88,7 +88,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    IQueryable<UserDto>? Entities;
+    ResultQPagination<UserDto>? Entities;
 
     const string Title = "Users";
 
@@ -102,12 +102,41 @@ else
 
     async Task LoadEntities()
     {
-        var result = await Repository.GetAllQueryableAsync();
-        if (result.Success && result.Data is not null) Entities = result.Data;
+        Entities = await Repository.GetPagedAsync(0, PaginationState.ItemsPerPage, null, null, false);
 
         IsProcessing = false;
         StateHasChanged();
     }
+
+    async ValueTask<GridItemsProviderResult<UserDto>> LoadUsers(GridItemsProviderRequest<UserDto> request)
+    {
+        var pageZeroBased = request.StartIndex / PaginationState.ItemsPerPage;
+
+        var sortDescriptor = request.GetSortByProperties().FirstOrDefault();
+        string? sortBy = sortDescriptor.PropertyName;
+        bool sortDesc = sortDescriptor.Direction == SortDirection.Descending;
+
+        var response = await Repository.GetPagedAsync(pageZeroBased, PaginationState.ItemsPerPage, null, sortBy, sortDesc);
+
+        if (response == null || response.Data == null || response.Pagination == null) return GridItemsProviderResult.From(new List<UserDto>(), 0);
+
+        return GridItemsProviderResult.From(response.Data, response.Pagination.TotalRecords);
+    }
+
+    // async ValueTask<GridItemsProviderResult<UserDto>> LoadUsers(GridItemsProviderRequest<UserDto> request)
+    // {
+    //     int page = (request.StartIndex / PaginationState.ItemsPerPage) + 1;
+
+    //     // For Sort
+    //     var sortBy = request.GetSortByProperties().FirstOrDefault();
+    //     var response = await Repository.GetPagedAsync(page, PaginationState.ItemsPerPage, sortBy.PropertyName, null, sortBy.Direction == SortDirection.Descending);
+
+    //     // No Sort
+    //     // var response = await Repository.GetPaginatedAsync(page, PaginationState.ItemsPerPage);
+    //     if (response.Pagination == null || response.Data == null) return GridItemsProviderResult.From(new List<UserDto>(), 0);
+
+    //     return GridItemsProviderResult.From(response.Data, response.Pagination.TotalRecords);
+    // }
     #endregion
 
     #region ---> DELETE

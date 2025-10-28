@@ -2,8 +2,8 @@
 
 public static class RoleMapping
 {
-    // GetAllQueryableAsync()
-    public static Expression<Func<IdentityRole<Guid>, RoleDto>> ToDtoExpression => x => new RoleDto
+    // GetAllListAsync() - Expression for EF projections
+    public static Expression<Func<IdentityRole<Guid>, RoleDto>> ToDtoExpression => x => new()
     {
         Id = x.Id,
         Name = x.Name ?? string.Empty,
@@ -11,42 +11,30 @@ public static class RoleMapping
         ConcurrencyStamp = x.ConcurrencyStamp ?? string.Empty
     };
 
-    // GetAllListAsync() - Convert IEnumerable<IdentityRole<Guid>> to List<RoleDto>
-    public static List<RoleDto> ToDtoList(this IEnumerable<IdentityRole<Guid>> entities)
-    {
-        return entities.Select(e => e.ToDto()).ToList();
-    }
+    // Cache compiled projector to avoid repeated Compile() cost
+    private static readonly Func<IdentityRole<Guid>, RoleDto> _projector = ToDtoExpression.Compile();
 
-    // GetByIdAsync() - Convert IdentityRole<Guid> to RoleDto
-    public static RoleDto ToDto(this IdentityRole<Guid> entity)
-    {
-        return new RoleDto
-        {
-            Id = entity.Id,
-            Name = entity.Name ?? string.Empty,
-            NormalizedName = entity.NormalizedName ?? string.Empty,
-            ConcurrencyStamp = entity.ConcurrencyStamp ?? string.Empty
-        };
-    }
+    // GetAllListAsync() - Convenience: map IEnumerable using cached compiled projector (for in-memory mapping)
+    public static List<RoleDto> ToDtoList(this IEnumerable<IdentityRole<Guid>> entities) => entities.Select(_projector).ToList();
 
-    // AddAsync() - Convert RoleInput to IdentityRole<Guid>
-    public static IdentityRole<Guid> ToEntity(this RoleInput input)
+    // GetByIdAsync() - Map a single materialized entity to DTO (use when you already have an entity instance)
+    public static RoleDto ToDto(this IdentityRole<Guid> entity) => new()
     {
-        return new IdentityRole<Guid>(input.Name);
-    }
+        Id = entity.Id,
+        Name = entity.Name ?? string.Empty,
+        NormalizedName = entity.NormalizedName ?? string.Empty,
+        ConcurrencyStamp = entity.ConcurrencyStamp ?? string.Empty
+    };
 
-    // UpdateAsync() - Update IdentityRole<Guid> from RoleInput
+    // AddAsync() - Convert input DTO to IdentityRole entity
+    public static IdentityRole<Guid> ToEntity(this RoleInput input) => new(input.Name);
+
+    // UpdateAsync() - Update existing entity from input
     public static void UpdateFromInput(this IdentityRole<Guid> entity, RoleInput input)
     {
         entity.Name = input.Name;
     }
 
     // UI -> Convert RoleDto to RoleInput
-    public static RoleInput ToInput(this RoleDto dto)
-    {
-        return new RoleInput
-        {
-            Name = dto.Name
-        };
-    }
+    public static RoleInput ToInput(this RoleDto dto) => new() { Name = dto.Name };
 }

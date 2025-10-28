@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+
+@inject AppState App
+
+<div class="page">
+    <CascadingValue Value="@App">
+        <Toast />
+        <Progress></Progress>
+        <Confirmation />
+        <DeleteConfirmation />
+        <Settings />
+
+        <main>
+            <NavBar />
+            @Body
+        </main>
+    </CascadingValue>
+</div>
+
+
+@code
+{
+    protected override async Task OnInitializedAsync() => await App.InitializeCurrentUserAsync();
+}

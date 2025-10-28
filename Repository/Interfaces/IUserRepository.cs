@@ -9,12 +9,11 @@ public interface IUserRepository
 
 
     //Task<Result<List<UserDto>>> GetAllToListAsync();
-    Task<Result<IQueryable<UserDto>>> GetAllQueryableAsync();
+    //Task<Result<IQueryable<UserDto>>> GetAllAsync();
 
+
+    Task<ResultQPagination<UserDto>> GetPagedAsync(int page, int pageSize, string? search = null, string? sortBy = null, bool sortDescending = false, CancellationToken cancellationToken = default);
     Task<Result<UserDto>> GetByIdAsync(Guid id);
-
-
-
 
     Task<Result> AddAsync(UserInput input);
     Task<Result> UpdateAsync(Guid id, UserInput input);
