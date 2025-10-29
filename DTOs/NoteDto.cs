@@ -2,8 +2,8 @@
 
 public class NoteDto
 {
-    public Guid? Id { get; set; }
-    
+    public Guid Id { get; set; }
+
     public Guid? UserId { get; set; }
     public virtual UserDto? User { get; set; } = null!;
 

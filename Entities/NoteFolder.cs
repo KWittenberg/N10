@@ -12,7 +12,7 @@ public class NoteFolder : BaseAuditableEntity<Guid>
 
     public string Name { get; set; } = string.Empty;
 
-    public string? Color { get; set; } = "#FFFFFF"; // White by default
+    public string? Color { get; set; }
 
 
 

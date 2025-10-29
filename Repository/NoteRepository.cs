@@ -40,8 +40,6 @@ public class NoteRepository(IDbContextFactory<ApplicationDbContext> context) : I
 
     public async Task<Result> UpdateAsync(Guid id, NoteInput input)
     {
-        if (await IsTitleAvailableAsync(input.Title)) return Result.Error($"{entityName} with this Title already exists!");
-
         await using var db = await context.CreateDbContextAsync();
 
         var entity = await db.Notes.FindAsync(id);

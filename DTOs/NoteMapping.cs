@@ -33,6 +33,8 @@ public static class NoteMapping
     // AddAsync() - Convert Input to Entity
     public static Note ToEntity(this NoteInput input) => new()
     {
+        ApplicationUserId = input.UserId,
+        NoteFolderId = input.NoteFolderId,
         Title = input.Title,
         Content = input.Content,
         Color = input.Color,
@@ -43,6 +45,8 @@ public static class NoteMapping
     // UpdateAsync() - Update existing entity from input
     public static void UpdateFromInput(this Note entity, NoteInput input)
     {
+        entity.ApplicationUserId = input.UserId;
+        entity.NoteFolderId = input.NoteFolderId;
         entity.Title = input.Title;
         entity.Content = input.Content;
         entity.Color = input.Color;
@@ -52,5 +56,15 @@ public static class NoteMapping
     }
 
     // UI -> Convert Dto to Input
-    public static NoteInput ToInput(this NoteDto dto) => new() { Title = dto.Title };
+    public static NoteInput ToInput(this NoteDto dto) => new()
+    {
+        UserId = dto.UserId,
+        NoteFolderId = dto.NoteFolderId,
+        Title = dto.Title,
+        Content = dto.Content,
+        Color = dto.Color,
+        ReminderAt = dto.ReminderAt,
+        IsEncrypted = dto.IsEncrypted,
+        EncryptionMetadata = dto.EncryptionMetadata
+    };
 }

@@ -1,0 +1,127 @@
+﻿@page "/admin/notes"
+@attribute [Authorize(Roles = "Admin")]
+@inject INoteRepository Repository
+
+<title>@Title</title>
+
+<_PageHeader Title="@Title" AddButtonText="Add Note" AddButtonLink="note" />
+
+@if (IsProcessing || Entities is null)
+{
+    <_Loading />
+}
+else
+{
+    <div class="@App?.GetContentClass()">
+        <div class="quickgrid-wrapper-sm table-responsive">
+            @* <QuickGrid TGridItem="UserDto" Class="table table-striped table-hover align-middle p-sm" ItemsProvider="LoadUsers" Pagination="PaginationState"> *@
+
+            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()">
+                @if (App!.IsExpanded)
+                {
+                    <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.UserId" Title="UserId" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.NoteFolderId" Title="NoteFolderId" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.Content" Title="Content" Align="Align.Center" Sortable="true" />
+                }
+
+
+                <PropertyColumn Property="x => x.Title" Title="Title" Align="Align.Center" Sortable="true" />
+
+
+                <TemplateColumn Title="Color" Align="Align.Center">
+                    <div class="d-flex justify-content-center">
+                        <input type="color" class="form-control form-control-color p-0" value="@context.Color" title="Set color for Note">
+                    </div>
+                </TemplateColumn>
+                <TemplateColumn Title="Reminder" Align="Align.Center">
+                    <div class="d-flex justify-content-center">
+                        @if (!context.ReminderAt.HasValue)
+                        {
+                            <i class="bi bi-stopwatch-fill"></i>
+                        }
+                    </div>
+                </TemplateColumn>
+
+                @if (App!.IsExpanded)
+                {
+                    <TemplateColumn Title="IsEncrypted" Align="Align.Center">
+                        <div class="d-flex justify-content-center">
+                            <input class="form-check form-check-input text-warning" type="checkbox" checked="@context.IsEncrypted">
+                        </div>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.EncryptionMetadata" Title="EncryptionMetadata" Align="Align.Center" Sortable="true" />
+                }
+                <TemplateColumn Title="Actions" Align="Align.Center">
+                    <a class="me-2" href="admin/note/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                    <a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
+                </TemplateColumn>
+            </QuickGrid>
+            <div class="quickgrid-pagination">
+                <Paginator State="PaginationState" />
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<NoteDto>? Entities;
+
+    const string Title = "Notes";
+
+    bool IsProcessing { get; set; } = true;
+
+    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 15 };
+
+
+    #region ---> INITIALIZATION
+    protected override async Task OnInitializedAsync() => await LoadEntities();
+
+    async Task LoadEntities()
+    {
+        // Entities = await Repository.GetPagedAsync(0, PaginationState.ItemsPerPage, null, null, false);
+        var result = await Repository.GetAllAsync();
+        if (!result.Success || result.Data is null) return;
+
+        Entities = result.Data;
+        IsProcessing = false;
+        StateHasChanged();
+    }
+
+    // async ValueTask<GridItemsProviderResult<UserDto>> LoadUsers(GridItemsProviderRequest<UserDto> request)
+    // {
+    //     var pageZeroBased = request.StartIndex / PaginationState.ItemsPerPage;
+
+    //     var sortDescriptor = request.GetSortByProperties().FirstOrDefault();
+    //     string? sortBy = sortDescriptor.PropertyName;
+    //     bool sortDesc = sortDescriptor.Direction == SortDirection.Descending;
+
+    //     var response = await Repository.GetPagedAsync(pageZeroBased, PaginationState.ItemsPerPage, null, sortBy, sortDesc);
+
+    //     if (response == null || response.Data == null || response.Pagination == null) return GridItemsProviderResult.From(new List<UserDto>(), 0);
+
+    //     return GridItemsProviderResult.From(response.Data, response.Pagination.TotalRecords);
+    // }
+
+
+    #endregion
+
+    #region ---> DELETE
+    void ShowDelete(NoteDto input)
+    {
+        App?.ShowDeleteConfirmation(input.Title.ToString(), input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+    }
+
+    async Task ConfirmDelete(Guid id)
+    {
+        var result = await Repository.DeleteAsync(id);
+        if (result.Success) await LoadEntities();
+
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+    #endregion
+
+}
