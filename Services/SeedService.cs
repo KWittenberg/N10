@@ -17,7 +17,7 @@ public class SeedService(ApplicationDbContext db,
         await SeedRoles();
         await SeedAdminUser();
         //await SeedDemoUsersAsync("../Services/SeedData/DemoUsers.json", 10);
-        await SeedDemoUsersAsync("Services/SeedData/DemoUsers.json", 2);
+        await SeedDemoUsersAsync("Services/SeedData/DemoUsers.json", 20);
     }
 
     async Task MigrateDatabaseAsync()

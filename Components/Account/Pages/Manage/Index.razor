@@ -1,5 +1,7 @@
 ﻿@page "/Account/Manage"
 
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
@@ -28,6 +30,7 @@
     </div>
 </div>
 
+
 @code {
     ApplicationUser? user;
     string? username;
@@ -55,7 +58,7 @@
         Input.PhoneNumber ??= phoneNumber;
     }
 
-    private async Task OnValidSubmitAsync()
+    async Task OnValidSubmitAsync()
     {
         if (user is null)
         {
@@ -77,7 +80,7 @@
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
 
-    private sealed class InputModel
+    sealed class InputModel
     {
         [Phone]
         [Display(Name = "Phone number")]

@@ -1,0 +1,80 @@
+﻿@page "/note/{id:guid?}"
+@layout FrontLayout
+
+@inject INoteRepository Repository
+@inject NavigationManager Navigation
+
+<title>@Title</title>
+
+
+@if (Input is not null)
+{
+    <div class="bg-header"></div>
+    <div class="page @App?.GetContentClass()">
+        <EditForm Model=@Input OnValidSubmit=@HandleValidSubmit>
+            @* <StatusMessage Message="@Message" /> *@
+            <DataAnnotationsValidator />
+
+            <div class="d-flex justify-content-between align-items-end">
+                <h1>@Title</h1>
+                <div class="d-flex align-items-end gap-2">
+                    <a href="notes" class="btn btn-sm btn-secondary">back</a>
+                    <button class="btn btn-lg btn-primary" type="submit">Save</button>
+                </div>
+            </div>
+            <div class="mt-2 d-flex w-100 gap-2">
+                <div class="w-100">
+                    <InputText @bind-Value="Input.Title" class="form-control form-control-lg" placeholder="Title" required />
+                    <ValidationMessage For="() => Input.Title" class="text-danger" />
+                </div>
+                <div class="">
+                    <input type="color" class="form-control form-control-color p-0 h-100 border-0" @bind-value="@Input.Color" title="Set color for Note">
+                </div>
+            </div>
+            <div class="mt-5">
+                <InputTextArea @bind-Value="Input.Content" class="form-control" style="height: 600px" placeholder="Content" />
+                <ValidationMessage For="() => Input.Content" class="text-danger" />
+            </div>
+        </EditForm>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public Guid? Id { get; set; } = Guid.Empty;
+
+    NoteInput? Input { get; set; }
+
+    string Title => Id.HasValue ? "Update Note" : "Add Note";
+
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Input is not null) return;
+        if (!Id.HasValue) Input = new NoteInput();
+        else
+        {
+            var result = await Repository.GetByIdAsync((Guid)Id);
+            if (!result.Success || result.Data is null) return;
+            Input = result.Data.ToInput();
+        }
+    }
+
+    async Task HandleValidSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(Input);
+
+        Input.UserId = App?.CurrentUser?.Id ?? Guid.Empty;
+
+        var result = Id is null
+            ? await Repository.AddAsync(Input)
+            : await Repository.UpdateAsync(Id.Value, Input);
+
+        if (result.Success) Navigation.NavigateTo("/notes");
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+        StateHasChanged();
+    }
+}

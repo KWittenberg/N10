@@ -7,6 +7,8 @@
     --kw-body-bg-dark: #212529;
     --kw-dark-color: #212121;
     --kw-light-color: #deeefb;
+    --kw-z-navbar: 1100;
+    --kw-z-toast: 2000;
 }
 
 html, body {
@@ -117,6 +119,26 @@ h1:focus {
     align-items: center;
     padding: 0;
 }
+
+
+
+
+.bg-transparent {
+    background-color: transparent !important;
+}
+
+.bg-transparent10 {
+    background-color: rgba(var(--bs-black-rgb), 0.1);
+}
+
+.bg-transparent20 {
+    background-color: rgba(var(--bs-black-rgb), 0.2);
+}
+
+
+
+
+
 
 /*---------------------
   Icon Success for Modal
@@ -274,4 +296,113 @@ h1:focus {
 -----------------------*/
 .quickgrid tbody tr:not(:has(td:not(:empty))) {
     display: none;
+}
+
+
+
+
+
+
+/*---------------------
+  START Margin
+-----------------------*/
+.mt-25 {
+    margin-top: 25px !important;
+}
+
+.mt-50 {
+    margin-top: 50px !important;
+}
+
+.mt-60 {
+    margin-top: 60px !important;
+}
+
+.mt-70 {
+    margin-top: 70px !important;
+}
+
+.mt-100 {
+    margin-top: 100px;
+}
+
+.mt-150 {
+    margin-top: 150px;
+}
+
+.mt-min10 {
+    margin-top: -10px;
+}
+
+.mt-min20 {
+    margin-top: -20px;
+}
+
+.mt-min25 {
+    margin-top: -25px;
+}
+
+.mt-min30 {
+    margin-top: -30px;
+}
+
+.mt-min40 {
+    margin-top: -40px;
+}
+
+.mt-min45 {
+    margin-top: -45px;
+}
+
+.mt-min50 {
+    margin-top: -50px;
+}
+
+.mt-min55 {
+    margin-top: -53px;
+}
+
+.mt-min60 {
+    margin-top: -60px;
+}
+
+.mt-min65 {
+    margin-top: -65px;
+}
+
+.mt-min70 {
+    margin-top: -70px;
+}
+
+.mt-min90 {
+    margin-top: -90px;
+}
+
+
+.mb-min20 {
+    margin-bottom: -20px;
+}
+
+.mb-50 {
+    margin-bottom: 50px;
+}
+
+.mb-70 {
+    margin-bottom: 70px;
+}
+
+.mb-80 {
+    margin-bottom: 80px;
+}
+
+.mb-100 {
+    margin-bottom: 100px;
+}
+
+.mb-150 {
+    margin-bottom: 150px;
+}
+
+.mb-200 {
+    margin-bottom: 200px;
 }

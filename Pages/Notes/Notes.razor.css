@@ -1,0 +1,35 @@
+﻿.grid-container {
+    display: grid;
+    gap: 1rem; /* Vaš razmak */
+    grid-template-columns: repeat(1, 1fr); /* Default: 1 kolona za xs (<576px) */
+}
+
+@media (min-width: 576px) { /* sm */
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 768px) { /* md */
+    .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 992px) { /* lg */
+    .grid-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1200px) { /* xl */
+    .grid-container {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/*@media (min-width: 1400px) {*/ /* xxl */
+    /*.grid-container {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}*/

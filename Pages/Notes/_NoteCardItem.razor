@@ -1,0 +1,52 @@
+﻿<!-- Note Card Item Component -->
+@* <div class="p-0 card @(CardHover ? "card-hover" : "") bg-card-t" style="width: @(CardWidth + "px")">
+    <div class="position-relative">
+        <a href="coupon/@Item.Id">
+            <img src="@(string.IsNullOrEmpty(Item.ImageUrl) ? Placeholder.P480X270 : Item.ImageUrl)"
+                 class="card-img-top w-100 bg-page-product"
+                 style="object-fit: contain; width: 100%; height: 100%;" alt="Image"
+                 onerror="this.src='@Placeholder.P480X270';">
+        </a>
+        <div class="p-2 position-absolute top-0 start-0"><img src="/img/udemy/u.png" width="30" alt="logo"></div>
+        <div class="p-1 mt-2 me-2 position-absolute top-0 end-0 badge text-bg-danger">100% off</div>
+        <div class="p-2 position-absolute bottom-0 start-0 h7 text-white"><img class="rounded-circle me-2" src="@Item.InstructorImage" width="30" alt="Avatar">@Item.Instructor</div>
+        <h7 class="p-2 position-absolute bottom-0 end-0 text-danger">Free: <s class="text-muted">@Item.Price</s></h7>
+    </div>
+    <a class="m-2 h7 text-white no-underline" href="coupon/@Item.Id">@Item.Title</a>
+</div> *@
+
+
+@* <div class="card text-bg-light mb-3" style="max-width: 18rem;"> *@
+<a class="text-decoration-none" href="note/@Item.Id">
+    <div class="card" style="@BgColor">
+        <div class="card-body">
+            @* <a class="h6 text-decoration-none" href="note/@Item.Id">@Item.Title</a> *@
+            <p class="h5">@Item.Title</p>
+        </div>
+    </div>
+</a>
+
+
+
+
+
+@code
+{
+    [Parameter] public NoteDto Item { get; set; } = new();
+
+    [Parameter] public bool CardHover { get; set; } = true;
+
+    [Parameter] public int? CardWidth { get; set; } = 300;
+
+    string BgColor { get; set; } = string.Empty;
+
+
+
+    protected override void OnInitialized()
+    {
+        BgColor = $"background-color: {Item.Color} !important;";
+
+        // Set note color based on item properties if needed
+        // Example: NoteColor = $"color: {Item.TextColor} !important;background-color: {Item.BackgroundColor} !important;";
+    }
+}

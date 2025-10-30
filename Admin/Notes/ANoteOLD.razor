@@ -1,4 +1,4 @@
-﻿@page "/admin/note/{id:guid?}"
+﻿@page "/admin/noteold/{id:guid?}"
 
 @inject INoteRepository Repository
 @inject NavigationManager Navigation
@@ -36,17 +36,6 @@
                             <ValidationMessage For="() => Input.Content" class="text-danger" />
                         </div>
                     </div>
-
-
-
-
-
-
-
-
-
-
-
 
                     <div class="mt-4 p-0 text-end">
                         <a href="admin/notes" class="btn btn-secondary">back</a>

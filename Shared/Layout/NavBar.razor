@@ -2,7 +2,7 @@
 
 <!-- NavBar -->
 @* <div class="navbar container" style="background-image: url('@(string.IsNullOrEmpty(App.Background?.ImageUrl) ? Placeholder.BackgroundUrl : App.Background?.ImageUrl)')"> *@
-<div class="navbar container">
+<div class="navbar container" style="background-image: url('@(Globals.BgUrl)');">
     <a class="logo" href="/admin">
         <img src="img/logo/net-core.png" alt="logo">
         <span class="d-none d-md-inline">.NET<b>10</b></span>
@@ -12,13 +12,13 @@
         <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
             <span class="d-none d-md-inline">Home</span>
         </NavLink>
-        <NavLink class="nav-link" href="shop" Match="NavLinkMatch.All">
-            <span class="d-md-none" data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Shop">
+        <NavLink class="nav-link" href="notes" Match="NavLinkMatch.All">
+            <span class="d-md-none" data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Notes">
                 <i class="fs-4 bi bi-archive-fill"></i>
             </span>
-            <span class="d-none d-md-inline">Shop</span>
+            <span class="d-none d-md-inline">Notes</span>
         </NavLink>
-        <NavLink class="nav-link" href="authors" Match="NavLinkMatch.All">
+        @* <NavLink class="nav-link" href="authors" Match="NavLinkMatch.All">
             <span class="d-md-none"
                   data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Authors">
                 <i class="fs-4 bi bi-person-lines-fill"></i>
@@ -28,7 +28,7 @@
             <span class="d-md-none" data-bs-toggle="tooltip" data-bs-placement="auto" data-bs-custom-class="custom-tooltip" data-bs-title="Coupons">
                 <i class="fs-4 bi bi-cash"></i>
             </span><span class="d-none d-md-inline">Coupons</span>
-        </NavLink>
+        </NavLink> *@
     </div>
 
     <div class="d-flex justify-content-end align-items-center">
@@ -39,14 +39,14 @@
             </NotAuthorized>
             <Authorized>
                 <div class="d-flex justify-content-center align-items-center gap-3">
-                    <NavLink class="nav-link" href="Wishlist" Match="NavLinkMatch.All">
+                    @* <NavLink class="nav-link" href="Wishlist" Match="NavLinkMatch.All">
                         <i class="fs-6 bi bi-heart-fill" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="custom-tooltip" data-bs-title="Wishlist"></i>
                     </NavLink>
                     <a class="nav-link" href="shoppingcart/@App?.CurrentUser?.Id">
                         <i class="position-relative fs-6 bi bi bi-cart3" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="custom-tooltip" data-bs-title="Shopping Cart">
-                            @* <span class="icon-add-number">@App?.ShoppingCartQuantity</span> *@
+                            @* <span class="icon-add-number">@App?.ShoppingCartQuantity</span>
                         </i>
-                    </a>
+                    </a> *@
                     <div>
                         <a type="button" data-bs-toggle="dropdown">
                             <img class="rounded-circle"

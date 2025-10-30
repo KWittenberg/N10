@@ -1,0 +1,171 @@
+﻿@page "/notes"
+@layout FrontLayout
+@attribute [Authorize]
+
+@inject NavigationManager Navigation
+@inject INoteRepository Repository
+
+<title>@Title</title>
+
+<_FrontPageHeader Title="@Title" AddButtonText="Add Note" AddButtonLink="note" />
+
+@if (IsProcessing || Entities is null)
+{
+    <_Loading />
+}
+else
+{
+    <div id="top-anchor" class="mt-5 @App?.GetContentClass()">
+    
+        @* <EditForm Enhance Model=@this OnValidSubmit=@SearchCoupons>
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="position-relative w-50">
+                    <InputText @bind-Value="TitleFilter" type="text" class="form-control form-control-lg rounded-pill custom-input" placeholder="Search" />
+                    <button type="submit" class="btn btn-icon icon-search" data-bs-toggle="tooltip" title="Search">
+                        <i class="h5 bi bi-arrow-up-right"></i>
+                    </button>
+                </div>
+            </div>
+        </EditForm> *@
+
+        <!-- Pagination -->
+        @* <div class="mt-5 pb-3 d-flex justify-content-center border-bottom">
+            <input @onchange="() => SortCoupons(true)" type="radio" class="btn btn-check" name="model-options" id="up" checked>
+            <label for="up" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-sort-up mx-1"></i></label>
+
+            <button class="btn btn-sm btn-outline-secondary me-2" @onclick="GoFirstPage" disabled="@(CurrentPage <= 1)"><i class="bi bi-chevron-double-left mx-1"></i></button>
+            <button class="btn btn-sm btn-outline-secondary me-2" @onclick="PreviousPage" disabled="@(CurrentPage <= 1)"><i class="bi bi-chevron-left mx-1"></i></button>
+            <span class="ms-3 me-3 align-content-center text-muted">Page <span class="text-white">@CurrentPage</span> of <span class="text-white">@TotalPages</span></span>
+            <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="NextPage" disabled="@(CurrentPage >= TotalPages)"><i class="bi bi-chevron-right mx-1"></i></button>
+            <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="GoLastPage" disabled="@(CurrentPage >= TotalPages)"><i class="bi bi-chevron-double-right mx-1"></i></button>
+
+            <input @onchange="() => SortCoupons(false)" type="radio" class="btn btn-check" name="model-options" id="down">
+            <label for="down" class="btn btn-sm btn-outline-secondary ms-3"><i class="bi bi-sort-down mx-1"></i></label>
+        </div> *@
+
+        <!-- Grid -->
+        @* <div class="p-4 row d-flex justify-content-center gap-3" style="max-width: 100%;"> *@
+        @* <div class="" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"> *@
+            @* <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6" style="gap: 1rem;"> *@
+            <div class="grid-container">
+                @foreach (var item in Entities)
+                {
+                    <_NoteCardItem Item="@item" />
+                }
+            @* </div> *@
+        </div>
+
+        <!-- Pagination -->
+        @* <div class="pt-3 d-flex justify-content-center border-top">
+            <button class="btn btn-sm btn-outline-secondary me-2" @onclick="GoFirstPage" disabled="@(CurrentPage <= 1)"><i class="bi bi-chevron-double-left mx-1"></i></button>
+            <button class="btn btn-sm btn-outline-secondary me-2" @onclick="PreviousPage" disabled="@(CurrentPage <= 1)"><i class="bi bi-chevron-left mx-1"></i></button>
+            <span class="ms-3 me-3 align-content-center text-muted">Page <span class="text-white">@CurrentPage</span> of <span class="text-white">@TotalPages</span></span>
+            <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="NextPage" disabled="@(CurrentPage >= TotalPages)"><i class="bi bi-chevron-right mx-1"></i></button>
+            <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="GoLastPage" disabled="@(CurrentPage >= TotalPages)"><i class="bi bi-chevron-double-right mx-1"></i></button>
+        </div> *@
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<NoteDto>? Entities;
+
+    const string Title = "Notes";
+
+    bool IsProcessing { get; set; } = true;
+
+
+    string TitleFilter { get; set; } = string.Empty;
+    bool SortByNewest { get; set; } = true;
+
+    int CurrentPage = 1;
+    int PageSize = 80;
+    int TotalPages;
+
+
+
+    #region ---> INITIALIZATION
+    protected override async Task OnInitializedAsync() => await LoadEntities();
+
+    async Task LoadEntities()
+    {
+        var result = await Repository.GetAllAsync();
+        if (!result.Success || result.Data is null) return;
+
+        Entities = result.Data;
+        IsProcessing = false;
+        StateHasChanged();
+    }
+    #endregion
+
+    #region ---> DELETE
+    void ShowDelete(NoteDto input)
+    {
+        App?.ShowDeleteConfirmation(input.Title.ToString(), input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+    }
+
+    async Task ConfirmDelete(Guid id)
+    {
+        var result = await Repository.DeleteAsync(id);
+        if (result.Success) await LoadEntities();
+
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+    #endregion
+
+    #region ---> SEARCH & SORT
+    async Task SearchCoupons()
+    {
+        CurrentPage = 1;
+        await LoadEntities();
+    }
+
+    async Task SortCoupons(bool sortByNewest)
+    {
+        SortByNewest = sortByNewest;
+        CurrentPage = 1;
+        await LoadEntities();
+    }
+    #endregion
+
+    #region ---> PAGINATION
+    async Task GoFirstPage()
+    {
+        CurrentPage = 1;
+        await LoadEntities();
+        ScrollToTop();
+    }
+
+    async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            await LoadEntities();
+            ScrollToTop();
+        }
+    }
+
+    async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            await LoadEntities();
+            ScrollToTop();
+        }
+    }
+
+    async Task GoLastPage()
+    {
+        CurrentPage = TotalPages;
+        await LoadEntities();
+        ScrollToTop();
+    }
+
+    void ScrollToTop() => Navigation.NavigateTo($"{Navigation.Uri.Split('#')[0]}#top-anchor", forceLoad: true);
+    #endregion
+
+}

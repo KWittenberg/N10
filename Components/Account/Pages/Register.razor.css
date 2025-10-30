@@ -1,0 +1,17 @@
+﻿.register {
+    min-height: 100vh;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    .register .register-container {
+        max-width: 390px;
+        padding: 2rem 2rem;
+        position: relative;
+        flex: 1;
+        border-radius: 10px;
+        background-color: rgba(0,0,0,0.20);
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+    }

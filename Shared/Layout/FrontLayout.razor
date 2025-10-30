@@ -2,7 +2,7 @@
 
 @inject AppState App
 
-<div class="page">
+<div>
     <CascadingValue Value="@App">
         <Toast />
         <Progress></Progress>
@@ -10,10 +10,8 @@
         <DeleteConfirmation />
         <Settings />
 
-        <main>
-            <NavBar />
-            @Body
-        </main>
+        <NavBar />
+        @Body
     </CascadingValue>
 </div>
 

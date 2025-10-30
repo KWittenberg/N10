@@ -13,17 +13,21 @@
 }
 else
 {
-    <div class="mt-5 @App?.GetContentClass()">
+    <div class="@App?.GetContentClass()">
 
-        @* @if (Input is not null)
+        @if (Input is not null)
         {
             <EditForm Enhance Model=@Input OnValidSubmit=@HandleValidSubmit>
-                <div class="input-group">
-                    <InputText class="form-control" @bind-Value="Input.Name" placeholder="Add new role" required />
-                    <button class="btn btn-primary" type="submit">ADD</button>
+                <div class="mt-5 row justify-content-end">
+                    <div class="col-12 col-md-6">
+                        <div class="input-group">
+                            <InputText class="form-control" @bind-Value="Input.Name" placeholder="Add new role" required />
+                            <button class="btn btn-primary" type="submit">ADD</button>
+                        </div>
+                    </div>
                 </div>
             </EditForm>
-        } *@
+        }
         <div class="mt-5 quickgrid-wrapper table-responsive">
             <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()">
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
@@ -37,7 +41,7 @@ else
                             Add Role
                         </button>
                         </HeaderTemplate>*@ 
-                        <ChildContent>
+                                <ChildContent>
                         <a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
                     </ChildContent>
 
@@ -52,7 +56,7 @@ else
     #region ---> START
     [CascadingParameter] AppState? App { get; set; }
 
-    List<RoleDto>? Entities;
+    List<RoleDto>? Entities { get; set; }
 
     const string Title = "Roles";
 
@@ -72,6 +76,21 @@ else
         Entities = result.Data;
         IsProcessing = false;
         StateHasChanged();
+    }
+    #endregion
+
+    #region ---> INPUT
+    RoleInput? Input { get; set; } = new RoleInput() { Name = string.Empty };
+
+    async Task HandleValidSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(Input);
+
+        var result = await Repository.AddAsync(Input);
+        if (result.Success) await LoadEntities();
+                
+        Input = new RoleInput() { Name = string.Empty };
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
     }
     #endregion
 
