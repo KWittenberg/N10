@@ -16,7 +16,7 @@
 else
 {
     <div id="top-anchor" class="mt-5 @App?.GetContentClass()">
-    
+
         @* <EditForm Enhance Model=@this OnValidSubmit=@SearchCoupons>
             <div class="d-flex justify-content-center align-items-center">
                 <div class="position-relative w-50">
@@ -46,13 +46,12 @@ else
         <!-- Grid -->
         @* <div class="p-4 row d-flex justify-content-center gap-3" style="max-width: 100%;"> *@
         @* <div class="" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"> *@
-            @* <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6" style="gap: 1rem;"> *@
-            <div class="grid-container">
-                @foreach (var item in Entities)
-                {
-                    <_NoteCardItem Item="@item" />
-                }
-            @* </div> *@
+        @* <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6" style="gap: 1rem;"> *@
+        <div class="grid-container">
+            @foreach (var item in Entities)
+            {
+                <_NoteCardItem Item="@item" OnDeleted="() => ShowDelete(item)" />
+            }
         </div>
 
         <!-- Pagination -->
@@ -70,6 +69,8 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
+    List<NoteFolderDto>? Folders;
+    
     List<NoteDto>? Entities;
 
     const string Title = "Notes";

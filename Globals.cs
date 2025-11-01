@@ -6,6 +6,17 @@ public static class Globals
 
 
 
+
+
+    public static class Notes
+    {
+        public const string PrimaryColor = "orange";
+    }
+
+
+
+
+
     public const string BgUrl = "img/bg/0.Simple Gray.jpg";
 
     public const string AvatarUrl = "img/avatar/user.png";

@@ -7,11 +7,11 @@ public class BaseImageEntityConfiguration : IEntityTypeConfiguration<BaseImageEn
         // Postavljamo TPC mapping - ovo će osigurati da se base ne mapira u tablicu, već samo derived
         entity.UseTpcMappingStrategy();
 
-        entity.Property(e => e.FileName).IsRequired().HasMaxLength(BaseImageEntityConst.FileNameLength);
+        entity.Property(e => e.FileName).HasMaxLength(BaseImageEntityConst.FileNameLength).IsRequired();
 
-        entity.Property(e => e.Type).IsRequired();
+        entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(BaseImageEntityConst.TypeLength).IsRequired();
 
-        entity.Property(e => e.FileUrl).IsRequired().HasMaxLength(BaseImageEntityConst.FileUrlLength);
+        entity.Property(e => e.FileUrl).HasMaxLength(BaseImageEntityConst.FileUrlLength).IsRequired();
 
         entity.Property(e => e.Width);
 

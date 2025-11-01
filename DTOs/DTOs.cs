@@ -35,4 +35,4 @@ public record CategoryDto(Guid Id, string Name, string? Description, string? Ico
 public record MapDto(Guid Id, string Name, string? IconHtml);
 
 // DASHBOARD
-public record DashboardDto(int? RoleCount, int? UserCount);
+public record DashboardDto(int? RolesCount, int? UsersCount, int? NoteFoldersCount, int? NotesCount);

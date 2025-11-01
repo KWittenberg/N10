@@ -12,7 +12,7 @@ public class NoteInput
 
     // public NoteContentType ContentType { get; set; } = NoteContentType.PlainText;
 
-    public string? Color { get; set; } = "#FFFFFF";
+    public string? Color { get; set; } = "#fd7e14";
 
     public DateTime? ReminderAt { get; set; }
 

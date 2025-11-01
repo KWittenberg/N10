@@ -27,8 +27,22 @@
                     <InputText @bind-Value="Input.Title" class="form-control form-control-lg" placeholder="Title" required />
                     <ValidationMessage For="() => Input.Title" class="text-danger" />
                 </div>
-                <div class="">
-                    <input type="color" class="form-control form-control-color p-0 h-100 border-0" @bind-value="@Input.Color" title="Set color for Note">
+
+                <div class="d-flex justify-content-center w-25">
+                    <select @bind="Input.Color" class="form-select" style="background-color:@Input.Color;">
+                        @if (Colors is not null)
+                        {
+                            foreach (var color in Colors)
+                            {
+                                <option value="@color.Hex" class="text-center" style="background-color:@color.Hex;">
+                                    @color.Name
+                                </option>
+                            }
+                        }
+                    </select>
+
+                    @* <input type="color" class="form-control form-control-color p-0 h-100 border-0" @bind-value="@Input.Color" title="Set color for Note"> *@
+
                 </div>
             </div>
             <div class="mt-5">
@@ -45,12 +59,13 @@
 
     [Parameter] public Guid? Id { get; set; } = Guid.Empty;
 
+    List<Color> Colors = Color.GetAll();
+        
     NoteInput? Input { get; set; }
 
     string Title => Id.HasValue ? "Update Note" : "Add Note";
 
-
-
+        
     protected override async Task OnParametersSetAsync()
     {
         if (Input is not null) return;

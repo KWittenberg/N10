@@ -151,7 +151,7 @@ public class UserRepository(
         if (!validateInput.IsValid) return Result.Error(string.Join(Environment.NewLine, validateInput.Errors.Select(e => e.ErrorMessage)));
 
         var user = input.ToEntity();
-        var result = await _userManager.CreateAsync(user, input.Password);
+        var result = await _userManager.CreateAsync(user!, input.Password);
         if (!result.Succeeded) return Result.Error(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
 
         return Result.Ok("User added!");
