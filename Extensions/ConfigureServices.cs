@@ -18,7 +18,7 @@ public static class ConfigureServices
 
         //services.AddTransient<ISeedService, SeedService>();
 
-
+        services.AddScoped<IMovieLibraryService, MovieLibraryService>();
 
         return services;
     }

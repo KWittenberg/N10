@@ -1,0 +1,78 @@
+﻿@page "/admin/movies"
+@attribute [Authorize(Roles = "Admin")]
+@inject IMovieLibraryService Service
+
+<title>@Title</title>
+
+<_PageHeader Title="@Title" AddButtonText="Add Note" AddButtonLink="note" />
+
+@if (IsProcessing || Entities is null)
+{
+    <_Loading />
+}
+else
+{
+    <div class="@App?.GetContentClass()">
+        <div class="quickgrid-wrapper-sm table-responsive">
+            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()">
+
+                <PropertyColumn Property="x => x.Title" Title="Title" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.VersionType" Title="VersionType" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.ResolutionType" Title="ResolutionType" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
+
+            </QuickGrid>
+        </div>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    MovieInfo? Entity;
+
+    List<MovieInfo> Entities = new();
+
+
+
+    const string Title = "Movies";
+
+    bool IsProcessing { get; set; } = true;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var fileName in MovieFileNames)
+        {
+            var movie = await Service.ParseFilenameAsync(fileName);
+            Entities.Add(movie);
+        }
+
+        //Entity = await Service.ParseFilenameAsync("Iron.Man.2008.1080p.10bit.BluRay.8CH.x265.HEVC-PSA.mkv");
+        IsProcessing = false;
+        StateHasChanged();
+    }
+
+
+    // protected override void OnInitialized()
+    // {
+    //     Entity = Service.ParseFilename("Iron.Man.2008.1080p.10bit.BluRay.8CH.x265.HEVC-PSA.mkv");
+    //     IsProcessing = false;
+    //     StateHasChanged();
+    // }
+
+    List<string> MovieFileNames = [
+        "6.Underground.2019.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv",
+        "2001.A.Space.Odyssey.1968.1080p.10bit.BrRip.6CH.x265.HEVC-PSA.mkv",
+        "2010 The Year We Make Contact 1984.mkv",
+        "A.Man.Called.Ove.A.K.A.En.man.som.heter.Ove.2015.SWEDISH.1080p.10bit.BluRay.6CH.x265.HEVC-PSA.mkv",
+        "Alien.1979.DIRECTOR'S.CUT.1080p.10bit.BluRay.6CH.x265.HEVC-PSA.mkv",
+        "Greyhound.2020.REPACK.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv"
+        ];
+}
