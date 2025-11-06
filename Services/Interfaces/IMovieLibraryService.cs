@@ -2,7 +2,15 @@
 
 public interface IMovieLibraryService
 {
-    MovieInfo ParseFilename(string filename);
+    Task<List<MovieInfo>> GetAllMoviesAsync(CancellationToken cancellationToken = default);
 
-    Task<MovieInfo> ParseFilenameAsync(string filename);
+
+
+
+    // MovieInfo ParseFilename(string filename);
+
+    // Task<MovieInfo> ParseFilenameAsync(string filename);
+
+
+    // Task<List<string>> ReadFolderAsync(bool sortByYear = false);
 }

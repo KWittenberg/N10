@@ -4,7 +4,7 @@
 
 <title>@Title</title>
 
-<_PageHeader Title="@Title" AddButtonText="Add Note" AddButtonLink="note" />
+<_PageHeader Title="@Title" />
 
 @if (IsProcessing || Entities is null)
 {
@@ -14,47 +14,47 @@ else
 {
     <div class="@App?.GetContentClass()">
         <div class="quickgrid-wrapper-sm table-responsive">
-            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()">
+            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()" Pagination="PaginationState">
 
                 <PropertyColumn Property="x => x.Title" Title="Title" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.VersionType" Title="VersionType" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.ResolutionType" Title="ResolutionType" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
+                @if (App!.IsExpanded)
+                {
+                    <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
+                }
                 <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
 
             </QuickGrid>
+            <div class="quickgrid-pagination">
+                <Paginator State="PaginationState" />
+            </div>
         </div>
     </div>
 }
 
 
+
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    MovieInfo? Entity;
-
     List<MovieInfo> Entities = new();
-
-
 
     const string Title = "Movies";
 
     bool IsProcessing { get; set; } = true;
 
+    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 20 };
+
 
     protected override async Task OnInitializedAsync()
     {
-        foreach (var fileName in MovieFileNames)
-        {
-            var movie = await Service.ParseFilenameAsync(fileName);
-            Entities.Add(movie);
-        }
+        Entities = await Service.GetAllMoviesAsync();
 
-        //Entity = await Service.ParseFilenameAsync("Iron.Man.2008.1080p.10bit.BluRay.8CH.x265.HEVC-PSA.mkv");
         IsProcessing = false;
         StateHasChanged();
     }

@@ -7,50 +7,60 @@ public class MovieLibraryService() : IMovieLibraryService
 {
     //private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
     //private readonly string _apiKey = "tvoj_api_key"; // Spremi u appsettings.json
-    //private readonly string _folderPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
     //private List<MovieModel> _movies = new List<MovieModel>(); // Ili koristi DB
 
+    //private readonly string folderPath = @"C:\Temp";
+    private readonly string folderPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
 
-    public MovieInfo ParseFilename(string filename)
+
+
+
+    public async Task<List<MovieInfo>> GetAllMoviesAsync(CancellationToken cancellationToken = default)
     {
-        // Ukloni ekstenziju
-        var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
+        var fileNames = await ReadFolderAsync(cancellationToken);
 
-        // Regex za godinu (4 broja između 1900-2099)
-        var yearRegex = Regex.Match(nameWithoutExt, @"\.(19|20)\d{2}\.");
-        if (yearRegex.Success)
+        var movieInfos = new List<MovieInfo>();
+
+        var tasks = fileNames.Select(async fileName =>
         {
-            var yearStr = yearRegex.Value.Trim('.');
-            int year;
-            if (int.TryParse(yearStr, out year))
+            try
             {
-                // Podijeli na dijelove
-                var parts = nameWithoutExt.Split(yearRegex.Value);
-                var titlePart = parts[0].Replace('.', ' ').Trim(); // Naziv sa spaceovima
-                var techPart = parts.Length > 1 ? parts[1] : string.Empty;
-
-                // Parsiraj tehničke dijelove (opcionalno, koristi regex za specifične)
-                var resolution = Regex.Match(techPart, @"(720p|1080p|2160p|4K)").Value;
-                var codec = Regex.Match(techPart, @"(x264|x265|HEVC)").Value;
-
-                return new MovieInfo
-                {
-                    Title = titlePart,
-                    Year = year,
-                    ResolutionType = resolution,
-                    VideoCodec = codec
-                };
+                return await ParseFilenameAsync(fileName);
             }
-        }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing {fileName}: {ex.Message}");
+                return new MovieInfo { Title = $"Error: {fileName}" };
+            }
+        });
 
-        // Ako ne uspije, fallback na cijeli naziv
-        return new MovieInfo { Title = nameWithoutExt.Replace('.', ' ').Trim() };
+        var results = await Task.WhenAll(tasks);
+        movieInfos.AddRange(results.Where(info => info != null));
+
+        return movieInfos;
     }
 
+    async Task<List<string>> ReadFolderAsync(CancellationToken cancellationToken = default)
+    {
+        var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi" };
 
+        return await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested(); // Baci exception ako je otkazano
 
+            var allFiles = Directory.EnumerateFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly);
 
-    public async Task<MovieInfo> ParseFilenameAsync(string filename)
+            var fileNames = allFiles
+                .Where(file => extensions.Contains(Path.GetExtension(file)))
+                .Select(file => Path.GetFileName(file))
+                .ToList();
+
+            return fileNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
+
+        }, cancellationToken);
+    }
+
+    async Task<MovieInfo> ParseFilenameAsync(string filename)
     {
         // Ukloni ekstenziju
         var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
@@ -128,6 +138,84 @@ public class MovieLibraryService() : IMovieLibraryService
 
         return await Task.FromResult(info); // Async wrapper
     }
+
+
+
+
+
+    //public MovieInfo ParseFilename(string filename)
+    //{
+    //    // Ukloni ekstenziju
+    //    var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
+
+    //    // Regex za godinu (4 broja između 1900-2099)
+    //    var yearRegex = Regex.Match(nameWithoutExt, @"\.(19|20)\d{2}\.");
+    //    if (yearRegex.Success)
+    //    {
+    //        var yearStr = yearRegex.Value.Trim('.');
+    //        int year;
+    //        if (int.TryParse(yearStr, out year))
+    //        {
+    //            // Podijeli na dijelove
+    //            var parts = nameWithoutExt.Split(yearRegex.Value);
+    //            var titlePart = parts[0].Replace('.', ' ').Trim(); // Naziv sa spaceovima
+    //            var techPart = parts.Length > 1 ? parts[1] : string.Empty;
+
+    //            // Parsiraj tehničke dijelove (opcionalno, koristi regex za specifične)
+    //            var resolution = Regex.Match(techPart, @"(720p|1080p|2160p|4K)").Value;
+    //            var codec = Regex.Match(techPart, @"(x264|x265|HEVC)").Value;
+
+    //            return new MovieInfo
+    //            {
+    //                Title = titlePart,
+    //                Year = year,
+    //                ResolutionType = resolution,
+    //                VideoCodec = codec
+    //            };
+    //        }
+    //    }
+
+    //    // Ako ne uspije, fallback na cijeli naziv
+    //    return new MovieInfo { Title = nameWithoutExt.Replace('.', ' ').Trim() };
+    //}
+
+
+
+
+
+    //public async Task<List<string>> ReadFolderAsync(bool sortByYear = false)
+    //{
+    //    var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi" };
+
+    //    var allFiles = Directory.EnumerateFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly);
+
+    //    var fileNames = allFiles.Where(file => extensions.Contains(Path.GetExtension(file)))
+    //                            .Select(file => Path.GetFileName(file))
+    //                            .ToList();
+
+    //    return fileNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
+    //}
+
+
+
+
+
+
+    //public async Task<List<MovieInfo>> GetAllMoviesInFolderAsync()
+    //{
+    //    var fileNames = await ReadFolderAsync();
+
+    //    var movieInfos = new List<MovieInfo>();
+    //    foreach (var fileName in fileNames)
+    //    {
+    //        var info = await ParseFilenameAsync(fileName);
+    //        movieInfos.Add(info);
+    //    }
+
+    //    return movieInfos;
+    //}
+
+
 
 
 
