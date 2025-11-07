@@ -1,6 +1,6 @@
-﻿namespace N10.Services;
+﻿namespace N10.Entities;
 
-public class MovieInfo
+public class Movie : BaseEntity<Guid>
 {
     public string Title { get; set; } = string.Empty;
 

@@ -1,8 +1,8 @@
 ﻿namespace N10.Services.Interfaces;
 
-public interface IMovieLibraryService
+public interface IMovieService
 {
-    Task<List<MovieInfo>> GetAllMoviesAsync(CancellationToken cancellationToken = default);
+    Task<List<Movie>> GetAllMoviesAsync(CancellationToken cancellationToken = default);
 
 
 

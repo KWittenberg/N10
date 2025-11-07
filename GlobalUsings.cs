@@ -29,6 +29,7 @@ global using N10.Entities;
 global using N10.Enums;
 global using N10.Extensions;
 global using N10.Models;
+global using N10.Models.Tmdb;
 global using N10.Repository;
 global using N10.Repository.Interfaces;
 global using N10.Services;

@@ -1,0 +1,96 @@
+﻿@page "/movie/{id:int?}"
+@layout FrontLayout
+
+@inject ITmdbService Service
+@inject NavigationManager Navigation
+
+<title>@Title</title>
+
+
+@if (IsProcessing || Entity is null)
+{
+    <_Loading />
+}
+else
+{
+    <div id="movie-details" style="--background: url(@Entity.BackdropPath)">
+
+
+        <div id="movie-wrapper">
+            @* <div class="container-xxl py-3"> *@
+            <div class="@App?.GetContentClass() py-4">
+                @* <h1 class="p-4">
+                    <i class="me-2 bi bi-film text-primary"></i> @Entity.Title - @Entity.Id
+                </h1> *@
+
+
+                <div class="mt-5 row">
+                    <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
+                        <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
+                    </div>
+                    <div class="col-12 col-md-8 col-xl-9">
+                        <h3 class="display-6 fw-bold mb-0">
+                            @Entity.Title
+                        </h3>
+                        <div class="lead mb-3">
+                            @Entity.Tagline
+                        </div>
+                        <div class="hstack gap-2">
+                            @{
+                                bool dateParsed = DateTime.TryParse(Entity.ReleaseDate, out DateTime releaseDate);
+                            }
+                            @if (dateParsed)
+                            {
+                                <span>@releaseDate.ToString("MMMM dd, yyyy") | </span>
+                            }
+                            <span>
+                                @{
+                                    int hours = Entity.Runtime / 60;
+                                    int minutes = Entity.Runtime % 60;
+                                }
+                                @hours hour(s) @minutes minutes
+                            </span>
+                        </div>
+                        <div class="hstack gap-2 my-2">
+                            @foreach (var genre in Entity.Genres)
+                            {
+                                <span class="badge text-bg-primary">@genre.Name</span>
+                            }
+                        </div>
+                        <p>TMDB Id: @Entity.Id</p>
+                        <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
+                        <p>@Entity.Overview</p>
+                        <div>
+                            <span id="movie-rating">
+                                User Score: @((Entity.VoteAverage * 10).ToString("F2"))%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public int Id { get; set; }
+
+    TmdbDetails? Entity { get; set; }
+
+    const string Title = "Movie Info";
+
+    bool IsProcessing { get; set; } = true;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Entity = await Service.GetMovieAsync(Id);
+
+        IsProcessing = false;
+        StateHasChanged();
+    }
+}

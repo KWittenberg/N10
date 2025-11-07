@@ -18,7 +18,10 @@ public static class ConfigureServices
 
         //services.AddTransient<ISeedService, SeedService>();
 
-        services.AddScoped<IMovieLibraryService, MovieLibraryService>();
+        services.AddScoped<IMovieService, MovieService>();
+
+        services.AddTransient<TmdbAuthenticationHandler>();
+        services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();
 
         return services;
     }

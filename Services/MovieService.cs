@@ -3,7 +3,7 @@
 namespace N10.Services;
 
 //public class MovieLibraryService(IHttpClientFactory httpClientFactory) : BackgroundService, IMovieLibraryService
-public class MovieLibraryService() : IMovieLibraryService
+public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
 {
     //private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
     //private readonly string _apiKey = "tvoj_api_key"; // Spremi u appsettings.json
@@ -15,11 +15,11 @@ public class MovieLibraryService() : IMovieLibraryService
 
 
 
-    public async Task<List<MovieInfo>> GetAllMoviesAsync(CancellationToken cancellationToken = default)
+    public async Task<List<Movie>> GetAllMoviesAsync(CancellationToken cancellationToken = default)
     {
         var fileNames = await ReadFolderAsync(cancellationToken);
 
-        var movieInfos = new List<MovieInfo>();
+        var movieInfos = new List<Movie>();
 
         var tasks = fileNames.Select(async fileName =>
         {
@@ -30,7 +30,7 @@ public class MovieLibraryService() : IMovieLibraryService
             catch (Exception ex)
             {
                 Console.WriteLine($"Error parsing {fileName}: {ex.Message}");
-                return new MovieInfo { Title = $"Error: {fileName}" };
+                return new Movie { Title = $"Error: {fileName}" };
             }
         });
 
@@ -60,12 +60,12 @@ public class MovieLibraryService() : IMovieLibraryService
         }, cancellationToken);
     }
 
-    async Task<MovieInfo> ParseFilenameAsync(string filename)
+    async Task<Movie> ParseFilenameAsync(string filename)
     {
         // Ukloni ekstenziju
         var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
 
-        var info = new MovieInfo();
+        var info = new Movie();
 
         // 1. Pronađi godinu (4 broja između 1900-2099)
         var yearMatch = Regex.Match(nameWithoutExt, @"\.(19|20)\d{2}\.");
@@ -256,28 +256,14 @@ public class MovieLibraryService() : IMovieLibraryService
     //}
 
     // Modeli
-    public class TmdbSearchResponse
-    {
-        public List<TmdbMovie> Results { get; set; }
-    }
 
-    public class TmdbMovie
-    {
-        public int Id { get; set; }
-        public string Title { get; set; }
-        public string Overview { get; set; }
-        public string PosterPath { get; set; }
-        // Ostalo
-    }
 
-    public class MovieModel
-    {
-        public string LocalPath { get; set; }
-        public string Title { get; set; }
-        public int Year { get; set; }
-        public string Overview { get; set; }
-        public string PosterUrl { get; set; }
-    }
+
+
+
+
+
+
 
     // Metoda za dohvaćanje liste u Blazoru
     // public List<MovieModel> GetMovies() => _movies;
