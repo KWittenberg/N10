@@ -4,6 +4,9 @@ public interface INoteRepository
 {
     Task<Result<List<NoteDto>>> GetAllAsync();
 
+    Task<Result<List<NoteDto>>> GetNotesInCurrentFolderAsync(Guid? userId, Guid? currentFolderId, bool ascending = true);
+
+
     Task<Result<NoteDto>> GetByIdAsync(Guid id);
 
     Task<Result> AddAsync(NoteInput input);

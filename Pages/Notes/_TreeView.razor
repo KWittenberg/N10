@@ -1,0 +1,54 @@
+﻿@inject INoteFolderRepository NoteFolderRepository
+
+<ul class="list-group">
+    <li class="list-group-item border-0">
+        <a @onclick="OnCurrentFolderClicked" class="d-flex align-items-center">
+            @DisplayIcon()
+            @Folder.Name
+        </a>
+        @if (Folder.IsExpanded && Folder.SubFolders.Any())
+        {
+            <ul class="list-group ps-3">
+                @foreach (var subFolder in Folder.SubFolders)
+                {
+                    <_TreeView Folder="@subFolder" OnChildFolderSelected="ChildFolderSelected" />
+                }
+            </ul>
+        }
+    </li>
+</ul>
+
+
+
+
+@code {
+    [CascadingParameter] public AppState? App { get; set; }
+
+    [Parameter] public NoteFolderDto Folder { get; set; } = new();
+
+    [Parameter] public EventCallback<NoteFolderDto> OnChildFolderSelected { get; set; }
+
+
+
+    async Task OnCurrentFolderClicked()
+    {
+        if (!Folder.IsExpanded && !Folder.SubFolders.Any())
+        {
+            var subResult = await NoteFolderRepository.GetSubFoldersInCurrentFolderAsync(App?.CurrentUser?.Id, Folder.Id);
+            if (subResult.Success && subResult.Data != null) Folder.SubFolders = subResult.Data;
+        }
+        Folder.IsExpanded = !Folder.IsExpanded;
+        await OnChildFolderSelected.InvokeAsync(Folder);
+    }
+
+    async Task ChildFolderSelected(NoteFolderDto childFolder)
+    {
+        await OnChildFolderSelected.InvokeAsync(childFolder);
+    }
+
+    RenderFragment DisplayIcon()
+    {
+        // Provjeri ima li potencijalnih sub (možeš dodati HasChildren flag u DTO ako znaš unaprijed)
+        return Folder.IsExpanded ?@<i class="bi bi-dash me-2"></i> :@<i class="bi bi-plus me-2"></i>;
+    }
+}

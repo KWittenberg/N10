@@ -1,6 +1,6 @@
 ﻿<!-- Note Card Item Component -->
 
-<div class="p-2 card" style="background-color: @Item.Color; height: 2.5rem;">
+<div class="my-3 p-3 card" style="background-color: @Item.Color; height: 100%;">
     <div class="d-flex justify-content-between align-item-center">
         <a class="text-decoration-none" href="note/@Item.Id"><h5 class="text-white">@Item.Title</h5></a>
         <div>
@@ -14,6 +14,7 @@
             </ul>
         </div>
     </div>
+    <p class="card-text">@(Item.Content?.Substring(0, Math.Min(50, Item.Content.Length)) + "...")</p>
 </div>
 
 

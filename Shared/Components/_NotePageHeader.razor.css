@@ -1,0 +1,34 @@
+﻿.bg-header {
+    height: 150px;
+    background-color: rgba(var(--bs-black-rgb), 0.1);
+}
+
+.page-header {
+    margin-top: -50px;
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center !important;
+}
+
+.breadcrumb {
+    display: flex !important;
+    justify-content: start;
+    align-items: center !important;
+    margin-left: 1.5rem;
+}
+
+    /*.breadcrumb a {
+        text-decoration: none;
+        color: whitesmoke;
+    }*/
+
+    .breadcrumb i {
+        margin-right: 0.5rem !important;
+        margin-left: 0.5rem !important;
+        color: gray;
+    }
+
+    /*.breadcrumb span {
+        color: whitesmoke;
+        text-transform: uppercase !important;
+    }*/

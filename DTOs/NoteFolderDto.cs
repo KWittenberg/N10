@@ -3,15 +3,18 @@
 public class NoteFolderDto
 {
     public Guid? Id { get; set; }
-    
+
     public Guid? ApplicationUserId { get; set; }
-    
+
     public Guid? ParentFolderId { get; set; }
-    
+
 
     public string Name { get; set; } = string.Empty;
 
     public string? Color { get; set; }
+
+
+    public bool IsExpanded { get; set; } = false;
 
 
 

@@ -16,10 +16,10 @@
             <DataAnnotationsValidator />
 
             <div class="d-flex justify-content-between align-items-end">
-                <h1>@Title</h1>
+                <h1>@Title</h1><span>@CurrentFolderId</span>
                 <div class="d-flex align-items-end gap-2">
-                    <a href="notes" class="btn btn-sm btn-secondary">back</a>
-                    <button class="btn btn-lg btn-primary" type="submit">Save</button>
+                    <a href="notes" class="btn btn-outline-secondary rounded-pill">back</a>
+                    <button class="btn btn-lg btn-primary rounded-pill" type="submit">Save</button>
                 </div>
             </div>
             <div class="mt-2 d-flex w-100 gap-2">
@@ -57,6 +57,8 @@
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
+    [SupplyParameterFromQuery(Name = "folderId")] public Guid? CurrentFolderId { get; set; }
+    
     [Parameter] public Guid? Id { get; set; } = Guid.Empty;
 
     List<Color> Colors = Color.GetAll();
@@ -83,6 +85,7 @@
         ArgumentNullException.ThrowIfNull(Input);
 
         Input.UserId = App?.CurrentUser?.Id ?? Guid.Empty;
+        Input.NoteFolderId = CurrentFolderId;
 
         var result = Id is null
             ? await Repository.AddAsync(Input)

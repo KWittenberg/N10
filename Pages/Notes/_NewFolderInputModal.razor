@@ -1,0 +1,71 @@
+﻿@inject INoteFolderRepository Repository
+
+<!-- NoteFolder Input Modal Component -->
+<div class="modal fade @(Show ? "show d-block" : "") bg-transparent60" tabindex="-1" style="display:@(Show ? "block" : "none");" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header border-0">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">New Folder</h1>
+                <button type="button" class="btn-close" @onclick="Hide"></button>
+            </div>
+
+            <div class="modal-body p-2">
+                @if (Input is not null)
+                {
+                    <EditForm Enhance Model=@Input OnValidSubmit=@HandleValidSubmit>
+                        <div class="mb-4">
+                            <div class="p-2">
+                                <InputText class="form-control" @bind-Value="Input.Name" placeholder=" name" required />
+                            </div>
+                            <div class="p-2">
+                                <InputText class="form-control" @bind-Value="Input.Color" placeholder=" color" />
+                            </div>
+                        </div>
+                        <div class="p-2 text-end">
+                            <button type="button" class="mx-2 btn btn-outline-secondary rounded-pill border-0 shadow" @onclick="Hide">Cancel</button>
+                            <button type="submit" class="btn btn-primary rounded-pill w-50 shadow">Save</button>
+                        </div>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public bool Show { get; set; } = false;
+
+    [Parameter] public Guid? ParentFolderId { get; set; }
+
+    [Parameter] public EventCallback OnAddNewFolder { get; set; }
+
+    NoteFolderInput? Input { get; set; } = new() { Name = string.Empty };
+
+
+    void Hide()
+    {
+        Show = false;
+        StateHasChanged();
+    }
+
+    async Task HandleValidSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(Input);
+
+        Input.ApplicationUserId = App?.CurrentUser?.Id;
+        Input.ParentFolderId = ParentFolderId;
+
+        var result = await Repository.AddAsync(Input);
+        if (result.Success)
+        {
+            Input = new NoteFolderInput();
+            await OnAddNewFolder.InvokeAsync();
+            Hide();
+        }
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+}
