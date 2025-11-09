@@ -2,6 +2,9 @@
 
 public class Movie : BaseEntity<Guid>
 {
+
+    public string FileName { get; set; } = string.Empty;
+
     public string Title { get; set; } = string.Empty;
 
     public int? Year { get; set; } // 1900-2099
@@ -19,4 +22,28 @@ public class Movie : BaseEntity<Guid>
     public string? VideoCodec { get; set; } // "x264", "x265", "HEVC"
 
     public string? ReleaseGroup { get; set; } // "PSA", "YIFY", "SPARKS"
+
+
+
+
+
+    public int? TmdbId { get; set; }
+
+    public string? TmdbTitle { get; set; }
+
+    public string? TmdbImageUrl { get; set; }
+
+    public double? VoteAverage { get; set; }
+
+    public string? ImdbId { get; set; }
+
+
+
+
+
+
+
+
+
+    public override string ToString() => $"Title: {Title}\nYear: {Year}\nVersion: {VersionType}\nResolution: {ResolutionType}\nColorDepth: {ColorDepthType}\nSource: {SourceType}\nAudio: {Audio}\nVideoCodec: {VideoCodec}\nGroup: {ReleaseGroup}\nTMDB: {TmdbId}";
 }

@@ -34,7 +34,7 @@ else
         @if (TmdbSearch is null)
         {
             <div class="quickgrid-wrapper-sm table-responsive">
-                <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()" Pagination="PaginationState">
+                <QuickGrid Class="table table-striped table-hover align-middle p-sm" Items="Entities.AsQueryable()" Pagination="PaginationState">
                     <TemplateColumn Title="Title" Align="Align.Start">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
                         <a class="ms-4 text-decoration-none text-white" style="cursor: pointer;"
@@ -42,17 +42,23 @@ else
                     </TemplateColumn>
 
                     <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.VersionType" Title="VersionType" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.ResolutionType" Title="ResolutionType" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.VersionType" Title="Version" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.TmdbId" Title="TmdbId" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.ResolutionType" Title="Resolution" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.VoteAverage" Title="Score" Align="Align.Center" Sortable="true" />
+
                     @if (App!.IsExpanded)
                     {
                         <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
+                        @* <PropertyColumn Property="x => x.FileName" Title="FileName" Align="Align.Center" Sortable="true" /> *@
+                        <PropertyColumn Property="x => x.TmdbTitle" Title="TmdbTitle" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.TmdbImageUrl" Title="TmdbImageUrl" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
                     }
-                    <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
-
                 </QuickGrid>
 
                 <div class="quickgrid-pagination d-flex justify-content-between align-items-center">
@@ -96,7 +102,7 @@ else
 
     TmdbSearch? TmdbSearch;
     string SearchTerm = string.Empty;
-    
+
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
 

@@ -13,8 +13,6 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
     private readonly string folderPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
 
 
-
-
     public async Task<List<Movie>> GetAllMoviesAsync(CancellationToken cancellationToken = default)
     {
         var fileNames = await ReadFolderAsync(cancellationToken);
@@ -60,211 +58,113 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
         }, cancellationToken);
     }
 
-    async Task<Movie> ParseFilenameAsync(string filename)
-    {
-        // Ukloni ekstenziju
-        var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
 
+    public async Task<Movie> ParseFilenameAsync(string filename)
+    {
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
         var info = new Movie();
 
-        // 1. Pronađi godinu (4 broja između 1900-2099)
-        var yearMatch = Regex.Match(nameWithoutExt, @"\.(19|20)\d{2}\.");
-        if (yearMatch.Success)
+        info.FileName = filename;
+
+        // 1. TMDB ID na kraju (fleksibilno)
+        var tmdbMatch = Regex.Match(nameWithoutExt, @"[-._]?tmdb[-._]?(\d{5,7})$", RegexOptions.IgnoreCase);
+        if (tmdbMatch.Success && int.TryParse(tmdbMatch.Groups[1].Value, out int tmdbId))
         {
-            var yearStr = yearMatch.Value.Trim('.');
+            info.TmdbId = tmdbId;
+            nameWithoutExt = Regex.Replace(nameWithoutExt, @"[-._]?tmdb[-._]?\d{5,7}$", "", RegexOptions.IgnoreCase).Trim(' ', '.', '-', '_');
+        }
+        else
+        {
+            var idMatch = Regex.Match(nameWithoutExt, @"-(\d{5,7})$");
+            if (idMatch.Success && int.TryParse(idMatch.Groups[1].Value, out tmdbId))
+            {
+                info.TmdbId = tmdbId;
+                nameWithoutExt = nameWithoutExt.Substring(0, nameWithoutExt.Length - idMatch.Value.Length).Trim(' ', '.', '-', '_');
+            }
+        }
+
+        // 2. Pronađi POSLJEDNJU godinu (fleksibilno, sa \b za izolaciju)
+        var yearMatches = Regex.Matches(nameWithoutExt, @"\b((19|20)\d{2})\b");
+        if (yearMatches.Count > 0)
+        {
+            var lastYearMatch = yearMatches[yearMatches.Count - 1];
+            var yearStr = lastYearMatch.Value;
             if (int.TryParse(yearStr, out int year) && year >= 1900 && year <= 2099)
             {
                 info.Year = year;
 
-                // Podijeli string na dio prije godine (naziv + eventualne verzije) i nakon (tehnički detalji)
-                var parts = nameWithoutExt.Split(yearMatch.Value);
-                var preYear = parts[0].Trim();
-                var postYear = parts.Length > 1 ? parts[1].Trim() : string.Empty;
+                var start = lastYearMatch.Index;
+                var end = start + lastYearMatch.Length;
+                var preYear = nameWithoutExt.Substring(0, start).Trim(' ', '.', '-', '_');
+                var postYear = nameWithoutExt.Substring(end).Trim(' ', '.', '-', '_');
 
-                // 2. Naziv: Dio prije godine, zamijeni točke sa spaceovima, ali izvuci verzije ako postoje
-                // Prvo izvuci VersionType iz preYear ili postYear (common pattern: nakon naziva, prije godine ili u tehničkom dijelu)
-                var versionPatterns = new[] { "IMAX", "DIRECTOR'S\\.CUT", "EXTENDED", "INTERNAL", "REMASTERED", "RUSSIAN", "UNRATED\\.DIRECTOR'S\\.CUT\\.REMASTERED", "UNRATED", "MASTERED\\.IN\\.4K", "PARAMOUNT\\.REISSUE\\.EXTENDED\\.CUT\\.REMASTERED", "REPACK", "SWEDISH" };
-                var versionRegex = new Regex($@"\b({string.Join("|", versionPatterns)})\b", RegexOptions.IgnoreCase);
-                var versionMatch = versionRegex.Match(preYear + "." + postYear); // Traži u cijelom
-                if (versionMatch.Success)
+                // Title iz preYear (ili iz postYear prije tagova ako pre prazan)
+                info.Title = Regex.Replace(preYear, @"\.+", " ").Trim();
+                if (string.IsNullOrEmpty(info.Title))
                 {
-                    info.VersionType = versionMatch.Value.ToUpper(); // Normaliziraj na upper za konzistenciju
-                    preYear = preYear.Replace(versionMatch.Value, "").Trim('.'); // Ukloni iz naziva ako je tu
+                    // Pokuşaj iz postYear prije prvih tagova
+                    var tagStartMatch = Regex.Match(postYear, @"\b(1080p|720p|2160p|4K|WEBRip|BluRay|WEB-DL|10bit|8bit|x265|x264|HEVC|AV1|DTS|AAC|\dCH|-PSA|-YIFY)\b", RegexOptions.IgnoreCase);
+                    if (tagStartMatch.Success)
+                    {
+                        var potentialTitle = postYear.Substring(0, tagStartMatch.Index).Trim();
+                        info.Title = Regex.Replace(potentialTitle, @"\.+", " ").Trim();
+                    }
+                    else
+                    {
+                        info.Title = Regex.Replace(postYear, @"\.+", " ").Trim();
+                    }
                 }
 
-                info.Title = preYear.Replace('.', ' ').Trim(); // Sada naziv sa spaceovima
+                // TitleCase za ljepši izgled
+                if (!string.IsNullOrEmpty(info.Title))
+                {
+                    info.Title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Title.ToLower());
+                }
 
-                // 3. Tehnički detalji iz postYear (rezolucija, boja, izvor, audio, kodek, grupa)
-                // ResolutionType: 720p, 1080p, 2160p
-                var resolutionMatch = Regex.Match(postYear, @"(720p|1080p|2160p)", RegexOptions.IgnoreCase);
-                if (resolutionMatch.Success) info.ResolutionType = resolutionMatch.Value.ToLower();
+                // Tagovi iz postYear + preYear (cijeli za sigurnost)
+                var tagsStr = preYear + " " + postYear;
 
-                // ColorDepthType: 10bit, 8bit
-                var colorDepthMatch = Regex.Match(postYear, @"(10bit|8bit)", RegexOptions.IgnoreCase);
-                if (colorDepthMatch.Success) info.ColorDepthType = colorDepthMatch.Value.ToLower();
+                // VersionType
+                var versionRegex = new Regex(@"\b(IMAX|DIRECTORS?.CUT|EXTENDED|INTERNAL|REMASTERED|UNRATED|MASTERED.IN.4K|REPACK|FINAL.CUT)\b", RegexOptions.IgnoreCase);
+                var versionMatch = versionRegex.Match(tagsStr);
+                if (versionMatch.Success) info.VersionType = versionMatch.Value.ToUpper();
 
-                // SourceType: WEBRip, BluRay (dodaj više ako treba, npr. HDRip, DVDRip)
-                var sourceMatch = Regex.Match(postYear, @"(WEBRip|BrRip|BluRay|HDRip|DVDRip)", RegexOptions.IgnoreCase);
-                if (sourceMatch.Success) info.SourceType = sourceMatch.Value;
+                // ResolutionType
+                var resMatch = Regex.Match(postYear, @"\b(480p|720p|1080p|2160p|4K)\b", RegexOptions.IgnoreCase);
+                if (resMatch.Success) info.ResolutionType = resMatch.Value.ToLower();
 
-                // Audio: 6CH, 8CH (možeš dodati više, npr. 2CH, DTS)
-                var audioMatch = Regex.Match(postYear, @"(\dCH|DTS|AAC)", RegexOptions.IgnoreCase);
+                // ColorDepthType
+                var colorMatch = Regex.Match(postYear, @"\b(8bit|10bit|12bit)\b", RegexOptions.IgnoreCase);
+                if (colorMatch.Success) info.ColorDepthType = colorMatch.Value.ToLower();
+
+                // SourceType
+                var sourceRegex = new Regex(@"\b(WEBRip|WEBDL|BluRay|BRRip|HDRip|DVDRip|HDTV|CAM|WEB-DL)\b", RegexOptions.IgnoreCase);
+                var sourceMatch = sourceRegex.Match(postYear);
+                if (sourceMatch.Success) info.SourceType = sourceMatch.Value.ToUpper();
+
+                // Audio
+                var audioMatch = Regex.Match(postYear, @"\b(\dCH|DTS|AAC|AC3|FLAC)\b", RegexOptions.IgnoreCase);
                 if (audioMatch.Success) info.Audio = audioMatch.Value.ToUpper();
 
-                // VideoCodec: x264, x265, HEVC (ako se pojavljuje više, uzmi prvi ili kombiniraj)
-                var codecMatch = Regex.Match(postYear, @"(x264|x265|HEVC)", RegexOptions.IgnoreCase);
+                // VideoCodec
+                var codecMatch = Regex.Match(postYear, @"\b(x264|x265|HEVC|AVC|AV1)\b", RegexOptions.IgnoreCase);
                 if (codecMatch.Success) info.VideoCodec = codecMatch.Value.ToUpper();
 
-                // ReleaseGroup: Zadnji dio nakon '-', npr. PSA, YIFY (pretpostavka da je na kraju)
-                var groupMatch = Regex.Match(postYear, @"-(\w+)$");
+                // ReleaseGroup
+                var groupMatch = Regex.Match(postYear, @"-([A-Z0-9]+)$", RegexOptions.IgnoreCase);
                 if (groupMatch.Success) info.ReleaseGroup = groupMatch.Groups[1].Value.ToUpper();
-                else
-                {
-                    // Alternativa: Traži common grupe
-                    var groupPatterns = new[] { "PSA", "YIFY", "SPARKS" }; // Dodaj više ako znaš
-                    var groupRegex = new Regex($@"\b({string.Join("|", groupPatterns)})\b", RegexOptions.IgnoreCase);
-                    var groupFound = groupRegex.Match(postYear);
-                    if (groupFound.Success) info.ReleaseGroup = groupFound.Value.ToUpper();
-                }
+            }
+        }
+        else
+        {
+            // Fallback bez godine (npr. serije bez godine u filenameu)
+            info.Title = Regex.Replace(nameWithoutExt, @"\.+", " ").Trim();
+            if (!string.IsNullOrEmpty(info.Title))
+            {
+                info.Title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Title.ToLower());
             }
         }
 
-        // Fallback ako godina nije nađena: Cijeli naziv kao Title, i pokušaj naći ostalo u cijelom stringu
-        if (string.IsNullOrEmpty(info.Title))
-        {
-            info.Title = nameWithoutExt.Replace('.', ' ').Trim();
-            // Ponovi regexe za ostalo na cijelom nameWithoutExt ako treba
-        }
-
-        return await Task.FromResult(info); // Async wrapper
+        return await Task.FromResult(info);
     }
-
-
-
-
-
-    //public MovieInfo ParseFilename(string filename)
-    //{
-    //    // Ukloni ekstenziju
-    //    var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
-
-    //    // Regex za godinu (4 broja između 1900-2099)
-    //    var yearRegex = Regex.Match(nameWithoutExt, @"\.(19|20)\d{2}\.");
-    //    if (yearRegex.Success)
-    //    {
-    //        var yearStr = yearRegex.Value.Trim('.');
-    //        int year;
-    //        if (int.TryParse(yearStr, out year))
-    //        {
-    //            // Podijeli na dijelove
-    //            var parts = nameWithoutExt.Split(yearRegex.Value);
-    //            var titlePart = parts[0].Replace('.', ' ').Trim(); // Naziv sa spaceovima
-    //            var techPart = parts.Length > 1 ? parts[1] : string.Empty;
-
-    //            // Parsiraj tehničke dijelove (opcionalno, koristi regex za specifične)
-    //            var resolution = Regex.Match(techPart, @"(720p|1080p|2160p|4K)").Value;
-    //            var codec = Regex.Match(techPart, @"(x264|x265|HEVC)").Value;
-
-    //            return new MovieInfo
-    //            {
-    //                Title = titlePart,
-    //                Year = year,
-    //                ResolutionType = resolution,
-    //                VideoCodec = codec
-    //            };
-    //        }
-    //    }
-
-    //    // Ako ne uspije, fallback na cijeli naziv
-    //    return new MovieInfo { Title = nameWithoutExt.Replace('.', ' ').Trim() };
-    //}
-
-
-
-
-
-    //public async Task<List<string>> ReadFolderAsync(bool sortByYear = false)
-    //{
-    //    var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi" };
-
-    //    var allFiles = Directory.EnumerateFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly);
-
-    //    var fileNames = allFiles.Where(file => extensions.Contains(Path.GetExtension(file)))
-    //                            .Select(file => Path.GetFileName(file))
-    //                            .ToList();
-
-    //    return fileNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
-    //}
-
-
-
-
-
-
-    //public async Task<List<MovieInfo>> GetAllMoviesInFolderAsync()
-    //{
-    //    var fileNames = await ReadFolderAsync();
-
-    //    var movieInfos = new List<MovieInfo>();
-    //    foreach (var fileName in fileNames)
-    //    {
-    //        var info = await ParseFilenameAsync(fileName);
-    //        movieInfos.Add(info);
-    //    }
-
-    //    return movieInfos;
-    //}
-
-
-
-
-
-
-    //protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    //{
-    //    // Skeniraj folder
-    //    var files = Directory.EnumerateFiles(_folderPath, "*.mkv", SearchOption.AllDirectories);
-
-    //    foreach (var file in files)
-    //    {
-    //        var info = ParseFilename(file);
-    //        if (!string.IsNullOrEmpty(info.Title) && info.Year.HasValue)
-    //        {
-    //            // TMDB search
-    //            var query = $"{info.Title.Replace(' ', '+')}&year={info.Year}";
-    //            var url = $"https://api.themoviedb.org/3/search/movie?api_key={_apiKey}&query={query}";
-    //            var response = await _httpClient.GetStringAsync(url);
-    //            var tmdbResult = JsonSerializer.Deserialize<TmdbSearchResponse>(response);
-
-    //            if (tmdbResult.Results.Count > 0)
-    //            {
-    //                var tmdbMovie = tmdbResult.Results[0];
-    //                // Dodaj u listu (ili DB)
-    //                _movies.Add(new MovieModel
-    //                {
-    //                    LocalPath = file,
-    //                    Title = tmdbMovie.Title,
-    //                    Year = info.Year.Value,
-    //                    Overview = tmdbMovie.Overview,
-    //                    PosterUrl = $"https://image.tmdb.org/t/p/w500{tmdbMovie.PosterPath}",
-    //                    // Dodaj ostalo
-    //                });
-    //            }
-    //        }
-    //    }
-    //    // Nakon skeniranja, možeš spremiti u SQLite ili JSON file
-    //}
-
-    // Modeli
-
-
-
-
-
-
-
-
-
-    // Metoda za dohvaćanje liste u Blazoru
-    // public List<MovieModel> GetMovies() => _movies;
 }
