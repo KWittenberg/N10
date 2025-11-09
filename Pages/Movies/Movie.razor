@@ -29,12 +29,9 @@ else
                         <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
                     </div>
                     <div class="col-12 col-md-8 col-xl-9">
-                        <h3 class="display-6 fw-bold mb-0">
-                            @Entity.Title
-                        </h3>
-                        <div class="lead mb-3">
-                            @Entity.Tagline
-                        </div>
+                        <a href="https://www.themoviedb.org/movie/@Entity.Id" class="text-decoration-none" target="_blank">
+                            <h3 class="display-6 fw-bold mb-0">@Entity.Title</h3></a>
+                        <div class="lead mb-3">@Entity.Tagline</div>
                         <div class="hstack gap-2">
                             @{
                                 bool dateParsed = DateTime.TryParse(Entity.ReleaseDate, out DateTime releaseDate);

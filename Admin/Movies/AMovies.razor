@@ -1,5 +1,6 @@
 ﻿@page "/admin/movies"
 @using N10.Entities
+@using System.ComponentModel.DataAnnotations;
 @attribute [Authorize(Roles = "Admin")]
 @inject IMovieService Service
 @inject ITmdbService TmdbService
@@ -30,65 +31,60 @@ else
             </EditForm>
         }
 
-        <div class="quickgrid-wrapper-sm table-responsive">
-            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()" Pagination="PaginationState">
+        @if (TmdbSearch is null)
+        {
+            <div class="quickgrid-wrapper-sm table-responsive">
+                <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()" Pagination="PaginationState">
+                    <TemplateColumn Title="Title" Align="Align.Start">
+                        @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
+                        <a class="ms-4 text-decoration-none text-white" style="cursor: pointer;"
+                           @onclick="() => HandleClick(context.Title, context.Year)">@context.Title</a>
+                    </TemplateColumn>
 
-                @* <PropertyColumn Property="x => x.Title" Title="Title" Align="Align.Center" Sortable="true" /> *@
+                    <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.VersionType" Title="VersionType" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.ResolutionType" Title="ResolutionType" Align="Align.Center" Sortable="true" />
+                    @if (App!.IsExpanded)
+                    {
+                        <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
+                    }
+                    <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
 
+                </QuickGrid>
 
-
-                <TemplateColumn Title="Title" Align="Align.Center">
-                    @* <a class="me-2" href="admin/movie/@context.Title/@context.Year">@context.Title</a> *@
-                    <a class="me-2" @onclick="() => HandleClick(context.Title)">@context.Title</a>
-                </TemplateColumn>
-
-
-                @*  <TemplateColumn Title="Title" Align="Align.Center">
-                    <a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>
-                </TemplateColumn> *@
-
-
-                <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.VersionType" Title="VersionType" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.ResolutionType" Title="ResolutionType" Align="Align.Center" Sortable="true" />
-                @if (App!.IsExpanded)
-                {
-                    <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
-                }
-                <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
-
-            </QuickGrid>
-            <div class="quickgrid-pagination">
-                <Paginator State="PaginationState" />
+                <div class="quickgrid-pagination d-flex justify-content-between align-items-center">
+                    <div class="ms-2">
+                        <label class="me-2 small text-muted">Items:</label>
+                        <select class="form-select form-select-sm d-inline-block w-auto" @bind="PaginationState.ItemsPerPage">
+                            @foreach (var value in Enum.GetValues<ItemsPerPage>())
+                            {
+                                <option value="@((int)value)">@value</option>
+                                <!-- Ili @(value.GetDisplayName()) ako koristite [Display] -->
+                            }
+                        </select>
+                    </div>
+                    <div class="w-75">
+                        <Paginator State="PaginationState" />
+                    </div>
+                </div>
             </div>
-        </div>
+        }
 
         @if (TmdbSearch is not null)
         {
-            foreach (var movie in TmdbSearch.Results)
-            {
-                <div class="card mb-3">
-                    <div class="row g-0">
-                        <div class="col-md-2">
-                            @{
-                                string ImageUrl = $"http://image.tmdb.org/t/p/w500{movie.PosterPath}";
-                            }
-                            <img src="@ImageUrl" class="img-fluid rounded-start" alt="cover" style="max-height: 200px;">
-                        </div>
-                        <div class="col-md-10">
-                            <div class="card-body">
-                                <a href="movie/@movie.Id"><h5 class="card-title">@movie.Title</h5></a>
-                                <p class="card-text"><small class="text-body-secondary">@movie.ReleaseDate</small></p>
-                                <p class="card-text">@movie.Overview</p>
-                                
-                            </div>
-                        </div>
-                    </div>
+            <div class="">
+                <div class="m-3 d-flex justify-content-start align-items-center">
+                    <button type="button" class="btn-close me-2" @onclick="() => TmdbSearch = null"></button>Close Search
                 </div>
-            }
+
+                @foreach (var movie in TmdbSearch.Results)
+                {
+                    <_SearchCardItem Movie="movie" />
+                }
+            </div>
         }
     </div>
 }
@@ -99,15 +95,13 @@ else
     List<Movie> Entities = new();
 
     TmdbSearch? TmdbSearch;
-
     string SearchTerm = string.Empty;
-    string Year = string.Empty;
-
+    
     const string Title = "Movies";
-
     bool IsProcessing { get; set; } = true;
 
-    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 20 };
+    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
+
 
 
     protected override async Task OnInitializedAsync()
@@ -122,17 +116,17 @@ else
     {
         ArgumentNullException.ThrowIfNull(SearchTerm);
 
-        TmdbSearch = await TmdbService.GetMovieAsync(SearchTerm, Year);
+        TmdbSearch = await TmdbService.GetMovieAsync(SearchTerm);
 
         SearchTerm = string.Empty;
         StateHasChanged();
     }
 
-    async Task HandleClick(string searchTerm)
+    async Task HandleClick(string searchTerm, int? year)
     {
         ArgumentNullException.ThrowIfNull(SearchTerm);
 
-        TmdbSearch = await TmdbService.GetMovieAsync(searchTerm, Year);
+        TmdbSearch = await TmdbService.GetMovieAsync(searchTerm, year.ToString());
 
         SearchTerm = string.Empty;
         StateHasChanged();
