@@ -127,20 +127,20 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
                 // VersionType
                 var versionRegex = new Regex(@"\b(IMAX|DIRECTORS?.CUT|EXTENDED|INTERNAL|REMASTERED|UNRATED|MASTERED.IN.4K|REPACK|FINAL.CUT)\b", RegexOptions.IgnoreCase);
                 var versionMatch = versionRegex.Match(tagsStr);
-                if (versionMatch.Success) info.VersionType = versionMatch.Value.ToUpper();
+                if (versionMatch.Success) info.Version = versionMatch.Value.ToUpper();
 
                 // ResolutionType
                 var resMatch = Regex.Match(postYear, @"\b(480p|720p|1080p|2160p|4K)\b", RegexOptions.IgnoreCase);
-                if (resMatch.Success) info.ResolutionType = resMatch.Value.ToLower();
+                if (resMatch.Success) info.Resolution = resMatch.Value.ToLower();
 
                 // ColorDepthType
                 var colorMatch = Regex.Match(postYear, @"\b(8bit|10bit|12bit)\b", RegexOptions.IgnoreCase);
-                if (colorMatch.Success) info.ColorDepthType = colorMatch.Value.ToLower();
+                if (colorMatch.Success) info.Color = colorMatch.Value.ToLower();
 
                 // SourceType
                 var sourceRegex = new Regex(@"\b(WEBRip|WEBDL|BluRay|BRRip|HDRip|DVDRip|HDTV|CAM|WEB-DL)\b", RegexOptions.IgnoreCase);
                 var sourceMatch = sourceRegex.Match(postYear);
-                if (sourceMatch.Success) info.SourceType = sourceMatch.Value.ToUpper();
+                if (sourceMatch.Success) info.Source = sourceMatch.Value.ToUpper();
 
                 // Audio
                 var audioMatch = Regex.Match(postYear, @"\b(\dCH|DTS|AAC|AC3|FLAC)\b", RegexOptions.IgnoreCase);
@@ -148,11 +148,11 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
 
                 // VideoCodec
                 var codecMatch = Regex.Match(postYear, @"\b(x264|x265|HEVC|AVC|AV1)\b", RegexOptions.IgnoreCase);
-                if (codecMatch.Success) info.VideoCodec = codecMatch.Value.ToUpper();
+                if (codecMatch.Success) info.Video = codecMatch.Value.ToUpper();
 
                 // ReleaseGroup
                 var groupMatch = Regex.Match(postYear, @"-([A-Z0-9]+)$", RegexOptions.IgnoreCase);
-                if (groupMatch.Success) info.ReleaseGroup = groupMatch.Groups[1].Value.ToUpper();
+                if (groupMatch.Success) info.Release = groupMatch.Groups[1].Value.ToUpper();
             }
         }
         else

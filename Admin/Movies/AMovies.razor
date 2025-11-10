@@ -1,7 +1,6 @@
 ﻿@page "/admin/movies"
-@using N10.Entities
-@using System.ComponentModel.DataAnnotations;
 @attribute [Authorize(Roles = "Admin")]
+
 @inject IMovieService Service
 @inject ITmdbService TmdbService
 
@@ -15,7 +14,7 @@
 }
 else
 {
-    <div class="@App?.GetContentClass()">
+    <div class="mb-5 @App?.GetContentClass()">
 
         @if (SearchTmdb is not null)
         {
@@ -70,29 +69,28 @@ else
                     <TemplateColumn Title="Title" Align="Align.Start">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
                         <a class="ms-4 text-decoration-none text-white" style="cursor: pointer;"
-                           @onclick="() => HandleClick(context.TmdbId, context.Title, context.Year)">@context.Title</a>
+                           @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">@context.Title</a>
                     </TemplateColumn>
 
                     <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.VersionType" Title="Version" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.Version" Title="Version" Align="Align.Center" Sortable="true" />
                     <PropertyColumn Property="x => x.TmdbId" Title="TmdbId" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.ResolutionType" Title="Resolution" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.Resolution" Title="Resolution" Align="Align.Center" Sortable="true" />
 
                     @if (App!.IsExpanded)
                     {
-                        <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepth" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.Color" Title="Color" Align="Align.Center" Sortable="true" />
                     }
-                    
-                    <PropertyColumn Property="x => x.SourceType" Title="Source" Align="Align.Center" Sortable="true" />
+
+                    <PropertyColumn Property="x => x.Source" Title="Source" Align="Align.Center" Sortable="true" />
 
                     @if (App!.IsExpanded)
                     {
                         <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.VideoCodec" Title="Video" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.VoteAverage" Title="Score" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.Video" Title="Video" Align="Align.Center" Sortable="true" />
                     }
-                                        
-                    <PropertyColumn Property="x => x.ReleaseGroup" Title="Release" Align="Align.Center" Sortable="true" />
+
+                    <PropertyColumn Property="x => x.Release" Title="Release" Align="Align.Center" Sortable="true" />
 
                     @if (App!.IsExpanded)
                     {
@@ -120,6 +118,7 @@ else
                 }
             </div>
         }
+
         @if (TmdbDetails is not null)
         {
             <div class="">
@@ -128,7 +127,7 @@ else
                 </div>
 
                 <_Details Movie="TmdbDetails" />
-                
+
             </div>
         }
     </div>
@@ -141,7 +140,7 @@ else
     string? Search;
 
     string SearchTmdb = string.Empty;
-    TmdbSearch? TmdbSearch;
+    TmdbMovieList? TmdbSearch;
     TmdbDetails? TmdbDetails;
 
     const string Title = "Movies";
@@ -172,16 +171,16 @@ else
     {
         ArgumentNullException.ThrowIfNull(SearchTmdb);
 
-        TmdbSearch = await TmdbService.GetMovieAsync(SearchTmdb);
+        TmdbSearch = await TmdbService.SearchMoviesAsync(SearchTmdb);
 
         SearchTmdb = string.Empty;
         StateHasChanged();
     }
 
-    async Task HandleClick(int? tmdbId, string search, int? year)
+    async Task HandleSearch(int? tmdbId, string search, int? year)
     {
-        if(tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId);
-        else TmdbSearch = await TmdbService.GetMovieAsync(search, year.ToString());
+        if (tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId);
+        else TmdbSearch = await TmdbService.SearchMoviesAsync(search, year.ToString());
 
         SearchTmdb = string.Empty;
         StateHasChanged();

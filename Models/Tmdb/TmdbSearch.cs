@@ -2,7 +2,7 @@
 
 namespace N10.Models.Tmdb;
 
-public class TmdbSearch
+public class TmdbMovieList
 {
     [JsonPropertyName("page")]
     public int Page { get; set; }
