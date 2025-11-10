@@ -23,7 +23,7 @@ else
                 <div class="mt-5 row justify-content-end">
                     <div class="col-12 col-md-6">
                         <div class="input-group">
-                            <InputText class="form-control" @bind-Value="SearchTerm" placeholder="find movie.." required />
+                            <InputText class="form-control" @bind-Value="SearchTerm" placeholder=" tmdb search.." required />
                             <button class="btn btn-primary" type="submit">Search</button>
                         </div>
                     </div>
@@ -33,8 +33,40 @@ else
 
         @if (TmdbSearch is null)
         {
-            <div class="quickgrid-wrapper-sm table-responsive">
-                <QuickGrid Class="table table-striped table-hover align-middle p-sm" Items="Entities.AsQueryable()" Pagination="PaginationState">
+            <div class="mt-2 table-responsive border rounded">
+                <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
+
+                    <div class="p-2 d-flex justify-content-between align-items-center">
+                        <h4 class="p-0 m-0 ms-2">@Title</h4>
+
+                        <div class="d-inline-flex align-items-center">
+                            <i class="bi bi-search"></i>
+                            <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
+                        </div>
+                        <div class="me-2 d-inline-flex align-items-center" stile="width: 5rem;">
+                            <label class="me-2 small text-muted">Items:</label>
+                            <select class="form-select form-select-sm" @bind="PaginationState.ItemsPerPage">
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="150">150</option>
+                                @* @foreach (var value in Enum.GetValues<ItemsPerPage>())
+                                {
+                                    <option value="@((int)value)">@value</option>
+                                    <!-- Ili @(value.GetDisplayName()) ako koristite [Display] -->
+                                } *@
+                            </select>
+                        </div>
+                    </div>
+
+                    @*<PropertyColumn Property="@(x => x.Title)" Sortable="true" Class="">
+                        <ColumnOptions>
+                            <div class="search-box">
+                                <input type="search" autofocus @bind="Search" @bind:event="oninput" placeholder="name.." />
+                            </div>
+                        </ColumnOptions>
+                    </PropertyColumn> *@
+
                     <TemplateColumn Title="Title" Align="Align.Start">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
                         <a class="ms-4 text-decoration-none text-white" style="cursor: pointer;"
@@ -60,21 +92,8 @@ else
                         <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
                     }
                 </QuickGrid>
-
-                <div class="quickgrid-pagination d-flex justify-content-between align-items-center">
-                    <div class="ms-2">
-                        <label class="me-2 small text-muted">Items:</label>
-                        <select class="form-select form-select-sm d-inline-block w-auto" @bind="PaginationState.ItemsPerPage">
-                            @foreach (var value in Enum.GetValues<ItemsPerPage>())
-                            {
-                                <option value="@((int)value)">@value</option>
-                                <!-- Ili @(value.GetDisplayName()) ako koristite [Display] -->
-                            }
-                        </select>
-                    </div>
-                    <div class="w-75">
-                        <Paginator State="PaginationState" />
-                    </div>
+                <div class="quickgrid-pagination">
+                    <Paginator State="PaginationState" />
                 </div>
             </div>
         }
@@ -99,6 +118,7 @@ else
     [CascadingParameter] AppState? App { get; set; }
 
     List<Movie> Entities = new();
+    string? Search;
 
     TmdbSearch? TmdbSearch;
     string SearchTerm = string.Empty;
@@ -112,11 +132,24 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Entities = await Service.GetAllMoviesAsync();
+        Entities = await Service.GetAllMoviesAsync(default);
 
         IsProcessing = false;
         StateHasChanged();
     }
+
+    IQueryable<Movie> FilteredEntities
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Search)) return Entities.AsQueryable();
+            else return Entities.Where(x => x.Title.Contains(Search, StringComparison.OrdinalIgnoreCase)).AsQueryable();
+        }
+    }
+
+
+
+
 
     async Task HandleValidSubmit()
     {
