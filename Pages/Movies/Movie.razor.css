@@ -1,24 +1,15 @@
 ﻿#movie-details {
     margin-top: -40px;
-    /*min-height: 100vh;*/
-    height: 100vh;
+    min-height: 100vh;
     background-size: cover;
     background-position: center;
     background-image: var(--background);
     background-repeat: no-repeat;
 }
 
-#movie-wrapper {
-    background-color: rgba(0,0,0,0.2);
-}
-
 #movie-poster {
     max-width: 100%;
-    border: 2px solid var(--cf-theme-800);
-}
-
-#movie-rating {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: var(--cf-theme-200);
+    border: 1px solid var(--cf-theme-800);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }

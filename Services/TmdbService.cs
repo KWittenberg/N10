@@ -13,18 +13,18 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         return await response.Content.ReadFromJsonAsync<TmdbMovieList>();
     }
 
-    public async Task<TmdbDetails?> GetMovieByIdAsync(int? id)
+    public async Task<TmdbDetails?> GetMovieByIdAsync(int id, string? language = "en-US")
     {
-        var response = await client.GetAsync($"{options.Value.BaseUrl}movie/{id}&language=en-US");
+        var response = await client.GetAsync($"{options.Value.BaseUrl}movie/{id}&language={language}");
         var movie = await response.Content.ReadFromJsonAsync<TmdbDetails>();
 
         movie?.PosterPath = string.IsNullOrEmpty(movie.PosterPath)
                         ? "/images/poster.png"
-                        : $"http://image.tmdb.org/t/p/w500{movie.PosterPath}";
+                        : $"{options.Value.BaseImageUrl}{movie.PosterPath}";
 
         movie?.BackdropPath = string.IsNullOrEmpty(movie.BackdropPath)
                            ? "/images/backdrop.jpg"
-                           : $"http://image.tmdb.org/t/p/w500{movie.BackdropPath}";
+                           : $"{options.Value.BaseImageUrl}{movie.BackdropPath}";
 
         return movie;
     }

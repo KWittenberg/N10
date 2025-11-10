@@ -179,7 +179,7 @@ else
 
     async Task HandleSearch(int? tmdbId, string search, int? year)
     {
-        if (tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId);
+        if (tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId.Value);
         else TmdbSearch = await TmdbService.SearchMoviesAsync(search, year.ToString());
 
         SearchTmdb = string.Empty;

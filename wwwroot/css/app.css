@@ -135,6 +135,18 @@ h1:focus {
     background-color: rgba(var(--bs-black-rgb), 0.2);
 }
 
+.bg-transparent30 {
+    background-color: rgba(var(--bs-black-rgb), 0.3);
+}
+
+.bg-transparent40 {
+    background-color: rgba(var(--bs-black-rgb), 0.4);
+}
+
+.bg-transparent50 {
+    background-color: rgba(var(--bs-black-rgb), 0.5);
+}
+
 .bg-transparent60 {
     background-color: rgba(var(--bs-black-rgb), 0.6);
 }

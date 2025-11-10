@@ -14,23 +14,20 @@
 else
 {
     <div id="movie-details" style="--background: url(@Entity.BackdropPath)">
-
-
-        <div id="movie-wrapper">
-            @* <div class="container-xxl py-3"> *@
-            <div class="@App?.GetContentClass() py-4">
-                @* <h1 class="p-4">
+        <div class="@App?.GetContentClass() py-4">
+            @* <h1 class="p-4">
                     <i class="me-2 bi bi-film text-primary"></i> @Entity.Title - @Entity.Id
                 </h1> *@
 
-
-                <div class="mt-5 row">
-                    <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
-                        <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
-                    </div>
-                    <div class="col-12 col-md-8 col-xl-9">
+            <div class="mt-5 row">
+                <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
+                    <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
+                </div>
+                <div class="col-12 col-md-8 col-xl-9">
+                    <div class="mx-2 p-2 ps-4 rounded bg-transparent40">
                         <a href="https://www.themoviedb.org/movie/@Entity.Id" class="text-decoration-none" target="_blank">
-                            <h3 class="display-6 fw-bold mb-0">@Entity.Title</h3></a>
+                            <h1 class="mb-0">@Entity.Title</h1>
+                        </a>
                         <div class="lead mb-3">@Entity.Tagline</div>
                         <div class="hstack gap-2">
                             @{
@@ -38,7 +35,7 @@ else
                             }
                             @if (dateParsed)
                             {
-                                <span>@releaseDate.ToString("MMMM dd, yyyy") | </span>
+                                <span>@releaseDate.ToString("dd. MMMM, yyyy.") | </span>
                             }
                             <span>
                                 @{
@@ -57,11 +54,7 @@ else
                         <p>TMDB Id: @Entity.Id</p>
                         <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
                         <p>@Entity.Overview</p>
-                        <div>
-                            <span id="movie-rating">
-                                User Score: @((Entity.VoteAverage * 10).ToString("F2"))%
-                            </span>
-                        </div>
+                        <h4>Score: @((Entity.VoteAverage * 10).ToString("F2"))%</h4>
                     </div>
                 </div>
             </div>
@@ -83,7 +76,7 @@ else
 
 
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         Entity = await Service.GetMovieByIdAsync(Id);
 
