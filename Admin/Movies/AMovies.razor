@@ -17,13 +17,13 @@ else
 {
     <div class="@App?.GetContentClass()">
 
-        @if (SearchTerm is not null)
+        @if (SearchTmdb is not null)
         {
-            <EditForm Enhance Model=@SearchTerm OnValidSubmit=@HandleValidSubmit>
+            <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
                 <div class="mt-5 row justify-content-end">
                     <div class="col-12 col-md-6">
                         <div class="input-group">
-                            <InputText class="form-control" @bind-Value="SearchTerm" placeholder=" tmdb search.." required />
+                            <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
                             <button class="btn btn-primary" type="submit">Search</button>
                         </div>
                     </div>
@@ -31,7 +31,7 @@ else
             </EditForm>
         }
 
-        @if (TmdbSearch is null)
+        @if (TmdbSearch is null && TmdbDetails is null)
         {
             <div class="mt-2 table-responsive border rounded">
                 <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
@@ -70,23 +70,32 @@ else
                     <TemplateColumn Title="Title" Align="Align.Start">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
                         <a class="ms-4 text-decoration-none text-white" style="cursor: pointer;"
-                           @onclick="() => HandleClick(context.Title, context.Year)">@context.Title</a>
+                           @onclick="() => HandleClick(context.TmdbId, context.Title, context.Year)">@context.Title</a>
                     </TemplateColumn>
 
                     <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
                     <PropertyColumn Property="x => x.VersionType" Title="Version" Align="Align.Center" Sortable="true" />
                     <PropertyColumn Property="x => x.TmdbId" Title="TmdbId" Align="Align.Center" Sortable="true" />
                     <PropertyColumn Property="x => x.ResolutionType" Title="Resolution" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.VoteAverage" Title="Score" Align="Align.Center" Sortable="true" />
 
                     @if (App!.IsExpanded)
                     {
-                        <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepthType" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.SourceType" Title="SourceType" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.ColorDepthType" Title="ColorDepth" Align="Align.Center" Sortable="true" />
+                    }
+                    
+                    <PropertyColumn Property="x => x.SourceType" Title="Source" Align="Align.Center" Sortable="true" />
+
+                    @if (App!.IsExpanded)
+                    {
                         <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.VideoCodec" Title="VideoCodec" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.ReleaseGroup" Title="ReleaseGroup" Align="Align.Center" Sortable="true" />
-                        @* <PropertyColumn Property="x => x.FileName" Title="FileName" Align="Align.Center" Sortable="true" /> *@
+                        <PropertyColumn Property="x => x.VideoCodec" Title="Video" Align="Align.Center" Sortable="true" />
+                        <PropertyColumn Property="x => x.VoteAverage" Title="Score" Align="Align.Center" Sortable="true" />
+                    }
+                                        
+                    <PropertyColumn Property="x => x.ReleaseGroup" Title="Release" Align="Align.Center" Sortable="true" />
+
+                    @if (App!.IsExpanded)
+                    {
                         <PropertyColumn Property="x => x.TmdbTitle" Title="TmdbTitle" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.TmdbImageUrl" Title="TmdbImageUrl" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
@@ -111,6 +120,17 @@ else
                 }
             </div>
         }
+        @if (TmdbDetails is not null)
+        {
+            <div class="">
+                <div class="m-3 d-flex justify-content-start align-items-center">
+                    <button type="button" class="btn-close me-2" @onclick="() => TmdbDetails = null"></button>Close Details
+                </div>
+
+                <_Details Movie="TmdbDetails" />
+                
+            </div>
+        }
     </div>
 }
 
@@ -120,8 +140,9 @@ else
     List<Movie> Entities = new();
     string? Search;
 
+    string SearchTmdb = string.Empty;
     TmdbSearch? TmdbSearch;
-    string SearchTerm = string.Empty;
+    TmdbDetails? TmdbDetails;
 
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
@@ -147,27 +168,22 @@ else
         }
     }
 
-
-
-
-
     async Task HandleValidSubmit()
     {
-        ArgumentNullException.ThrowIfNull(SearchTerm);
+        ArgumentNullException.ThrowIfNull(SearchTmdb);
 
-        TmdbSearch = await TmdbService.GetMovieAsync(SearchTerm);
+        TmdbSearch = await TmdbService.GetMovieAsync(SearchTmdb);
 
-        SearchTerm = string.Empty;
+        SearchTmdb = string.Empty;
         StateHasChanged();
     }
 
-    async Task HandleClick(string searchTerm, int? year)
+    async Task HandleClick(int? tmdbId, string search, int? year)
     {
-        ArgumentNullException.ThrowIfNull(SearchTerm);
+        if(tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId);
+        else TmdbSearch = await TmdbService.GetMovieAsync(search, year.ToString());
 
-        TmdbSearch = await TmdbService.GetMovieAsync(searchTerm, year.ToString());
-
-        SearchTerm = string.Empty;
+        SearchTmdb = string.Empty;
         StateHasChanged();
     }
 

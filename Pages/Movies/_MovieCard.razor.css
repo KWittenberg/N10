@@ -1,0 +1,16 @@
+﻿.card {
+    transition: transform 0.2s ease-in-out;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.6rem;
+    border: none;
+}
+
+    .card:hover {
+        transform: scale(1.03);
+        z-index: 99;
+    }
+
+    .card img {
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.4);
+    }

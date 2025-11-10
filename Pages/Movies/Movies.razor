@@ -12,55 +12,22 @@
 }
 else
 {
-    <div class="@App?.GetContentClass()">
+    <div class="mt-5 @App?.GetContentClass()">
 
-        @if (SearchTerm is not null)
-        {
-            <EditForm Enhance Model=@SearchTerm OnValidSubmit=@HandleValidSubmit>
-                <div class="mt-5 row justify-content-end">
-                    <div class="col-12 col-md-6">
-                        <div class="input-group">
-                            <InputText class="form-control" @bind-Value="SearchTerm" placeholder="find movie.." required />
-                            <button class="btn btn-primary" type="submit">Search</button>
-                        </div>
-                    </div>
-                </div>
-            </EditForm>
-        }
-
-        @if (TmdbSearch is null)
-        {
-            <div class="grid-container">
-                @foreach (var movie in Entities.Take(50))
-                {
-                    <_MovieCardItem Item="movie" />
-                }
-            </div>
-        }
-
-        @if (TmdbSearch is not null)
-        {
-            <div class="">
-                <div class="m-3 d-flex justify-content-start align-items-center">
-                    <button type="button" class="btn-close me-2" @onclick="() => TmdbSearch = null"></button>Close Search
-                </div>
-
-                @foreach (var movie in TmdbSearch.Results)
-                {
-                    <_SearchCardItem Movie="movie" />
-                }
-            </div>
-        }
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6">
+            @foreach (var movie in Entities.Take(18))
+            {
+                <_MovieCard Item="movie" />
+            }
+        </div>
     </div>
 }
+
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
     List<Entities.Movie> Entities = new();
-
-    TmdbSearch? TmdbSearch;
-    string SearchTerm = string.Empty;
 
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
@@ -72,26 +39,6 @@ else
         Entities = await Service.GetAllMoviesAsync();
 
         IsProcessing = false;
-        StateHasChanged();
-    }
-
-    async Task HandleValidSubmit()
-    {
-        ArgumentNullException.ThrowIfNull(SearchTerm);
-
-        TmdbSearch = await TmdbService.GetMovieAsync(SearchTerm);
-
-        SearchTerm = string.Empty;
-        StateHasChanged();
-    }
-
-    async Task HandleClick(string searchTerm, int? year)
-    {
-        ArgumentNullException.ThrowIfNull(SearchTerm);
-
-        TmdbSearch = await TmdbService.GetMovieAsync(searchTerm, year.ToString());
-
-        SearchTerm = string.Empty;
         StateHasChanged();
     }
 }

@@ -22,6 +22,7 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
         <h5 class="offcanvas-title" id="offcanvasSettings">Settings</h5>
         <div class="d-flex align-items-center gap-2">
             @* <a type="button" @onclick="@DeleteBg"><i class="bi bi-arrow-repeat"></i></a> *@
+            <i class="bi @(App!.IsExpanded ? "bi bi-distribute-horizontal" : "bi bi-distribute-vertical")" @onclick="OnChangeContent"></i>
             <i class="bi @(isDarkTheme ? "bi bi-lightbulb-fill" : "bi bi-lightbulb-off-fill")" @onclick="OnThemeToggle"></i>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
@@ -71,6 +72,8 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public EventCallback OnChangeContent { get; set; }
 
     bool isDarkTheme = true;
     bool isInitialized = false;

@@ -85,7 +85,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Entity = await Service.GetMovieAsync(Id);
+        Entity = await Service.GetMovieByIdAsync(Id);
 
         IsProcessing = false;
         StateHasChanged();

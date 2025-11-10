@@ -11,7 +11,7 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         return await response.Content.ReadFromJsonAsync<TmdbSearch>();
     }
 
-    public async Task<TmdbDetails?> GetMovieAsync(int? id)
+    public async Task<TmdbDetails?> GetMovieByIdAsync(int? id)
     {
         var response = await client.GetAsync($"{options.Value.BaseUrl}movie/{id}&language=en-US");
 
