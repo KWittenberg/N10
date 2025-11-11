@@ -2,15 +2,14 @@
 
 public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITmdbService
 {
-    public async Task<TmdbMovieList?> SearchMoviesAsync(string query, string? year = null, string? language = "en-US", bool includeAdult = true)
+    public async Task<TmdbSearchList?> SearchMoviesAsync(string query, string? year = null, string? language = "en-US", bool includeAdult = true)
     {
         var yearParam = string.IsNullOrWhiteSpace(year) ? string.Empty : $"&year={year}";
         var url = $"{options.Value.BaseUrl}search/movie?query={Uri.EscapeDataString(query)}&include_adult={includeAdult}&language={language}&page=1{yearParam}";
         var response = await client.GetAsync(url);
-
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<TmdbMovieList>();
+        return await response.Content.ReadFromJsonAsync<TmdbSearchList>();
     }
 
     public async Task<TmdbDetails?> GetMovieByIdAsync(int id, string? language = "en-US")
@@ -27,5 +26,14 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
                            : $"{options.Value.BaseImageUrl}{movie.BackdropPath}";
 
         return movie;
+    }
+
+    public async Task<TmdbVideo?> GetYouTubeVideosAsync(int id, string? language = "en-US")
+    {
+        var url = $"{options.Value.BaseUrl}movie/{id}/videos?language={language}";
+        var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<TmdbVideo>();
     }
 }

@@ -30,25 +30,13 @@ else
                         </a>
                         <div class="lead mb-3">@Entity.Tagline</div>
                         <div class="hstack gap-2">
-                            @{
-                                bool dateParsed = DateTime.TryParse(Entity.ReleaseDate, out DateTime releaseDate);
-                            }
-                            @if (dateParsed)
-                            {
-                                <span>@releaseDate.ToString("dd. MMMM, yyyy.") | </span>
-                            }
-                            <span>
-                                @{
-                                    int hours = Entity.Runtime / 60;
-                                    int minutes = Entity.Runtime % 60;
-                                }
-                                @hours hour(s) @minutes minutes
-                            </span>
+                            <span>@ReleaseDate | </span>
+                            <span>@Hours hour(s) @Minutes minutes</span>
                         </div>
                         <div class="hstack gap-2 my-2">
                             @foreach (var genre in Entity.Genres)
                             {
-                                <span class="badge text-bg-primary">@genre.Name</span>
+                                <span class="badge bg-dark-subtle">@genre.Name</span>
                             }
                         </div>
                         <p>TMDB Id: @Entity.Id</p>
@@ -74,11 +62,20 @@ else
 
     bool IsProcessing { get; set; } = true;
 
+    string? ReleaseDate;
+    int? Hours;
+    int? Minutes;
 
 
     protected override async Task OnParametersSetAsync()
     {
         Entity = await Service.GetMovieByIdAsync(Id);
+
+        bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
+        if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy."); 
+                
+        Hours = Entity?.Runtime / 60;
+        Minutes = Entity?.Runtime % 60;
 
         IsProcessing = false;
         StateHasChanged();

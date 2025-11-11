@@ -2,13 +2,13 @@
 
 namespace N10.Models.Tmdb;
 
-public class TmdbMovieList
+public class TmdbSearchList
 {
     [JsonPropertyName("page")]
     public int Page { get; set; }
 
     [JsonPropertyName("results")]
-    public List<TmdbResult> Results { get; set; } = new();
+    public List<TmdbSearch> Results { get; set; } = new();
 
     [JsonPropertyName("total_pages")]
     public int TotalPages { get; set; }
@@ -17,7 +17,7 @@ public class TmdbMovieList
     public int TotalResults { get; set; }
 }
 
-public class TmdbResult
+public class TmdbSearch
 {
     [JsonPropertyName("adult")]
     public bool Adult { get; set; }
