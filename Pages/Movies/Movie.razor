@@ -23,7 +23,7 @@ else
                 <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
                     <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
                     <div class="mt-2 p-2 d-flex justify-content-center align-items-center rounded bg-transparent40">
-                        <h4 class="m-0">* @Entity.VoteAverage<span class="h5 ms-4">[ @Entity.VoteCount votes ]</span></h4>
+                        <h4 class="m-0">@Entity.VoteAverage<span class="h5 ms-4">[ @Entity.VoteCount votes ]</span></h4>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
@@ -45,12 +45,17 @@ else
                         <p>TMDB Id: @Entity.Id</p>
                         <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
                         <p>@Entity.Overview</p>
-                        <h4>Score: @((Entity.VoteAverage * 10).ToString("F2"))%</h4>
+
+                        @* <h6 class="mt-2">Director: <span></span></h6>
+                        <h6 class="mt-2">Cast: <span></span></h6>
+                        <h4>Score: @((Entity.VoteAverage * 10).ToString("F2"))%</h4> *@
 
                         @if (!string.IsNullOrEmpty(MovieTrailer?.Key))
                         {
                             <div class="mt-2" id="btn-trailer">
-                                <button class="btn btn-outline-warning">Watch Trailer</button>
+                                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#youtube-modal">
+                                    <i class="bi bi-play"></i> Watch Trailer
+                                </button>
                             </div>
                         }
                     </div>
@@ -59,6 +64,27 @@ else
         </div>
     </div>
 }
+
+<div class="modal" tabindex="-1" id="youtube-modal">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content modal-background">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">@(Entity?.Title ?? "Movie Trailer")</h5>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="ms-auto">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="modal-trailer" src="" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-warning ms-auto" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 @code {
@@ -69,7 +95,7 @@ else
     TmdbDetails? Entity { get; set; }
     TmdbVideo? MovieTrailer { get; set; }
 
-    const string Title = "Movie Info";
+    string? Title;
 
     bool IsProcessing { get; set; } = true;
 
@@ -83,6 +109,8 @@ else
         Entity = await Service.GetMovieByIdAsync(Id);
         MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
 
+        Title = Entity?.Title;
+        
         bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
         if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy.");
 
