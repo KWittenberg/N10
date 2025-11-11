@@ -38,10 +38,7 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
 
         var videos = await response.Content.ReadFromJsonAsync<TmdbVideoList>();
 
-        var movieTrailer = videos?.Results
-            .FirstOrDefault(x => x.Site!.Contains("YouTube", StringComparison.OrdinalIgnoreCase)
-                              && x.Type!.Contains("Trailer", StringComparison.OrdinalIgnoreCase));
-
-        return movieTrailer;
+        return videos?.Results.FirstOrDefault(x => x.Site!.Contains("YouTube", StringComparison.OrdinalIgnoreCase)
+                                                && x.Type!.Contains("Trailer", StringComparison.OrdinalIgnoreCase));
     }
 }
