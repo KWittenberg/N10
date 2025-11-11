@@ -1,0 +1,11 @@
+﻿.modal-background {
+    background-color: var(--cf-theme-900);
+    color: var(--cf-light-color);
+}
+
+.modal-header button {
+    color: var(--bs-warning);
+    background-color: transparent;
+    border: none;
+    font-size: 2rem;
+}

@@ -1,0 +1,25 @@
+<div class="movie-stars">
+    <div class="stars-empty">
+        <i class="bi bi-star"></i>
+        <i class="bi bi-star"></i>
+        <i class="bi bi-star"></i>
+        <i class="bi bi-star"></i>
+        <i class="bi bi-star"></i>
+    </div>
+    @{
+        string starWidth = (Stars / 2).ToString(System.Globalization.CultureInfo.InvariantCulture) + "rem";
+    }
+
+    <div class="stars-full" style="width: @starWidth">
+        <i class="bi bi-star-fill text-warning"></i>
+        <i class="bi bi-star-fill text-warning"></i>
+        <i class="bi bi-star-fill text-warning"></i>
+        <i class="bi bi-star-fill text-warning"></i>
+        <i class="bi bi-star-fill text-warning"></i>
+    </div>
+</div>
+
+@code
+{
+    [Parameter] public double Stars { get; set; }
+}

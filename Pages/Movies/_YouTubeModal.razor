@@ -1,0 +1,45 @@
+@inject IJSRuntime JsRuntime
+
+<!-- YouTube Modal Component -->
+<div class="modal" tabindex="-1" id="youtube-modal">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content modal-background">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">@(Entity?.Title ?? "Movie Trailer")</h5>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="ms-auto">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="modal-trailer" src="" allowfullscreen></iframe>
+                </div>
+            </div>
+            @* <div class="modal-footer">
+                <button type="button" class="btn btn-outline-warning ms-auto" data-bs-dismiss="modal">Close</button>
+            </div> *@
+        </div>
+    </div>
+</div>
+
+
+@code
+{
+    [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public TmdbDetails? Entity { get; set; }
+
+    [Parameter] public TmdbVideo? MovieTrailer { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await using var jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "/Pages/Movies/_YouTubeModal.razor.js");
+
+            if (MovieTrailer is not null) await jsModule.InvokeVoidAsync("initVideoPlayer", $"https://www.youtube.com/embed/{MovieTrailer.Key}");
+            else await jsModule.InvokeVoidAsync("initVideoPlayer", string.Empty);
+        }
+    }
+}

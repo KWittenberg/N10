@@ -13,6 +13,8 @@
 }
 else
 {
+    <_YouTubeModal Entity="Entity" MovieTrailer="MovieTrailer" />
+
     <div id="movie-details" style="--background: url(@Entity.BackdropPath)">
         <div class="@App?.GetContentClass() py-4">
             @* <h1 class="p-4">
@@ -23,7 +25,8 @@ else
                 <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
                     <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
                     <div class="mt-2 p-2 d-flex justify-content-center align-items-center rounded bg-transparent40">
-                        <h4 class="m-0">@Entity.VoteAverage<span class="h5 ms-4">[ @Entity.VoteCount votes ]</span></h4>
+                        <_Stars Stars="@Entity.VoteAverage" />
+                        <h4 class="m-0 ms-3">@Entity?.VoteAverage<span class="h5 ms-3">[ @Entity?.VoteCount votes ]</span></h4>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
@@ -65,27 +68,6 @@ else
     </div>
 }
 
-<div class="modal" tabindex="-1" id="youtube-modal">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content modal-background">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal-title">@(Entity?.Title ?? "Movie Trailer")</h5>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="ms-auto">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="ratio ratio-16x9">
-                    <iframe id="modal-trailer" src="" allowfullscreen></iframe>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-warning ms-auto" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
@@ -96,7 +78,6 @@ else
     TmdbVideo? MovieTrailer { get; set; }
 
     string? Title;
-
     bool IsProcessing { get; set; } = true;
 
     string? ReleaseDate;
@@ -110,7 +91,7 @@ else
         MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
 
         Title = Entity?.Title;
-        
+
         bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
         if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy.");
 
