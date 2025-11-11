@@ -15,6 +15,8 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
     public async Task<TmdbDetails?> GetMovieByIdAsync(int id, string? language = "en-US")
     {
         var response = await client.GetAsync($"{options.Value.BaseUrl}movie/{id}&language={language}");
+        response.EnsureSuccessStatusCode();
+
         var movie = await response.Content.ReadFromJsonAsync<TmdbDetails>();
 
         movie?.PosterPath = string.IsNullOrEmpty(movie.PosterPath)
@@ -28,12 +30,18 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         return movie;
     }
 
-    public async Task<TmdbVideo?> GetYouTubeVideosAsync(int id, string? language = "en-US")
+    public async Task<TmdbVideo?> GetMovieTrailerAsync(int id, string? language = "en-US")
     {
         var url = $"{options.Value.BaseUrl}movie/{id}/videos?language={language}";
         var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<TmdbVideo>();
+        var videos = await response.Content.ReadFromJsonAsync<TmdbVideoList>();
+
+        var movieTrailer = videos?.Results
+            .FirstOrDefault(x => x.Site!.Contains("YouTube", StringComparison.OrdinalIgnoreCase)
+                              && x.Type!.Contains("Trailer", StringComparison.OrdinalIgnoreCase));
+
+        return movieTrailer;
     }
 }
