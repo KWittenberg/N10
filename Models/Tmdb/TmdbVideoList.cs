@@ -2,13 +2,13 @@
 
 namespace N10.Models.Tmdb;
 
-public class TmdbVideoList
+public class TmdbVideos
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
 
     [JsonPropertyName("results")]
-    public List<TmdbVideo> Results { get; set; } = [];
+    public List<TmdbVideo> Videos { get; set; } = [];
 }
 
 public class TmdbVideo

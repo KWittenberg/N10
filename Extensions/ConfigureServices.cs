@@ -23,6 +23,12 @@ public static class ConfigureServices
         services.AddTransient<TmdbAuthenticationHandler>();
         services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();
 
+        // Alternative way to configure HttpClient with BaseAddress from configuration
+        //services.AddHttpClient<ITmdbService, TmdbService>(client =>
+        //{
+        //    client.BaseAddress = new Uri(configuration["TmdbOptions:BaseUrl"]!);
+        //}).AddHttpMessageHandler<TmdbAuthenticationHandler>();
+
         return services;
     }
 }
