@@ -1,7 +1,7 @@
 ﻿.movie-stars {
     position: relative;
     display: inline-block;
-    height: 1.5em; /* Prilagodite veličinu zvjezdica */
+    height: 1.2em; /* Prilagodite veličinu zvjezdica */
     overflow: hidden;
 }
 
@@ -23,5 +23,5 @@
 }
 
     .stars-full i {
-        color: gold; /* Žute pune (ili koristite text-warning iz Bootstrap-a) */
+        color: var(--cf-theme-core) !important;
     }

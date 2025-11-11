@@ -26,7 +26,8 @@ else
                     <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
                     <div class="mt-2 p-2 d-flex justify-content-center align-items-center rounded bg-transparent40">
                         <_Stars Stars="@Entity.VoteAverage" />
-                        <h4 class="m-0 ms-3">@Entity?.VoteAverage<span class="h5 ms-3">[ @Entity?.VoteCount votes ]</span></h4>
+                        <h4 class="m-0 ms-3 rating-circle">@Entity?.VoteAverage.ToString("F1")</h4>
+                        <h5 class="m-0 ms-3">@Entity?.VoteCount votes</h5>
                     </div>
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
