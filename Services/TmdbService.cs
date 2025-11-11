@@ -30,7 +30,7 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         return movie;
     }
 
-    public async Task<TmdbVideo?> GetMovieTrailerAsync(int id, string? language = "en-US")
+    public async Task<TmdbVideo?> GetMovieTrailerByIdAsync(int id, string? language = "en-US")
     {
         var url = $"{options.Value.BaseUrl}movie/{id}/videos?language={language}";
         var response = await client.GetAsync(url);

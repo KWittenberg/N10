@@ -22,6 +22,9 @@ else
             <div class="mt-5 row">
                 <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
                     <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
+                    <div class="mt-2 p-2 d-flex justify-content-center align-items-center rounded bg-transparent40">
+                        <h4 class="m-0">* @Entity.VoteAverage<span class="h5 ms-4">[ @Entity.VoteCount votes ]</span></h4>
+                    </div>
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
                     <div class="mx-2 p-2 ps-4 rounded bg-transparent40">
@@ -43,6 +46,13 @@ else
                         <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
                         <p>@Entity.Overview</p>
                         <h4>Score: @((Entity.VoteAverage * 10).ToString("F2"))%</h4>
+
+                        @if (!string.IsNullOrEmpty(MovieTrailer?.Key))
+                        {
+                            <div class="mt-2" id="btn-trailer">
+                                <button class="btn btn-outline-warning">Watch Trailer</button>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -57,6 +67,7 @@ else
     [Parameter] public int Id { get; set; }
 
     TmdbDetails? Entity { get; set; }
+    TmdbVideo? MovieTrailer { get; set; }
 
     const string Title = "Movie Info";
 
@@ -70,10 +81,11 @@ else
     protected override async Task OnParametersSetAsync()
     {
         Entity = await Service.GetMovieByIdAsync(Id);
+        MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
 
         bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
-        if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy."); 
-                
+        if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy.");
+
         Hours = Entity?.Runtime / 60;
         Minutes = Entity?.Runtime % 60;
 
