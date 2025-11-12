@@ -25,3 +25,9 @@
     .stars-full i {
         color: var(--cf-theme-core) !important;
     }
+
+.rating-circle {
+    padding: 1rem;
+    border: 1.5px dashed white;
+    border-radius: 50%;
+}

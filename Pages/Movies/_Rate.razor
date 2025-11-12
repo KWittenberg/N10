@@ -1,3 +1,6 @@
+
+<div class="mt-3 d-flex justify-content-center align-items-center rounded bg-transparent50">
+
 <div class="movie-stars">
     <div class="stars-empty">
         <i class="bi bi-star"></i>
@@ -7,7 +10,7 @@
         <i class="bi bi-star"></i>
     </div>
     @{
-        string starWidth = (Stars / 2).ToString(System.Globalization.CultureInfo.InvariantCulture) + "rem";
+            string starWidth = (Entity.VoteAverage / 2).ToString(System.Globalization.CultureInfo.InvariantCulture) + "rem";
     }
     <div class="stars-full" style="width: @starWidth">
         <i class="bi bi-star-fill text-warning"></i>
@@ -18,7 +21,12 @@
     </div>
 </div>
 
+    <h4 class="m-0 ms-3 rating-circle">@Entity?.VoteAverage.ToString("F1")</h4>
+    <h5 class="m-0 ms-3">@Entity?.VoteCount votes</h5>
+</div>
+
+
 @code
 {
-    [Parameter] public double Stars { get; set; }
+    [Parameter] public TmdbDetails? Entity { get; set; }
 }

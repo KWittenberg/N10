@@ -30,6 +30,30 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         return movie;
     }
 
+    public async Task<TmdbCredits?> GetMovieCreditsByIdAsync(int id, string? language = "en-US")
+    {
+        var response = await client.GetAsync($"{options.Value.BaseUrl}movie/{id}/credits?language={language}");
+        response.EnsureSuccessStatusCode();
+
+        var credits = await response.Content.ReadFromJsonAsync<TmdbCredits>();
+
+        foreach (var castMember in credits?.Casts!)
+        {
+            castMember.ProfilePath = string.IsNullOrEmpty(castMember.ProfilePath)
+                ? "/images/profile.jpg"
+                : $"https://image.tmdb.org/t/p/w500{castMember.ProfilePath}";
+        }
+
+        foreach (var crewMember in credits.Crews)
+        {
+            crewMember.ProfilePath = string.IsNullOrEmpty(crewMember.ProfilePath)
+                ? "/images/profile.jpg"
+                : $"https://image.tmdb.org/t/p/w500{crewMember.ProfilePath}";
+        }
+
+        return credits;
+    }
+
     public async Task<TmdbVideo?> GetMovieTrailerByIdAsync(int id, string? language = "en-US")
     {
         var url = $"{options.Value.BaseUrl}movie/{id}/videos?language={language}";

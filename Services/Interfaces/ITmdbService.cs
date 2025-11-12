@@ -6,5 +6,7 @@ public interface ITmdbService
 
     Task<TmdbDetails?> GetMovieByIdAsync(int id, string? language = "en-US");
 
+    Task<TmdbCredits?> GetMovieCreditsByIdAsync(int id, string? language = "en-US");
+
     Task<TmdbVideo?> GetMovieTrailerByIdAsync(int id, string? language = "en-US");
 }

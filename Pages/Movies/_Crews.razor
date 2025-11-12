@@ -1,0 +1,14 @@
+<h6 class="mt-2">
+    Director:
+    <span class="ms-2 text-white-50">
+        @foreach (var director in Crews.Where(c => c.Job == "Director"))
+        {
+            @director.Name
+        }
+    </span>
+</h6>
+
+
+@code {
+    [Parameter] public List<TmdbCrew> Crews { get; set; } = [];
+}

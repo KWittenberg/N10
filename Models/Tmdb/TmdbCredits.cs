@@ -8,10 +8,10 @@ public class TmdbCredits
     public int Id { get; set; }
 
     [JsonPropertyName("cast")]
-    public List<TmdbCast> Casts { get; set; } = new();
+    public List<TmdbCast> Casts { get; set; } = [];
 
     [JsonPropertyName("crew")]
-    public List<TmdbCrew> Crews { get; set; } = new();
+    public List<TmdbCrew> Crews { get; set; } = [];
 }
 
 public class TmdbCast

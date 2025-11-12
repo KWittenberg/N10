@@ -6,7 +6,6 @@
 
 <title>@Title</title>
 
-
 @if (IsProcessing || Entity is null)
 {
     <_Loading />
@@ -17,21 +16,23 @@ else
 
     <div id="movie-details" style="--background: url(@Entity.BackdropPath)">
         <div class="@App?.GetContentClass() py-4">
-            @* <h1 class="p-4">
-                    <i class="me-2 bi bi-film text-primary"></i> @Entity.Title - @Entity.Id
-                </h1> *@
-
             <div class="mt-5 row">
                 <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
                     <img class="img-fluid" id="movie-poster" alt="movie poster" src="@Entity.PosterPath" />
-                    <div class="mt-2 p-2 d-flex justify-content-center align-items-center rounded bg-transparent40">
-                        <_Stars Stars="@Entity.VoteAverage" />
-                        <h4 class="m-0 ms-3 rating-circle">@Entity?.VoteAverage.ToString("F1")</h4>
-                        <h5 class="m-0 ms-3">@Entity?.VoteCount votes</h5>
-                    </div>
+
+                    <_Rate Entity="@Entity" />
+
+                    @if (!string.IsNullOrEmpty(MovieTrailer?.Key))
+                    {
+                        <div class="mt-3" id="btn-trailer">
+                            <button class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#youtube-modal">
+                                <i class="bi bi-play"></i> Watch Trailer
+                            </button>
+                        </div>
+                    }
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
-                    <div class="mx-2 p-2 ps-4 rounded bg-transparent40">
+                    <div class="p-4 rounded bg-transparent50">
                         <a href="https://www.themoviedb.org/movie/@Entity.Id" class="text-decoration-none" target="_blank">
                             <h1 class="mb-0">@Entity.Title</h1>
                         </a>
@@ -46,23 +47,23 @@ else
                                 <span class="badge bg-dark-subtle">@genre.Name</span>
                             }
                         </div>
-                        <p>TMDB Id: @Entity.Id</p>
-                        <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
+                        @* <p>TMDB Id: @Entity.Id</p> *@
+                        <h5 class="mt-4 fw-bold">Overview</h5>
                         <p>@Entity.Overview</p>
 
-                        @* <h6 class="mt-2">Director: <span></span></h6>
-                        <h6 class="mt-2">Cast: <span></span></h6>
-                        <h4>Score: @((Entity.VoteAverage * 10).ToString("F2"))%</h4> *@
-
-                        @if (!string.IsNullOrEmpty(MovieTrailer?.Key))
+                        @if (Credits?.Crews is not null)
                         {
-                            <div class="mt-2" id="btn-trailer">
-                                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#youtube-modal">
-                                    <i class="bi bi-play"></i> Watch Trailer
-                                </button>
-                            </div>
+                            <_Crews Crews="Credits.Crews" />
+                        }
+                        @if (Credits?.Casts is not null)
+                        {
+                            <_Casts Casts="Credits.Casts" />
                         }
                     </div>
+                    @if (Credits?.Casts is not null)
+                    {
+                        <_ActorSwiper Actors="@Credits.Casts" />
+                    }
                 </div>
             </div>
         </div>
@@ -76,6 +77,7 @@ else
     [Parameter] public int Id { get; set; }
 
     TmdbDetails? Entity { get; set; }
+    TmdbCredits? Credits { get; set; }
     TmdbVideo? MovieTrailer { get; set; }
 
     string? Title;
@@ -89,8 +91,6 @@ else
     protected override async Task OnParametersSetAsync()
     {
         Entity = await Service.GetMovieByIdAsync(Id);
-        MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
-
         Title = Entity?.Title;
 
         bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
@@ -98,6 +98,9 @@ else
 
         Hours = Entity?.Runtime / 60;
         Minutes = Entity?.Runtime % 60;
+
+        MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
+        Credits = await Service.GetMovieCreditsByIdAsync(Id);
 
         IsProcessing = false;
         StateHasChanged();

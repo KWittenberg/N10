@@ -1,0 +1,14 @@
+<h6 class="mt-2">
+    Cast:
+    <span class="ms-2 p-sm text-white-50">
+        @foreach (var cast in Casts)
+        {
+            @cast.Name
+        }
+    </span>
+</h6>
+
+
+@code {
+    [Parameter] public List<TmdbCast> Casts { get; set; } = [];
+}
