@@ -1,12 +1,25 @@
-<h6 class="mt-2">
-    Director:
-    <span class="ms-2 text-white-50">
-        @foreach (var director in Crews.Where(c => c.Job == "Director"))
+<div class="d-inline-flex align-items-baseline flex-wrap">
+    <h6 class="me-2">Director:</h6>
+    <span class="p-sm text-white-50">
+        @if (Crews?.Any() ?? false)
         {
-            @director.Name
+            @foreach (var cast in Crews.Where(c => c.Job == "Director"))
+            {
+                string url = $"https://www.themoviedb.org/person/{cast.Id}";
+
+                <a href="@url" target="_blank" class="text-decoration-none">@cast.Name</a>
+                @* @if (cast != Crews.Last())
+                {
+                    <span>, </span>
+                } *@
+            }
+        }
+        else
+        {
+            <span class="text-muted">N/A</span>
         }
     </span>
-</h6>
+</div>
 
 
 @code {

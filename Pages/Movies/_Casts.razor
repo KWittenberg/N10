@@ -1,12 +1,26 @@
-<h6 class="mt-2">
-    Cast:
-    <span class="ms-2 p-sm text-white-50">
-        @foreach (var cast in Casts)
+<div class="d-inline-flex align-items-baseline flex-wrap">
+    <h6 class="me-2">Cast:</h6>
+    <span class="p-sm text-white-50">
+        @if (Casts?.Any() ?? false)
         {
-            @cast.Name
+            @foreach (var cast in Casts)
+            {
+                string url = $"https://www.themoviedb.org/person/{cast.Id}";
+
+                <a href="@url" target="_blank" class="text-decoration-none">@cast.Name</a>
+                @if (cast != Casts.Last())
+                {
+                    <span>, </span>
+                }
+            }
+        }
+        else
+        {
+            <span class="text-muted">N/A</span>
         }
     </span>
-</h6>
+</div>
+
 
 
 @code {

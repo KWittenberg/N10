@@ -1,16 +1,14 @@
 @inject IJSRuntime JsRuntime
 
 <!-- YouTube Modal Component -->
-<div class="modal" tabindex="-1" id="youtube-modal">
+<div class="modal bg-transparent60" tabindex="-1" id="youtube-modal">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content modal-background">
-            <div class="modal-header">
+            <div class="p-0 modal-header border-0">
                 <h5 class="modal-title" id="modal-title">@(Entity?.Title ?? "Movie Trailer")</h5>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="ms-auto">
-                    <i class="bi bi-x"></i>
-                </button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" class="ms-auto"><i class="bi bi-x"></i></button>
             </div>
-            <div class="modal-body">
+            <div class="m-0 p-0 modal-body">
                 <div class="ratio ratio-16x9">
                     <iframe id="modal-trailer" src="" allowfullscreen></iframe>
                 </div>

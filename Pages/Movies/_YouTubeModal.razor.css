@@ -1,6 +1,10 @@
 ﻿.modal-background {
-    background-color: var(--cf-theme-900);
+    /*background-color: var(--cf-theme-900);*/
+    background-color: transparent;
     color: var(--cf-light-color);
+    border: none;
+    margin: 0;
+    padding: 0;
 }
 
 .modal-header button {
