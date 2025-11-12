@@ -1,14 +1,25 @@
-﻿<!-- Movie Card Component -->
+﻿@using System.Diagnostics
+<!-- Movie Card Component -->
 
 <div class="card">
-    <a href="/movie/@Item.TmdbId">
-        <img src="http://image.tmdb.org/t/p/w200/lnWkyG3LLgbbrIEeyl5mK5VRFe4.jpg" class="card-img" alt="...">
-    </a>
+    <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : Item.TmdbImageUrl)" class="card-img" alt="..."
+         @onclick="() => PlayInVlc(Item.FileName)">
 
-    <div class="m-3 badge bg-white text-black position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
-    <div class="m-3 badge bg-primary position-absolute top-0 end-0"><span class="p">@Item.Resolution</span></div>
 
-    <h4 class="m-3 position-absolute bottom-0 start-0 text-truncate">@Item.Title</h4>
+    <div class="card-overlay">
+        <div class="m-3 badge bg-white text-black position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
+
+        @if (Item.Resolution is not null)
+        {
+            <div class="m-3 badge position-absolute top-0 end-0 @GetResolutionClass(Item.Resolution)">
+                <span class="p">@GetResolutionDisplayText(Item.Resolution)</span>
+            </div>
+        }
+
+        <a href="/movie/@Item?.TmdbId" class="card-title-link">
+            <h4 class="m-3 position-absolute bottom-0 start-0 text-truncate">@Item.Title</h4>
+        </a>
+    </div>
 </div>
 
 
@@ -17,4 +28,66 @@
     [CascadingParameter] AppState? App { get; set; }
 
     [Parameter] public Entities.Movie? Item { get; set; }
+
+
+
+    string GetResolutionClass(string? resolution)
+    {
+        return resolution?.ToLower() switch
+        {
+            "720p" => "resolution-720p",
+            "1080p" => "resolution-1080p",
+            "2160p" => "resolution-2160p",
+            _ => "resolution-1080p"
+        };
+    }
+
+    string GetResolutionDisplayText(string? resolution)
+    {
+        return resolution?.ToLower() switch
+        {
+            "2160p" => "4K",
+            _ => resolution
+        };
+    }
+
+    async Task PlayInVlc(string? filename)
+    {
+        if (string.IsNullOrEmpty(filename)) return;
+
+        try
+        {
+            // Prilagodite putanju do vašeg media foldera
+            string mediaPath = Path.Combine(Globals.X265Path, filename);
+
+            if (!File.Exists(mediaPath))
+            {
+                // Logger?.LogWarning($"File not found: {mediaPath}");
+                return;
+            }
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = Globals.VlcPath,
+                Arguments = $"\"{mediaPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            Process.Start(processInfo);
+        }
+        catch (Exception ex)
+        {
+            //Logger?.LogError(ex, $"Error starting VLC with file: {filename}");
+            // Možete dodati i neku notifikaciju za korisnika
+        }
+    }
+
+
+
+
+
 }
+@* <a href="/movie/@Item?.TmdbId">
+        <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : Item.TmdbImageUrl)" class="card-img" alt="...">
+    </a> *@
