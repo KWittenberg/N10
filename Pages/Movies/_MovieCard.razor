@@ -1,12 +1,13 @@
-﻿@using System.Diagnostics
-<!-- Movie Card Component -->
+﻿<!-- Movie Card Component -->
 
 <div class="card">
-    <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : Item.TmdbImageUrl)" class="card-img" alt="..."
-         @onclick="() => PlayInVlc(Item.FileName)">
-
-
-    <div class="card-overlay">
+    <div class="card-image-container">
+        <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : Item.TmdbImageUrl)" class="card-img" alt="..."
+             @onclick="() => PlayInVlc(Item.FileName)">
+    </div>
+    <!-- Hide Info / Isključio dok ne nabavim slike od filmova-->
+    @* <div class="card-overlay"> *@
+    <div class="">
         <div class="m-3 badge bg-white text-black position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
 
         @if (Item.Resolution is not null)
@@ -16,9 +17,11 @@
             </div>
         }
 
-        <a href="/movie/@Item?.TmdbId" class="card-title-link">
+        @* <a href="/movie/@Item?.TmdbId" class="card-title-link">
             <h4 class="m-3 position-absolute bottom-0 start-0 text-truncate">@Item.Title</h4>
-        </a>
+        </a> *@
+        
+        <a href="/movie/@Item?.TmdbId" class="pb-2 h4 title-link position-absolute bottom-0 start-0 w-100 px-3 text-truncate">@Item.Title</a>
     </div>
 </div>
 
@@ -53,6 +56,8 @@
 
     async Task PlayInVlc(string? filename)
     {
+        await App!.ShowToast($"Startam: {Item.Title}", "success");
+
         if (string.IsNullOrEmpty(filename)) return;
 
         try
@@ -63,6 +68,7 @@
             if (!File.Exists(mediaPath))
             {
                 // Logger?.LogWarning($"File not found: {mediaPath}");
+                await App!.ShowToast($"File not found: {mediaPath}", "error");
                 return;
             }
 
@@ -78,6 +84,7 @@
         }
         catch (Exception ex)
         {
+            await App!.ShowToast($"Error starting VLC with file: {filename}", "error");
             //Logger?.LogError(ex, $"Error starting VLC with file: {filename}");
             // Možete dodati i neku notifikaciju za korisnika
         }

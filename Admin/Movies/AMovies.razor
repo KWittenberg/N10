@@ -68,7 +68,10 @@ else
 
                     <TemplateColumn Title="Title" Align="Align.Start">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
-                        <a class="ms-4 text-decoration-none text-white" style="cursor: pointer;"
+                        <span class="ms-4" style="cursor: pointer;"
+                           @onclick="() => PlayInVlc(context.Title, context.FileName)"><i class="bi bi-play-circle-fill"></i></span>
+                        
+                        <a class="ms-3 text-decoration-none text-white" style="cursor: pointer;"
                            @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">@context.Title</a>
                     </TemplateColumn>
 
@@ -186,7 +189,37 @@ else
         StateHasChanged();
     }
 
+    async Task PlayInVlc(string? name, string? filename)
+    {
+        await App!.ShowToast($"Playing  {name} !", "success");
 
+        if (string.IsNullOrEmpty(filename)) return;
+
+        try
+        {
+            string mediaPath = Path.Combine(Globals.X265Path, filename);
+
+            if (!File.Exists(mediaPath))
+            {
+                await App!.ShowToast($"File not found: {mediaPath}", "error");
+                return;
+            }
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = Globals.VlcPath,
+                Arguments = $"\"{mediaPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            Process.Start(processInfo);
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Error starting VLC with file: {filename}", "error");
+        }
+    }
 
 
     // protected override void OnInitialized()

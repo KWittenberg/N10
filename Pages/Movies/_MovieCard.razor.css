@@ -6,7 +6,7 @@
     padding: 0.6rem;
     border: none;
     overflow: hidden;
-    cursor: pointer;
+    /*cursor: pointer;*/
 }
 
     .card:hover {
@@ -14,35 +14,52 @@
         z-index: 99;
     }
 
-    .card img {
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.4);
-        width: 100%;
-        height: auto;
-    }
+
+.card-image-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.card img {
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    height: auto;
+    display: block;
+}
 
 .card-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0.6rem;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
+    pointer-events: none; /* Onemogući klikove na overlay */
 }
 
 .card:hover .card-overlay {
     opacity: 1;
 }
 
-.card-title-link {
+.title-link {
+    color: var(--cf-theme-core);
     text-decoration: none;
-    color: inherit;
+    pointer-events: auto;
 }
 
-    .card-title-link:hover h4 {
+
+
+/*.card-title-link {
+    pointer-events: auto;
+    text-decoration: none;
+    color: inherit;
+}*/
+
+/*.card-title-link:hover h4 {
         text-decoration: underline;
         color: #fff;
-    }
+    }*/
 
 .resolution-badge {
     padding: 0.5em 0.75em;
