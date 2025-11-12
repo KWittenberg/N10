@@ -58,8 +58,133 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
         }, cancellationToken);
     }
 
-
     public async Task<Movie> ParseFilenameAsync(string filename)
+    {
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
+        var info = new Movie { FileName = filename };
+
+        // Pre-pass za fraze koje želimo tretirati kao jedan token
+        nameWithoutExt = nameWithoutExt
+            .Replace("Special.Edition", "SpecialEdition", StringComparison.OrdinalIgnoreCase)
+            .Replace("Final.Cut", "FinalCut", StringComparison.OrdinalIgnoreCase)
+            .Replace("Director's.Cut", "DirectorsCut", StringComparison.OrdinalIgnoreCase)
+            .Replace("Extended.Edition", "ExtendedEdition", StringComparison.OrdinalIgnoreCase)
+            .Replace("Unrated.Directors.Cut", "UnratedDirectorsCut", StringComparison.OrdinalIgnoreCase)
+            .Replace("Mastered.In.4K", "MasteredIn4K", StringComparison.OrdinalIgnoreCase);
+
+        var tokens = Regex.Split(nameWithoutExt, @"[.\s_-]+")
+                          .Where(t => !string.IsNullOrWhiteSpace(t))
+                          .ToList();
+
+        // --- MAPA POZNATIH PATTERNA ---
+        var knownPatterns = new Dictionary<string, Action<Movie, string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            // Versions
+            ["IMAX"] = (m, _) => m.Version = AddVersion(m, "IMAX"),
+            ["DIRECTOR'S"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
+            ["DIRECTORSCUT"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
+            ["CUT"] = (m, _) => m.Version = AddVersion(m, "CUT"),
+            ["SPECIALEDITION"] = (m, _) => m.Version = AddVersion(m, "SPECIAL.EDITION"),
+            ["FINALCUT"] = (m, _) => m.Version = AddVersion(m, "FINAL.CUT"),
+            ["EXTENDED"] = (m, _) => m.Version = AddVersion(m, "EXTENDED"),
+            ["EXTENDEDEDITION"] = (m, _) => m.Version = AddVersion(m, "EXTENDED.EDITION"),
+            ["UNRATED"] = (m, _) => m.Version = AddVersion(m, "UNRATED"),
+            ["UNRATEDDIRECTORSCUT"] = (m, _) => m.Version = AddVersion(m, "UNRATED.DIRECTOR'S.CUT"),
+            ["MASTEREDIN4K"] = (m, _) => m.Version = AddVersion(m, "MASTERED.IN.4K"),
+            ["REMASTERED"] = (m, _) => m.Version = AddVersion(m, "REMASTERED"),
+            ["REPACK"] = (m, _) => m.Version = AddVersion(m, "REPACK"),
+
+            // Resolution
+            ["480p"] = (m, _) => m.Resolution = "480p",
+            ["720p"] = (m, _) => m.Resolution = "720p",
+            ["1080p"] = (m, _) => m.Resolution = "1080p",
+            ["2160p"] = (m, _) => m.Resolution = "2160p",
+            ["4K"] = (m, _) => m.Resolution = "2160p",
+
+            // Color
+            ["8bit"] = (m, _) => m.Color = "8bit",
+            ["10bit"] = (m, _) => m.Color = "10bit",
+            ["12bit"] = (m, _) => m.Color = "12bit",
+            ["16bit"] = (m, _) => m.Color = "16bit",
+
+            // Source
+            ["WEBRIP"] = (m, _) => m.Source = "WEBRip",
+            ["WEB-DL"] = (m, _) => m.Source = "WEB-DL",
+            ["BLURAY"] = (m, _) => m.Source = "BluRay",
+            ["BRRIP"] = (m, _) => m.Source = "BRRip",
+            ["HDRIP"] = (m, _) => m.Source = "HDRip",
+            ["DVDRIP"] = (m, _) => m.Source = "DVDRip",
+
+            // Audio
+            ["6CH"] = (m, _) => m.Audio = "6CH",
+            ["8CH"] = (m, _) => m.Audio = "8CH",
+            ["DTS"] = (m, _) => m.Audio = "DTS",
+            ["AAC"] = (m, _) => m.Audio = "AAC",
+            ["AC3"] = (m, _) => m.Audio = "AC3",
+            ["FLAC"] = (m, _) => m.Audio = "FLAC",
+
+            // Video
+            ["X264"] = (m, _) => m.Video = "x264",
+            ["X265"] = (m, _) => m.Video = "x265",
+            ["HEVC"] = (m, _) => m.Video = "HEVC",
+            ["AV1"] = (m, _) => m.Video = "AV1",
+
+            // Release
+            ["PSA"] = (m, _) => m.Release = "PSA",
+            ["YIFY"] = (m, _) => m.Release = "YIFY",
+            ["UTR"] = (m, _) => m.Release = "UTR",
+            ["SPARKS"] = (m, _) => m.Release = "SPARKS",
+            ["RARBG"] = (m, _) => m.Release = "RARBG"
+        };
+
+        // --- DETEKCIJA GODINE + TMDB ID-a ---
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            var token = tokens[i];
+
+            if (int.TryParse(token, out int number))
+            {
+                if (number >= 1900 && number <= 2099) info.Year = number;
+                else if (number > 0 && number < 9999999)
+                {
+                    // heuristika: TMDB ID je obično zadnji ili predzadnji token
+                    if (i >= tokens.Count - 2) info.TmdbId = number;
+                }
+            }
+
+            if (knownPatterns.TryGetValue(token.ToUpperInvariant(), out var apply)) apply(info, token);
+        }
+
+        // --- NASLOV ---
+        if (info.Year.HasValue)
+        {
+            int yearIndex = tokens.FindIndex(t => t == info.Year.Value.ToString());
+            info.Title = string.Join(" ", tokens.Take(yearIndex));
+        }
+        else
+        {
+            // fallback ako nema godine
+            info.Title = string.Join(" ", tokens);
+        }
+
+        // --- FORMATIRANJE NASLOVA ---
+        info.Title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Title.ToLowerInvariant().Trim());
+
+        return await Task.FromResult(info);
+    }
+
+    // --- HELPER METODA ---
+    static string AddVersion(Movie m, string value)
+    {
+        if (string.IsNullOrEmpty(m.Version)) return value;
+        if (m.Version.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Version; // već postoji, preskoči
+
+        return $"{m.Version}.{value}";
+    }
+
+
+
+    public async Task<Movie> ParseFilenameWithRegexAsync(string filename)
     {
         var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
         var info = new Movie();
