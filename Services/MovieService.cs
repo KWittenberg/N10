@@ -81,6 +81,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
         {
             // Versions
             ["IMAX"] = (m, _) => m.Version = AddVersion(m, "IMAX"),
+            ["INTERNAL"] = (m, _) => m.Version = AddVersion(m, "INTERNAL"),
             ["DIRECTOR'S"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
             ["DIRECTORSCUT"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
             ["CUT"] = (m, _) => m.Version = AddVersion(m, "CUT"),
@@ -93,6 +94,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["MASTEREDIN4K"] = (m, _) => m.Version = AddVersion(m, "MASTERED.IN.4K"),
             ["REMASTERED"] = (m, _) => m.Version = AddVersion(m, "REMASTERED"),
             ["REPACK"] = (m, _) => m.Version = AddVersion(m, "REPACK"),
+            ["RUSSIAN"] = (m, _) => m.Version = AddVersion(m, "RUSSIAN"),
 
             // Resolution
             ["480p"] = (m, _) => m.Resolution = "480p",
@@ -102,10 +104,18 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["4K"] = (m, _) => m.Resolution = "2160p",
 
             // Color
-            ["8bit"] = (m, _) => m.Color = "8bit",
-            ["10bit"] = (m, _) => m.Color = "10bit",
-            ["12bit"] = (m, _) => m.Color = "12bit",
-            ["16bit"] = (m, _) => m.Color = "16bit",
+            // TODO: dodati isto metodu za spajanje 10bit.HDR
+            //["8bit"] = (m, _) => m.Color = "8bit",
+            //["10bit"] = (m, _) => m.Color = "10bit",
+            //["12bit"] = (m, _) => m.Color = "12bit",
+            //["16bit"] = (m, _) => m.Color = "16bit",
+            //["HDR"] = (m, _) => m.Color = "HDR",
+
+            ["8bit"] = (m, _) => m.Color = AddColor(m, "8bit"),
+            ["10bit"] = (m, _) => m.Color = AddColor(m, "10bit"),
+            ["12bit"] = (m, _) => m.Color = AddColor(m, "12bit"),
+            ["16bit"] = (m, _) => m.Color = AddColor(m, "16bit"),
+            ["HDR"] = (m, _) => m.Color = AddColor(m, "HDR"),
 
             // Source
             ["WEBRIP"] = (m, _) => m.Source = "WEBRip",
@@ -116,6 +126,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["DVDRIP"] = (m, _) => m.Source = "DVDRip",
 
             // Audio
+            ["2CH"] = (m, _) => m.Audio = "2CH",
             ["6CH"] = (m, _) => m.Audio = "6CH",
             ["8CH"] = (m, _) => m.Audio = "8CH",
             ["DTS"] = (m, _) => m.Audio = "DTS",
@@ -130,11 +141,13 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["AV1"] = (m, _) => m.Video = "AV1",
 
             // Release
+            ["FGT"] = (m, _) => m.Release = "FGT",
             ["PSA"] = (m, _) => m.Release = "PSA",
             ["YIFY"] = (m, _) => m.Release = "YIFY",
             ["UTR"] = (m, _) => m.Release = "UTR",
             ["SPARKS"] = (m, _) => m.Release = "SPARKS",
-            ["RARBG"] = (m, _) => m.Release = "RARBG"
+            ["RARBG"] = (m, _) => m.Release = "RARBG",
+            ["xxxpav69"] = (m, _) => m.Release = "xxxpav69"
         };
 
         // --- DETEKCIJA GODINE + TMDB ID-a ---
@@ -182,6 +195,13 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
         return $"{m.Version}.{value}";
     }
 
+    static string AddColor(Movie m, string value)
+    {
+        if (string.IsNullOrEmpty(m.Color)) return value;
+        if (m.Color.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Color; // već postoji, preskoči
+
+        return $"{m.Color}.{value}";
+    }
 
 
     public async Task<Movie> ParseFilenameWithRegexAsync(string filename)
