@@ -2,11 +2,19 @@
 
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
+<div class="top-row ps-3 navbar" style="background: transparent !important;">
     <div class="container-fluid">
         <AuthorizeView>
             <Authorized>
-                <div class="navbar-brand" style="cursor: pointer;" @onclick="ToggleAdminMenu">.NET 10</div>
+                <div class="navbar-brand" style="cursor: pointer;" @onclick="ToggleAdminMenu">
+                    <div class="d-flex align-items-center">
+                        <div class="me-2">
+                            <img src="img/logo/a-logo.png" alt="logo" class="img-fluid" style="height: 2rem;"/>
+                            @* <span class="bg-secondary text-dark rounded p-1">TS</span> *@
+                        </div>
+                        <h5 class="mb-0">Aida</h5>
+                    </div>
+                </div>
             </Authorized>
             <NotAuthorized>
                 <div class="navbar-brand" style="cursor: none;">Guest</div>
@@ -22,7 +30,7 @@
 
         @if (ShowAdminMenu)
         {
-            <div class="mt-2 mb-2 p-2 border-bottom">
+            <div class="mt-2 mb-2 p-2 border-top border-bottom">
                 <div class="nav-item">
                     <NavLink class="nav-link" href="admin/roles" Match="NavLinkMatch.All">
                         <span class="bi bi-x-diamond-fill" aria-hidden="true"></span>Roles
@@ -118,12 +126,7 @@
     void ToggleAdminSubmenu() => IsAdminSubmenuOpen = !IsAdminSubmenuOpen;
 
 
-
-
-
-
-
-    private string? currentUrl;
+    string? currentUrl;
 
     protected override void OnInitialized()
     {
@@ -131,14 +134,11 @@
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
 
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
-    }
+    public void Dispose() => NavigationManager.LocationChanged -= OnLocationChanged;
 }
