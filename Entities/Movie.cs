@@ -29,6 +29,8 @@ public class Movie : BaseEntity<Guid>
 
     public string? TmdbTitle { get; set; }
 
+    public string? TmdbOriginalTitle { get; set; }
+
     public string? TmdbImageUrl { get; set; }
 
     public string? ImdbId { get; set; }

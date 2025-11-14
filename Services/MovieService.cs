@@ -3,14 +3,14 @@
 namespace N10.Services;
 
 //public class MovieLibraryService(IHttpClientFactory httpClientFactory) : BackgroundService, IMovieLibraryService
-public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
+public class MovieService() : IMovieService
 {
     //private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
     //private readonly string _apiKey = "tvoj_api_key"; // Spremi u appsettings.json
     //private List<MovieModel> _movies = new List<MovieModel>(); // Ili koristi DB
 
     //private readonly string folderPath = @"C:\Temp";
-    private readonly string folderPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
+    // private readonly string folderPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
 
 
     public async Task<List<Movie>> GetAllMoviesAsync(CancellationToken cancellationToken = default)
@@ -46,7 +46,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
         {
             cancellationToken.ThrowIfCancellationRequested(); // Baci exception ako je otkazano
 
-            var allFiles = Directory.EnumerateFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly);
+            var allFiles = Directory.EnumerateFiles(Globals.X265Path, "*.*", SearchOption.TopDirectoryOnly);
 
             var fileNames = allFiles
                 .Where(file => extensions.Contains(Path.GetExtension(file)))
@@ -68,6 +68,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             .Replace("Special.Edition", "SpecialEdition", StringComparison.OrdinalIgnoreCase)
             .Replace("Final.Cut", "FinalCut", StringComparison.OrdinalIgnoreCase)
             .Replace("Director's.Cut", "DirectorsCut", StringComparison.OrdinalIgnoreCase)
+            .Replace("Super.Duper.Cut", "SuperDuperCut", StringComparison.OrdinalIgnoreCase) // NE detektira!
             .Replace("Extended.Edition", "ExtendedEdition", StringComparison.OrdinalIgnoreCase)
             .Replace("Unrated.Directors.Cut", "UnratedDirectorsCut", StringComparison.OrdinalIgnoreCase)
             .Replace("Mastered.In.4K", "MasteredIn4K", StringComparison.OrdinalIgnoreCase);
@@ -86,6 +87,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["DIRECTORSCUT"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
             ["CUT"] = (m, _) => m.Version = AddVersion(m, "CUT"),
             ["SPECIALEDITION"] = (m, _) => m.Version = AddVersion(m, "SPECIAL.EDITION"),
+            ["SPECIALEDITION"] = (m, _) => m.Version = AddVersion(m, "SPECIAL.EDITION"),
             ["FINALCUT"] = (m, _) => m.Version = AddVersion(m, "FINAL.CUT"),
             ["EXTENDED"] = (m, _) => m.Version = AddVersion(m, "EXTENDED"),
             ["EXTENDEDEDITION"] = (m, _) => m.Version = AddVersion(m, "EXTENDED.EDITION"),
@@ -95,6 +97,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["REMASTERED"] = (m, _) => m.Version = AddVersion(m, "REMASTERED"),
             ["REPACK"] = (m, _) => m.Version = AddVersion(m, "REPACK"),
             ["RUSSIAN"] = (m, _) => m.Version = AddVersion(m, "RUSSIAN"),
+            ["JAPANESE"] = (m, _) => m.Version = AddVersion(m, "JAPANESE"),
 
             // Resolution
             ["480p"] = (m, _) => m.Resolution = "480p",
@@ -104,18 +107,12 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["4K"] = (m, _) => m.Resolution = "2160p",
 
             // Color
-            // TODO: dodati isto metodu za spajanje 10bit.HDR
-            //["8bit"] = (m, _) => m.Color = "8bit",
-            //["10bit"] = (m, _) => m.Color = "10bit",
-            //["12bit"] = (m, _) => m.Color = "12bit",
-            //["16bit"] = (m, _) => m.Color = "16bit",
-            //["HDR"] = (m, _) => m.Color = "HDR",
-
             ["8bit"] = (m, _) => m.Color = AddColor(m, "8bit"),
             ["10bit"] = (m, _) => m.Color = AddColor(m, "10bit"),
             ["12bit"] = (m, _) => m.Color = AddColor(m, "12bit"),
             ["16bit"] = (m, _) => m.Color = AddColor(m, "16bit"),
             ["HDR"] = (m, _) => m.Color = AddColor(m, "HDR"),
+            ["HDR10Plus"] = (m, _) => m.Color = AddColor(m, "HDR10Plus"),
 
             // Source
             ["WEBRIP"] = (m, _) => m.Source = "WEBRip",
@@ -147,6 +144,7 @@ public class MovieService(IOptions<TmdbOptions> tmdb) : IMovieService
             ["UTR"] = (m, _) => m.Release = "UTR",
             ["SPARKS"] = (m, _) => m.Release = "SPARKS",
             ["RARBG"] = (m, _) => m.Release = "RARBG",
+            ["HDCzT"] = (m, _) => m.Release = "HDCzT",
             ["xxxpav69"] = (m, _) => m.Release = "xxxpav69"
         };
 
