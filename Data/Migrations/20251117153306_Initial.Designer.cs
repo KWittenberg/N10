@@ -12,7 +12,7 @@ using N10.Data;
 namespace N10.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251030103631_Initial")]
+    [Migration("20251117153306_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace N10.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0-rc.2.25502.107")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -174,6 +174,21 @@ namespace N10.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("MovieMovieGenre", b =>
+                {
+                    b.Property<Guid>("GenresId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MoviesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("GenresId", "MoviesId");
+
+                    b.HasIndex("MoviesId");
+
+                    b.ToTable("MovieMovieGenre");
                 });
 
             modelBuilder.Entity("N10.Entities.ApplicationUser", b =>
@@ -401,17 +416,140 @@ namespace N10.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int?>("Width")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("BaseImageEntity");
+                    b.ToTable((string)null);
 
                     b.UseTpcMappingStrategy();
+                });
+
+            modelBuilder.Entity("N10.Entities.Movie", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Audio")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ImdbId")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<double?>("ImdbRating")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsMetadataFetched")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LastModifiedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastModifiedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Release")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Resolution")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SortTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("TmdbId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TmdbImageUrl")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TmdbTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Video")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Title");
+
+                    b.HasIndex("Year");
+
+                    b.ToTable("Movies");
+                });
+
+            modelBuilder.Entity("N10.Entities.MovieGenre", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TmdbId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TmdbName")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TmdbName")
+                        .IsUnique();
+
+                    b.ToTable("MovieGenres");
                 });
 
             modelBuilder.Entity("N10.Entities.Note", b =>
@@ -686,6 +824,21 @@ namespace N10.Data.Migrations
                     b.HasOne("N10.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MovieMovieGenre", b =>
+                {
+                    b.HasOne("N10.Entities.MovieGenre", null)
+                        .WithMany()
+                        .HasForeignKey("GenresId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("N10.Entities.Movie", null)
+                        .WithMany()
+                        .HasForeignKey("MoviesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

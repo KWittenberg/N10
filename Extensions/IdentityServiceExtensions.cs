@@ -38,9 +38,10 @@ public static class IdentityServiceExtensions
 
         services.AddDbContextFactory<ApplicationDbContext>(options =>
         {
-            if (index == 3) options.UseNpgsql(cs);
+            // if (index == 3) options.UseNpgsql(cs);
             // else if (index == 4) options.UseMySql(cs, ServerVersion.AutoDetect(cs));
-            else options.UseSqlServer(cs);
+            // else options.UseSqlServer(cs);
+            options.UseSqlServer(cs);
         });
 
         // Provide ApplicationDbContext via the factory as TRANSIENT so Identity gets a fresh context per injection

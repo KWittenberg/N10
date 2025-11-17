@@ -69,17 +69,40 @@ namespace N10.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BaseImageEntity",
+                name: "MovieGenres",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FileName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    FileUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
-                    Width = table.Column<int>(type: "int", nullable: true),
-                    Height = table.Column<int>(type: "int", nullable: true),
-                    FileSize = table.Column<long>(type: "bigint", nullable: true),
-                    MimeType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    TmdbId = table.Column<int>(type: "int", nullable: false),
+                    TmdbName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MovieGenres", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Movies",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    SortTitle = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Year = table.Column<int>(type: "int", nullable: true),
+                    Version = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Resolution = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Color = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Source = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Audio = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Video = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Release = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TmdbId = table.Column<int>(type: "int", nullable: true),
+                    TmdbTitle = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    TmdbImageUrl = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    ImdbId = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    ImdbRating = table.Column<double>(type: "float", nullable: true),
+                    IsMetadataFetched = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -89,7 +112,7 @@ namespace N10.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BaseImageEntity", x => x.Id);
+                    table.PrimaryKey("PK_Movies", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -250,6 +273,30 @@ namespace N10.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MovieMovieGenre",
+                columns: table => new
+                {
+                    GenresId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MoviesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MovieMovieGenre", x => new { x.GenresId, x.MoviesId });
+                    table.ForeignKey(
+                        name: "FK_MovieMovieGenre_MovieGenres_GenresId",
+                        column: x => x.GenresId,
+                        principalTable: "MovieGenres",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MovieMovieGenre_Movies_MoviesId",
+                        column: x => x.MoviesId,
+                        principalTable: "Movies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Notes",
                 columns: table => new
                 {
@@ -328,7 +375,7 @@ namespace N10.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     FileUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
                     Width = table.Column<int>(type: "int", nullable: true),
                     Height = table.Column<int>(type: "int", nullable: true),
@@ -439,6 +486,27 @@ namespace N10.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MovieGenres_TmdbName",
+                table: "MovieGenres",
+                column: "TmdbName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MovieMovieGenre_MoviesId",
+                table: "MovieMovieGenre",
+                column: "MoviesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Movies_Title",
+                table: "Movies",
+                column: "Title");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Movies_Year",
+                table: "Movies",
+                column: "Year");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_NoteAttachments_ApplicationUserId",
                 table: "NoteAttachments",
                 column: "ApplicationUserId");
@@ -516,7 +584,7 @@ namespace N10.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "BaseImageEntity");
+                name: "MovieMovieGenre");
 
             migrationBuilder.DropTable(
                 name: "NoteAttachments");
@@ -529,6 +597,12 @@ namespace N10.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "MovieGenres");
+
+            migrationBuilder.DropTable(
+                name: "Movies");
 
             migrationBuilder.DropTable(
                 name: "Notes");

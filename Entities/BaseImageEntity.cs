@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class BaseImageEntity : BaseAuditableEntity<Guid>
+public abstract class BaseImageEntity : BaseAuditableEntity<Guid>
 {
     public string FileName { get; set; } = string.Empty;
 

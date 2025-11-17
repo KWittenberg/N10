@@ -64,14 +64,15 @@ public class MovieService() : IMovieService
         var info = new Movie { FileName = filename };
 
         // Pre-pass za fraze koje želimo tretirati kao jedan token
-        nameWithoutExt = nameWithoutExt
-            .Replace("Special.Edition", "SpecialEdition", StringComparison.OrdinalIgnoreCase)
-            .Replace("Final.Cut", "FinalCut", StringComparison.OrdinalIgnoreCase)
-            .Replace("Director's.Cut", "DirectorsCut", StringComparison.OrdinalIgnoreCase)
-            .Replace("Super.Duper.Cut", "SuperDuperCut", StringComparison.OrdinalIgnoreCase) // NE detektira!
-            .Replace("Extended.Edition", "ExtendedEdition", StringComparison.OrdinalIgnoreCase)
-            .Replace("Unrated.Directors.Cut", "UnratedDirectorsCut", StringComparison.OrdinalIgnoreCase)
-            .Replace("Mastered.In.4K", "MasteredIn4K", StringComparison.OrdinalIgnoreCase);
+        //nameWithoutExt = nameWithoutExt
+        //    .Replace("Special.Edition", "SpecialEdition", StringComparison.OrdinalIgnoreCase)
+        //    .Replace("Final.Cut", "FinalCut", StringComparison.OrdinalIgnoreCase)
+        //    .Replace("Special.Cut", "SpecialCut", StringComparison.OrdinalIgnoreCase)
+        //    .Replace("Director's.Cut", "DirectorsCut", StringComparison.OrdinalIgnoreCase)
+        //    .Replace("Super.Duper.Cut", "SuperDuperCut", StringComparison.OrdinalIgnoreCase) // NE detektira!
+        //    .Replace("Extended.Edition", "ExtendedEdition", StringComparison.OrdinalIgnoreCase)
+        //    .Replace("Unrated.Directors.Cut", "UnratedDirectorsCut", StringComparison.OrdinalIgnoreCase)
+        //    .Replace("Mastered.In.4K", "MasteredIn4K", StringComparison.OrdinalIgnoreCase);
 
         var tokens = Regex.Split(nameWithoutExt, @"[.\s_-]+")
                           .Where(t => !string.IsNullOrWhiteSpace(t))
@@ -81,23 +82,31 @@ public class MovieService() : IMovieService
         var knownPatterns = new Dictionary<string, Action<Movie, string>>(StringComparer.OrdinalIgnoreCase)
         {
             // Versions
-            ["IMAX"] = (m, _) => m.Version = AddVersion(m, "IMAX"),
-            ["INTERNAL"] = (m, _) => m.Version = AddVersion(m, "INTERNAL"),
-            ["DIRECTOR'S"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
-            ["DIRECTORSCUT"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S.CUT"),
+            ["4K"] = (m, _) => m.Version = AddVersion(m, "4K"),
+            ["CHINESE"] = (m, _) => m.Version = AddVersion(m, "CHINESE"),
+            ["COLLECTION"] = (m, _) => m.Version = AddVersion(m, "COLLECTION"),
+            ["CRITERION"] = (m, _) => m.Version = AddVersion(m, "CRITERION"),
             ["CUT"] = (m, _) => m.Version = AddVersion(m, "CUT"),
-            ["SPECIALEDITION"] = (m, _) => m.Version = AddVersion(m, "SPECIAL.EDITION"),
-            ["SPECIALEDITION"] = (m, _) => m.Version = AddVersion(m, "SPECIAL.EDITION"),
-            ["FINALCUT"] = (m, _) => m.Version = AddVersion(m, "FINAL.CUT"),
+            ["DIRECTOR'S"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S"),
+            ["EDITION"] = (m, _) => m.Version = AddVersion(m, "EDITION"),
             ["EXTENDED"] = (m, _) => m.Version = AddVersion(m, "EXTENDED"),
-            ["EXTENDEDEDITION"] = (m, _) => m.Version = AddVersion(m, "EXTENDED.EDITION"),
-            ["UNRATED"] = (m, _) => m.Version = AddVersion(m, "UNRATED"),
-            ["UNRATEDDIRECTORSCUT"] = (m, _) => m.Version = AddVersion(m, "UNRATED.DIRECTOR'S.CUT"),
-            ["MASTEREDIN4K"] = (m, _) => m.Version = AddVersion(m, "MASTERED.IN.4K"),
+            ["FINAL"] = (m, _) => m.Version = AddVersion(m, "FINAL"),
+            ["FRENCH"] = (m, _) => m.Version = AddVersion(m, "FRENCH"),
+            ["IMAX"] = (m, _) => m.Version = AddVersion(m, "IMAX"),
+            ["IN"] = (m, _) => m.Version = AddVersion(m, "IN"),
+            ["INTERNAL"] = (m, _) => m.Version = AddVersion(m, "INTERNAL"),
+            ["JAPANESE"] = (m, _) => m.Version = AddVersion(m, "JAPANESE"),
+            ["KOREAN"] = (m, _) => m.Version = AddVersion(m, "KOREAN"),
+            ["MASTERED"] = (m, _) => m.Version = AddVersion(m, "MASTERED"),
             ["REMASTERED"] = (m, _) => m.Version = AddVersion(m, "REMASTERED"),
             ["REPACK"] = (m, _) => m.Version = AddVersion(m, "REPACK"),
+            ["ROGUE"] = (m, _) => m.Version = AddVersion(m, "ROGUE"),
             ["RUSSIAN"] = (m, _) => m.Version = AddVersion(m, "RUSSIAN"),
-            ["JAPANESE"] = (m, _) => m.Version = AddVersion(m, "JAPANESE"),
+            ["SPECIAL"] = (m, _) => m.Version = AddVersion(m, "SPECIAL"),
+            ["THEATRICAL"] = (m, _) => m.Version = AddVersion(m, "THEATRICAL"),
+            ["ULYSSES"] = (m, _) => m.Version = AddVersion(m, "ULYSSES"),
+            ["UNCUT"] = (m, _) => m.Version = AddVersion(m, "UNCUT"),
+            ["UNRATED"] = (m, _) => m.Version = AddVersion(m, "UNRATED"),
 
             // Resolution
             ["480p"] = (m, _) => m.Resolution = "480p",
@@ -113,6 +122,7 @@ public class MovieService() : IMovieService
             ["16bit"] = (m, _) => m.Color = AddColor(m, "16bit"),
             ["HDR"] = (m, _) => m.Color = AddColor(m, "HDR"),
             ["HDR10Plus"] = (m, _) => m.Color = AddColor(m, "HDR10Plus"),
+            ["HQ"] = (m, _) => m.Color = AddColor(m, "HQ"),
 
             // Source
             ["WEBRIP"] = (m, _) => m.Source = "WEBRip",
@@ -145,6 +155,7 @@ public class MovieService() : IMovieService
             ["SPARKS"] = (m, _) => m.Release = "SPARKS",
             ["RARBG"] = (m, _) => m.Release = "RARBG",
             ["HDCzT"] = (m, _) => m.Release = "HDCzT",
+            ["Tigole"] = (m, _) => m.Release = "Tigole",
             ["xxxpav69"] = (m, _) => m.Release = "xxxpav69"
         };
 

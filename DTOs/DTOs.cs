@@ -36,3 +36,7 @@ public record MapDto(Guid Id, string Name, string? IconHtml);
 
 // DASHBOARD
 public record DashboardDto(int? RolesCount, int? UsersCount, int? NoteFoldersCount, int? NotesCount);
+
+
+// MovieGenre
+public record MovieGenreDto(Guid Id, int TmdbId, string TmdbName, ICollection<MovieDto>? Movies);
