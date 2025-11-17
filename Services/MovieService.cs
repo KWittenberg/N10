@@ -2,17 +2,9 @@
 
 namespace N10.Services;
 
-//public class MovieLibraryService(IHttpClientFactory httpClientFactory) : BackgroundService, IMovieLibraryService
+//public class MovieService() : BackgroundService, IMovieService
 public class MovieService() : IMovieService
 {
-    //private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
-    //private readonly string _apiKey = "tvoj_api_key"; // Spremi u appsettings.json
-    //private List<MovieModel> _movies = new List<MovieModel>(); // Ili koristi DB
-
-    //private readonly string folderPath = @"C:\Temp";
-    // private readonly string folderPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
-
-
     public async Task<List<Movie>> GetAllMoviesAsync(CancellationToken cancellationToken = default)
     {
         var fileNames = await ReadFolderAsync(cancellationToken);
@@ -58,27 +50,15 @@ public class MovieService() : IMovieService
         }, cancellationToken);
     }
 
-    public async Task<Movie> ParseFilenameAsync(string filename)
+    async Task<Movie> ParseFilenameAsync(string filename)
     {
         var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
         var info = new Movie { FileName = filename };
-
-        // Pre-pass za fraze koje želimo tretirati kao jedan token
-        //nameWithoutExt = nameWithoutExt
-        //    .Replace("Special.Edition", "SpecialEdition", StringComparison.OrdinalIgnoreCase)
-        //    .Replace("Final.Cut", "FinalCut", StringComparison.OrdinalIgnoreCase)
-        //    .Replace("Special.Cut", "SpecialCut", StringComparison.OrdinalIgnoreCase)
-        //    .Replace("Director's.Cut", "DirectorsCut", StringComparison.OrdinalIgnoreCase)
-        //    .Replace("Super.Duper.Cut", "SuperDuperCut", StringComparison.OrdinalIgnoreCase) // NE detektira!
-        //    .Replace("Extended.Edition", "ExtendedEdition", StringComparison.OrdinalIgnoreCase)
-        //    .Replace("Unrated.Directors.Cut", "UnratedDirectorsCut", StringComparison.OrdinalIgnoreCase)
-        //    .Replace("Mastered.In.4K", "MasteredIn4K", StringComparison.OrdinalIgnoreCase);
 
         var tokens = Regex.Split(nameWithoutExt, @"[.\s_-]+")
                           .Where(t => !string.IsNullOrWhiteSpace(t))
                           .ToList();
 
-        // --- MAPA POZNATIH PATTERNA ---
         var knownPatterns = new Dictionary<string, Action<Movie, string>>(StringComparer.OrdinalIgnoreCase)
         {
             // Versions

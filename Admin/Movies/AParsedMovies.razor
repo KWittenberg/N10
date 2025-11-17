@@ -1,7 +1,6 @@
-﻿@page "/admin/movies"
+﻿@page "/admin/parsedmovies"
 @attribute [Authorize(Roles = "Admin")]
 
-@inject IMovieRepository Repository
 @inject IMovieService Service
 @inject ITmdbService TmdbService
 
@@ -11,12 +10,6 @@
 
 @if (IsProcessing || Entities is null)
 {
-    @if (Entities is null)
-    {
-        <div class="mb-5 @App?.GetContentClass() d-flex justify-content-center align-content-center">
-            <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
-        </div>
-    }
     <_Loading />
 }
 else
@@ -25,20 +18,16 @@ else
 
         @if (SearchTmdb is not null)
         {
-            <div class="mt-5 row align-items-center">
-                <div class="col-12 col-md-6">
-                    <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
+            <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
+                <div class="mt-5 row justify-content-end">
+                    <div class="col-12 col-md-6">
                         <div class="input-group">
                             <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
                             <button class="btn btn-primary" type="submit">Search</button>
                         </div>
-                    </EditForm>
+                    </div>
                 </div>
-            </div>
+            </EditForm>
         }
 
         @if (TmdbSearch is null && TmdbDetails is null)
@@ -80,8 +69,8 @@ else
                     <TemplateColumn Title="Title" Align="Align.Start">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
                         <span class="ms-4" style="cursor: pointer;"
-                              @onclick="() => PlayInVlc(context.Title, context.FileName)"><i class="bi bi-play-circle-fill"></i></span>
-
+                           @onclick="() => PlayInVlc(context.Title, context.FileName)"><i class="bi bi-play-circle-fill"></i></span>
+                        
                         <a class="ms-3 text-decoration-none text-white" style="cursor: pointer;"
                            @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">@context.Title</a>
                     </TemplateColumn>
@@ -150,7 +139,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<MovieDto>? Entities;
+    List<Movie> Entities = new();
     string? Search;
 
     string SearchTmdb = string.Empty;
@@ -166,15 +155,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Repository.GetAllAsync();
-        if (!result.Success || result.Data is null) return;
+        Entities = await Service.GetAllMoviesAsync(default);
 
-        Entities = result.Data;
         IsProcessing = false;
         StateHasChanged();
     }
 
-    IQueryable<MovieDto> FilteredEntities
+    IQueryable<Movie> FilteredEntities
     {
         get
         {
@@ -234,10 +221,20 @@ else
         }
     }
 
-    async Task ScanNew()
-    {
-        await App!.ShowToast($"Scan For New Movies!", "success");
-        await Repository.SyncParsedMoviesAsync();
-        await App!.ShowToast($"Scan Finish and Add in Database!", "success");
-    }
+
+    // protected override void OnInitialized()
+    // {
+    //     Entity = Service.ParseFilename("Iron.Man.2008.1080p.10bit.BluRay.8CH.x265.HEVC-PSA.mkv");
+    //     IsProcessing = false;
+    //     StateHasChanged();
+    // }
+
+    List<string> MovieFileNames = [
+    "6.Underground.2019.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv",
+                                "2001.A.Space.Odyssey.1968.1080p.10bit.BrRip.6CH.x265.HEVC-PSA.mkv",
+                                "2010 The Year We Make Contact 1984.mkv",
+                                "A.Man.Called.Ove.A.K.A.En.man.som.heter.Ove.2015.SWEDISH.1080p.10bit.BluRay.6CH.x265.HEVC-PSA.mkv",
+                                "Alien.1979.DIRECTOR'S.CUT.1080p.10bit.BluRay.6CH.x265.HEVC-PSA.mkv",
+                                "Greyhound.2020.REPACK.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv"
+    ];
 }
