@@ -19,13 +19,13 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
 
         var movie = await response.Content.ReadFromJsonAsync<TmdbDetails>();
 
-        movie?.PosterPath = string.IsNullOrEmpty(movie.PosterPath)
-                        ? "/images/poster.png"
-                        : $"{options.Value.BaseImageUrl}{movie.PosterPath}";
+        //movie?.PosterPath = string.IsNullOrEmpty(movie.PosterPath)
+        //                ? "/images/poster.png"
+        //                : $"{options.Value.BaseImageUrl}{movie.PosterPath}";
 
-        movie?.BackdropPath = string.IsNullOrEmpty(movie.BackdropPath)
-                           ? "/images/backdrop.jpg"
-                           : $"{options.Value.BaseImageUrl}{movie.BackdropPath}";
+        //movie?.BackdropPath = string.IsNullOrEmpty(movie.BackdropPath)
+        //                   ? "/images/backdrop.jpg"
+        //                   : $"{options.Value.BaseImageUrl}{movie.BackdropPath}";
 
         return movie;
     }

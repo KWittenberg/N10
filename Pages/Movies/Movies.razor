@@ -1,8 +1,7 @@
 ﻿@page "/movies"
 @layout FrontLayout
 
-@inject IMovieService Service
-@inject ITmdbService TmdbService
+@inject IMovieRepository Repository
 
 <title>@Title</title>
 
@@ -15,7 +14,7 @@ else
     <div class="mt-5 @App?.GetContentClass()">
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6">
-            @foreach (var movie in Entities)
+            @foreach (var movie in Entities.Take(20))
             {
                 <_MovieCard Item="movie" />
             }
@@ -27,7 +26,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<Entities.Movie> Entities = new();
+    List<MovieDto> Entities = new();
 
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
@@ -36,8 +35,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Entities = await Service.GetAllMoviesAsync();
+        var result = await Repository.GetAllAsync();
+        if (!result.Success || result.Data is null) return;
 
+        Entities = result.Data;
         IsProcessing = false;
         StateHasChanged();
     }

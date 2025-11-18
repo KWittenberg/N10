@@ -28,6 +28,7 @@ else
             <div class="mt-5 row align-items-center">
                 <div class="col-12 col-md-6">
                     <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
+                    <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -112,6 +113,19 @@ else
                         <PropertyColumn Property="x => x.TmdbImageUrl" Title="TmdbImageUrl" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
                     }
+
+                    <TemplateColumn Title="IsMetadata" Align="Align.Center">
+                        <div class="d-flex justify-content-center">
+                            <input class="form-check form-check-input text-warning" type="checkbox" checked="@context.IsMetadataFetched">
+                        </div>
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Actions" Align="Align.Center">
+                        <ChildContent>
+                            <a class="text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></a>
+                            <a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
+                        </ChildContent>
+                    </TemplateColumn>
                 </QuickGrid>
                 <div class="quickgrid-pagination">
                     <Paginator State="PaginationState" />
@@ -164,7 +178,10 @@ else
 
 
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
+
+
+    async Task RefreshEntitiesAsync()
     {
         var result = await Repository.GetAllAsync();
         if (!result.Success || result.Data is null) return;
@@ -238,6 +255,38 @@ else
     {
         await App!.ShowToast($"Scan For New Movies!", "success");
         await Repository.SyncParsedMoviesAsync();
+        await RefreshEntitiesAsync();
         await App!.ShowToast($"Scan Finish and Add in Database!", "success");
     }
+
+    async Task PopulateFromTmdb()
+    {
+        await App!.ShowToast($"Start Populate From Tmdb!", "success");
+        await Repository.PopulateFromTmdbAsync();
+        await RefreshEntitiesAsync();
+        await App!.ShowToast($"Finish and Add Details in Database!", "success");
+    }
+
+    async Task PopulateFromTmdb(Guid id)
+    {
+        await App!.ShowToast($"Start Populate From Tmdb!", "success");
+        await Repository.PopulateFromTmdbByIdAsync(id);
+        await RefreshEntitiesAsync();
+        await App!.ShowToast($"Finish and Add Details in Database!", "success");
+    }
+
+    #region ---> DELETE
+    void ShowDelete(MovieDto input)
+    {
+        App?.ShowDeleteConfirmation(input.Title, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+    }
+
+    async Task ConfirmDelete(Guid id)
+    {
+        var result = await Repository.DeleteAsync(id);
+        if (result.Success) await RefreshEntitiesAsync();
+
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+    #endregion
 }

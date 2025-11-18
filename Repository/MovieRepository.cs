@@ -1,6 +1,8 @@
 ﻿namespace N10.Repository;
 
-public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IMovieService movieService) : IMovieRepository
+public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
+                                IMovieService movieService,
+                                ITmdbService tmdbService) : IMovieRepository
 {
     readonly string entityName = "Movie";
 
@@ -131,4 +133,118 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IM
         // velika slova čisto radi lijepog spremanja
         return char.ToUpper(title[0]) + title[1..];
     }
+
+    public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var movie = await db.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
+        if (movie is null) return Result.Error($"{entityName} Not Found!");
+
+        try
+        {
+            var details = await tmdbService.GetMovieByIdAsync(movie.TmdbId!.Value);
+            if (details is null) return Result.Error("Tmdb Details Not Found!");
+
+
+            // MAPIRANJE TMDB → MOVIE
+            movie.TmdbTitle = details.Title;
+            movie.ImdbId = details.ImdbId;
+
+            movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
+                ? string.Empty
+                : details.PosterPath;
+
+            // Genres
+            movie.Genres.Clear();
+
+            foreach (var g in details.Genres)
+            {
+                movie.Genres.Add(new MovieGenre
+                {
+                    TmdbId = g.Id,
+                    TmdbName = g.Name
+                });
+            }
+
+            movie.IsMetadataFetched = true;
+
+            // SAVE
+            db.Movies.Update(movie);
+            await db.SaveChangesAsync();
+        }
+        catch
+        {
+            // ako pojedini film padne, preskači
+        }
+
+        return Result.Ok($"{entityName} Succifuly Populated From Tmdb!");
+    }
+
+    public async Task PopulateFromTmdbAsync()
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var movies = await db.Movies.Include(x => x.Genres).Where(x => x.IsMetadataFetched == false).ToListAsync();
+        if (movies.Count == 0) return;
+
+        foreach (var movie in movies)
+        {
+            try
+            {
+                TmdbDetails? details = null;
+
+                if (movie.TmdbId is not null) details = await tmdbService.GetMovieByIdAsync(movie.TmdbId.Value);
+
+                if (details is null)
+                {
+                    var search = await tmdbService.SearchMoviesAsync(movie.Title, movie.Year?.ToString());
+                    if (search?.Results is null || search.Results.Count == 0) continue;
+
+                    var best = search.Results.First();
+                    if (best.Id == 0) continue;
+
+                    movie.TmdbId = best.Id;
+
+                    details = await tmdbService.GetMovieByIdAsync(best.Id);
+                    if (details is null) continue;
+                }
+
+                // MAPIRANJE TMDB → MOVIE
+                movie.TmdbTitle = details.Title;
+                movie.ImdbId = details.ImdbId;
+
+                movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
+                    ? "img/NoImage.webp"
+                    : details.PosterPath;
+
+                // Genres
+                movie.Genres.Clear();
+
+                foreach (var g in details.Genres)
+                {
+                    movie.Genres.Add(new MovieGenre
+                    {
+                        TmdbId = g.Id,
+                        TmdbName = g.Name
+                    });
+                }
+
+                movie.IsMetadataFetched = true;
+
+                // SAVE
+                db.Movies.Update(movie);
+                await db.SaveChangesAsync();
+
+                // 5) DELAY (anti-rate-limit)
+                await Task.Delay(300);
+            }
+            catch
+            {
+                // ako pojedini film padne, preskači
+                continue;
+            }
+        }
+    }
+
 }

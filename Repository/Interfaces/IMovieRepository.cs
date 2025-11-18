@@ -7,5 +7,11 @@ public interface IMovieRepository
     Task<Result> DeleteAsync(Guid id);
 
 
+    Task<Result> PopulateFromTmdbByIdAsync(Guid id);
+
+
+
     Task SyncParsedMoviesAsync();
+
+    Task PopulateFromTmdbAsync();
 }

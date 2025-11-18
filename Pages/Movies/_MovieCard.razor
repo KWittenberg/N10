@@ -2,7 +2,7 @@
 
 <div class="card">
     <div class="card-image-container">
-        <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : Item.TmdbImageUrl)" class="card-img" alt="..."
+        <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Item.TmdbImageUrl}")" class="card-img" alt="..."
              @onclick="() => PlayInVlc(Item.FileName)">
     </div>
     <!-- Hide Info / Isključio dok ne nabavim slike od filmova-->
@@ -30,7 +30,7 @@
 {
     [CascadingParameter] AppState? App { get; set; }
 
-    [Parameter] public Entities.Movie? Item { get; set; }
+    [Parameter] public MovieDto? Item { get; set; }
 
 
 

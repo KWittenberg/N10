@@ -8,6 +8,8 @@ public static class Globals
 
     public const string NoImage = "img/NoImage.webp";
 
+    public const string BaseTmdbImageUrl = "http://image.tmdb.org/t/p/w500";
+
 
     public const string VlcPath = @"C:\Program Files\VideoLAN\VLC\vlc.exe";
 
