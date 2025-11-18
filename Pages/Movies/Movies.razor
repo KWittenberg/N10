@@ -52,7 +52,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<MovieDto> Entities = new();
+    List<MovieDto> Entities { get; set; } = new();
 
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;

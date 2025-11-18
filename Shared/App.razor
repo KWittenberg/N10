@@ -31,12 +31,14 @@
     <link rel="stylesheet" href="@Assets["N10.styles.css"]" />
     <ImportMap />
     <link rel="icon" type="image/png" href="/img/logo/a-logo.png" />
-    <HeadOutlet @rendermode="PageRenderMode" />
+    
+    @* <HeadOutlet @rendermode="PageRenderMode" /> *@
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 </head>
 
 <body data-cf-theme="orange">
-    <Routes @rendermode="PageRenderMode" />
-    @* <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" /> *@
+    @* <Routes @rendermode="PageRenderMode" /> *@
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <ReconnectModal />
 
 
