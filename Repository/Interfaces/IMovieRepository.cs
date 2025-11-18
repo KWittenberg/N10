@@ -4,6 +4,8 @@ public interface IMovieRepository
 {
     Task<Result<List<MovieDto>>> GetAllAsync();
 
+    Task<Result<PaginatedResult<MovieDto>>> GetPagedAsync(int pageNumber, int pageSize);
+
     Task<Result> DeleteAsync(Guid id);
 
 

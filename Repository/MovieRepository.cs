@@ -17,6 +17,20 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
         return Result<List<MovieDto>>.Ok(dtos);
     }
 
+    public async Task<Result<PaginatedResult<MovieDto>>> GetPagedAsync(int pageNumber, int pageSize)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var totalCount = await db.Movies.CountAsync();
+        var dtos = await db.Movies.AsNoTracking().OrderBy(x => x.SortTitle).Skip((pageNumber - 1) * pageSize).Take(pageSize)
+            .Select(MovieMapping.ToDtoExpression)
+            .ToListAsync();
+
+        if (dtos.Count == 0) return Result<PaginatedResult<MovieDto>>.Error($"{entityName} Not Found!");
+
+        return Result<PaginatedResult<MovieDto>>.Ok(new PaginatedResult<MovieDto>(dtos, pageNumber, pageSize, totalCount));
+    }
+
     public async Task<Result> DeleteAsync(Guid id)
     {
         await using var db = await context.CreateDbContextAsync();

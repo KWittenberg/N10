@@ -2,10 +2,11 @@
 @layout FrontLayout
 
 @inject IMovieRepository Repository
+@inject IJSRuntime JSRuntime
 
 <title>@Title</title>
 
-@if (IsProcessing || Entities is null)
+@if (IsProcessing || !Entities.Any())
 {
     <_Loading />
 }
@@ -19,6 +20,31 @@ else
                 <_MovieCard Item="movie" />
             }
         </div>
+
+        @if (IsLoadingMore)
+        {
+            <div class="text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Učitavanje...</span>
+                </div>
+            </div>
+        }
+
+        @if (HasMoreData && !IsLoadingMore)
+        {
+            <div @ref="LoadMoreTrigger" class="text-center my-4">
+                <button class="btn btn-primary" @onclick="LoadMoreData">
+                    Učitaj još filmova
+                </button>
+            </div>
+        }
+
+        @if (!HasMoreData && Entities.Any())
+        {
+            <div class="text-center my-4 text-muted">
+                <p>To su svi filmovi!</p>
+            </div>
+        }
     </div>
 }
 
@@ -32,14 +58,76 @@ else
     bool IsProcessing { get; set; } = true;
 
 
+    int CurrentPage = 0;
+    int PageSize = 80;
+    bool HasMoreData = true;
 
-    protected override async Task OnInitializedAsync()
+    bool IsLoadingMore = false;
+    ElementReference LoadMoreTrigger;
+    DotNetObjectReference<Movies>? DotNetHelper;
+
+
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var result = await Repository.GetAllAsync();
+    //     if (!result.Success || result.Data is null) return;
+
+    //     Entities = result.Data;
+    //     IsProcessing = false;
+    //     StateHasChanged();
+    // }
+
+    protected override async Task OnInitializedAsync() => await LoadInitialData();
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var result = await Repository.GetAllAsync();
-        if (!result.Success || result.Data is null) return;
+        if (firstRender)
+        {
+            DotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerInfiniteScroll", DotNetHelper);
+        }
+    }
 
-        Entities = result.Data;
+    async Task LoadInitialData()
+    {
+        IsProcessing = true;
+        CurrentPage = 1;
+
+        var result = await Repository.GetPagedAsync(CurrentPage, PageSize);
+        if (result.Success && result.Data != null)
+        {
+            Entities = result.Data.Items;
+            HasMoreData = result.Data.HasNextPage;
+        }
+
         IsProcessing = false;
         StateHasChanged();
     }
+
+    async Task LoadMoreData()
+    {
+        if (IsLoadingMore || !HasMoreData) return;
+
+        IsLoadingMore = true;
+        StateHasChanged();
+
+        CurrentPage++;
+        var result = await Repository.GetPagedAsync(CurrentPage, PageSize);
+
+        if (result.Success && result.Data != null)
+        {
+            Entities.AddRange(result.Data.Items);
+            HasMoreData = result.Data.HasNextPage;
+        }
+        else HasMoreData = false;
+
+        IsLoadingMore = false;
+        StateHasChanged();
+    }
+
+    [JSInvokable] public async Task LoadMoreJS() => await LoadMoreData();
+
+    public void Dispose() => DotNetHelper?.Dispose();
 }
