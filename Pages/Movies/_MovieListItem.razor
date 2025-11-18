@@ -1,0 +1,62 @@
+﻿<div class="card mb-3">
+    <div class="row g-0">
+        <div class="col-md-3">
+            @* <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Item.TmdbImageUrl}")"
+                 class="img-fluid rounded-start" alt="@Item.Title"
+                 @onclick="() => PlayInVlc(Item.FileName)"> *@
+
+            <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Item.TmdbImageUrl}")"
+                 class="img-fluid rounded-start" alt="@Item.Title">
+        </div>
+        <div class="col-md-9">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="/movie/@Item.TmdbId" class="text-decoration-none">@Item.Title</a>
+                    @if (Item.Year.HasValue)
+                    {
+                        <span class="text-muted">(@Item.Year)</span>
+                    }
+                </h5>
+
+                @if (Item.Genres.Any())
+                {
+                    <div class="mb-2">
+                        @foreach (var genre in Item.Genres)
+                        {
+                            <span class="badge bg-secondary me-1">@genre.TmdbName</span>
+                        }
+                    </div>
+                }
+
+                @if (Item.ImdbRating.HasValue)
+                {
+                    <div class="mb-2">
+                        <i class="fas fa-star text-warning"></i>
+                        <strong>@Item.ImdbRating.Value.ToString("0.0")</strong> IMDb
+                    </div>
+                }
+
+                <div class="mb-2">
+                    @if (!string.IsNullOrEmpty(Item.Resolution))
+                    {
+                        <span class="badge bg-primary me-1">@Item.Resolution</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Item.Source))
+                    {
+                        <span class="badge bg-info me-1">@Item.Source</span>
+                    }
+                </div>
+
+                <p class="card-text">
+                    <small class="text-muted">
+                        @Item.FileName
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public MovieDto Item { get; set; } = default!;
+}

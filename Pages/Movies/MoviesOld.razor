@@ -1,0 +1,126 @@
+﻿@page "/moviesold"
+@layout FrontLayout
+
+@inject IMovieRepository Repository
+@inject IJSRuntime JSRuntime
+
+<title>@Title</title>
+
+@if (IsProcessing || !Entities.Any())
+{
+    <_Loading />
+}
+else
+{
+    <div class="mt-5 @App?.GetContentClass()">
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6">
+            @foreach (var movie in Entities)
+            {
+                <_MovieCard Item="movie" />
+            }
+        </div>
+
+        @if (IsLoadingMore)
+        {
+            <div class="text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Učitavanje...</span>
+                </div>
+            </div>
+        }
+
+        @if (HasMoreData && !IsLoadingMore)
+        {
+            <div @ref="LoadMoreTrigger" class="text-center my-4">
+                <button class="btn btn-primary" @onclick="LoadMoreData">
+                    Učitaj još filmova
+                </button>
+            </div>
+        }
+
+        @if (!HasMoreData && Entities.Any())
+        {
+            <div class="text-center my-4 text-muted">
+                <p>To su svi filmovi!</p>
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<MovieDto> Entities { get; set; } = new();
+
+    const string Title = "Movies";
+    bool IsProcessing { get; set; } = true;
+
+
+    int CurrentPage = 0;
+    int PageSize = 80;
+    bool HasMoreData = true;
+
+    bool IsLoadingMore = false;
+    ElementReference LoadMoreTrigger;
+    DotNetObjectReference<Movies>? DotNetHelper;
+
+
+
+    protected override async Task OnInitializedAsync() => await LoadInitialData();
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         DotNetHelper = DotNetObjectReference.Create(this);
+    //         // await JSRuntime.InvokeVoidAsync("registerInfiniteScroll", DotNetHelper);
+            
+    //         // Using JS isolation, Warring! Add 'export' on JS function to make it work!
+    //         await using var jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/Pages/Movies/MoviesOld.razor.js");
+    //         await jsModule.InvokeVoidAsync("registerInfiniteScroll", DotNetHelper);
+    //     }
+    // }
+
+    async Task LoadInitialData()
+    {
+        IsProcessing = true;
+        CurrentPage = 1;
+
+        var result = await Repository.GetPagedAsync(CurrentPage, PageSize);
+        if (result.Success && result.Data != null)
+        {
+            Entities = result.Data.Items;
+            HasMoreData = result.Data.HasNextPage;
+        }
+
+        IsProcessing = false;
+        StateHasChanged();
+    }
+
+    async Task LoadMoreData()
+    {
+        if (IsLoadingMore || !HasMoreData) return;
+
+        IsLoadingMore = true;
+        StateHasChanged();
+
+        CurrentPage++;
+        var result = await Repository.GetPagedAsync(CurrentPage, PageSize);
+
+        if (result.Success && result.Data != null)
+        {
+            Entities.AddRange(result.Data.Items);
+            HasMoreData = result.Data.HasNextPage;
+        }
+        else HasMoreData = false;
+
+        IsLoadingMore = false;
+        StateHasChanged();
+    }
+
+    [JSInvokable] public async Task LoadMoreJS() => await LoadMoreData();
+
+    public void Dispose() => DotNetHelper?.Dispose();
+}

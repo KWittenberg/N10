@@ -6,80 +6,313 @@
 
 <title>@Title</title>
 
-@if (IsProcessing || !Entities.Any())
-{
-    <_Loading />
-}
-else
-{
-    <div class="mt-5 @App?.GetContentClass()">
-
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6">
-            @foreach (var movie in Entities)
+<!-- Filter Sidebar -->
+<div class="row">
+    <!-- Mobile Filter Toggle -->
+    <div class="col-12 d-lg-none mb-3">
+        <button class="btn btn-outline-primary w-100" @onclick="ToggleMobileFilters">
+            <i class="fas fa-filter"></i> Filteri
+            @if (HasActiveFilters)
             {
-                <_MovieCard Item="movie" />
+                <span class="badge bg-primary ms-2">@GetActiveFilterCount</span>
             }
-        </div>
+        </button>
+    </div>
 
-        @if (IsLoadingMore)
+    <!-- Filter Sidebar -->
+    <div class="p-2 col-lg-3 @(ShowMobileFilters ? "d-block" : "d-none d-lg-block")">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Filteri</h5>
+            </div>
+            <div class="card-body">
+                <!-- Search -->
+                <div class="mb-3">
+                    <label class="form-label">Pretraži filmove</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" @bind-value="@SearchTerm" placeholder="Naziv filma..." />
+                        @if (!string.IsNullOrEmpty(SearchTerm))
+                        {
+                            <button class="btn btn-outline-secondary" @onclick="ClearSearch"><i class="bi bi-x"></i></button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Alphabet Filter -->
+                <div class="mb-3">
+                    <label class="form-label">Početno slovo</label>
+                    <div class="alphabet-filter">
+                        <button class="btn @(filter.Letter == null ? "btn-primary" : "btn-outline-primary") btn-sm m-1"
+                                @onclick="() => SetLetterFilter(null)">
+                            Svi
+                        </button>
+                        @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                        {
+                            <button class="btn @(filter.Letter == letter.ToString() ? "btn-primary" : "btn-outline-primary") btn-sm m-1"
+                                    @onclick="() => SetLetterFilter(letter.ToString())">
+                                @letter
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Year Range -->
+                <div class="mb-3">
+                    <label class="form-label">Godina: @YearFrom - @YearTo</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <select class="form-select" @bind="YearFrom">
+                                <option value="">Od godine</option>
+                                @foreach (var year in filterOptions?.AvailableYears ?? new())
+                                {
+                                    <option value="@year">@year</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" @bind="YearTo">
+                                <option value="">Do godine</option>
+                                @foreach (var year in filterOptions?.AvailableYears ?? new())
+                                {
+                                    <option value="@year">@year</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Genres -->
+                <div class="mb-3">
+                    <label class="form-label">Žanrovi</label>
+                    <div class="genre-filter" style="max-height: 200px; overflow-y: auto;">
+                        @foreach (var genre in filterOptions?.AvailableGenres ?? new())
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       id="genre-@genre"
+                                       checked="@(filter.Genres?.Contains(genre) == true)"
+                                       @onchange="(e) => ToggleGenre(genre, e.Value)" />
+                                <label class="form-check-label" for="genre-@genre">
+                                    @genre
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Resolutions -->
+                <div class="mb-3">
+                    <label class="form-label">Rezolucija</label>
+                    <div class="resolution-filter">
+                        @foreach (var resolution in filterOptions?.AvailableResolutions ?? new())
+                        {
+                            <button class="btn @(filter.Resolutions?.Contains(resolution) == true ? "btn-success" : "btn-outline-success") btn-sm m-1"
+                                    @onclick="() => ToggleResolution(resolution)">
+                                @resolution
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Sort -->
+                <div class="mb-3">
+                    <label class="form-label">Sortiraj po</label>
+                    <select class="form-select" @bind="SortBy">
+                        <option value="title">Naslov (A-Ž)</option>
+                        <option value="title_desc">Naslov (Ž-A)</option>
+                        <option value="year">Godina (stariji)</option>
+                        <option value="year_desc">Godina (noviji)</option>
+                        <option value="rating">IMDb ocjena</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" @onclick="ApplyFilters">
+                        <i class="fas fa-search"></i> Primijeni filtere
+                    </button>
+                    @if (HasActiveFilters)
+                    {
+                        <button class="btn btn-outline-danger" @onclick="ResetFilters">
+                            <i class="fas fa-times"></i> Resetuj filtere
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="p-4 col-lg-9">
+        <!-- Active Filters -->
+        @if (HasActiveFilters)
         {
-            <div class="text-center my-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Učitavanje...</span>
+            <div class="card mb-4">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <small class="text-muted">Aktivni filteri:</small>
+                        @if (!string.IsNullOrEmpty(filter.Letter))
+                        {
+                            <span class="badge bg-primary">
+                                Slovo: @filter.Letter
+                                <button class="btn-close btn-close-white ms-1" @onclick="() => SetLetterFilter(null)"></button>
+                            </span>
+                        }
+                        @if (filter.YearFrom.HasValue || filter.YearTo.HasValue)
+                        {
+                            <span class="badge bg-primary">
+                                Godina: @(filter.YearFrom?.ToString() ?? "...") - @(filter.YearTo?.ToString() ?? "...")
+                                <button class="btn-close btn-close-white ms-1" @onclick="ClearYearFilter"></button>
+                            </span>
+                        }
+                        @foreach (var genre in filter.Genres ?? new())
+                        {
+                            <span class="badge bg-success">
+                                @genre
+                                <button class="btn-close btn-close-white ms-1" @onclick="() => ToggleGenre(genre, false)"></button>
+                            </span>
+                        }
+                        @foreach (var res in filter.Resolutions ?? new())
+                        {
+                            <span class="badge bg-warning text-dark">
+                                @res
+                                <button class="btn-close ms-1" @onclick="() => ToggleResolution(res)"></button>
+                            </span>
+                        }
+                    </div>
                 </div>
             </div>
         }
 
-        @if (HasMoreData && !IsLoadingMore)
+        <!-- Results Count & Button Grid/List -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Pronađeno filmova: <span class="text-primary">@(Entities.Count > 0 ? Entities.Count : "0")</span></h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" @onclick="ToggleViewMode">
+                    <i class="bi @(IsGridView ? "bi-list" : "bi-grid")"></i>
+                </button>
+            </div>
+        </div>
+
+        @if (IsProcessing && !Entities.Any())
         {
-            <div @ref="LoadMoreTrigger" class="text-center my-4">
-                <button class="btn btn-primary" @onclick="LoadMoreData">
-                    Učitaj još filmova
+            <_Loading />
+        }
+        else if (!Entities.Any())
+        {
+            <!-- Nema pronađenih filmova -->
+            <div class="text-center py-5">
+                @* <i class="fas fa-film fa-3x text-muted mb-3"></i> *@
+                <i class="bi bi-film mb-3"></i>
+                <h4 class="text-muted">Nema pronađenih filmova</h4>
+                <p class="text-muted">Pokušajte promijeniti filtere</p>
+                <button class="btn btn-primary" @onclick="ResetFilters">
+                    Resetuj filtere
                 </button>
             </div>
         }
-
-        @if (!HasMoreData && Entities.Any())
+        else
         {
-            <div class="text-center my-4 text-muted">
-                <p>To su svi filmovi!</p>
+            <div class="@(IsGridView ? "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6" : "list-view")">
+                @foreach (var movie in Entities)
+                {
+                    @if (IsGridView)
+                    {
+                        <_MovieCard Item="movie" />
+                    }
+                    else
+                    {
+                        <_MovieListItem Item="movie" />
+                    }
+                }
             </div>
+
+            @if (IsLoadingMore)
+            {
+                <div class="text-center my-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Učitavanje...</span>
+                    </div>
+                </div>
+            }
+
+            @if (HasMoreData && !IsLoadingMore)
+            {
+                <div @ref="LoadMoreTrigger" class="text-center my-4">
+                    <button class="btn btn-primary" @onclick="LoadMoreData">
+                        Učitaj još filmova (@(CurrentPage* PageSize)/@TotalCount)
+                    </button>
+                </div>
+            }
+
+            @if (!HasMoreData && Entities.Any())
+            {
+                <div class="text-center my-4 text-muted">
+                    <p>Prikazani su svi filmovi (@TotalCount)</p>
+                </div>
+            }
         }
     </div>
-}
-
+</div>
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
     List<MovieDto> Entities { get; set; } = new();
-
     const string Title = "Movies";
-    bool IsProcessing { get; set; } = true;
 
-
+    // Pagination
     int CurrentPage = 0;
-    int PageSize = 80;
+    int PageSize = 20;
+    int TotalCount = 0;
     bool HasMoreData = true;
-
+    bool IsProcessing = true;
     bool IsLoadingMore = false;
+
+    // Filters
+    MovieFilter filter = new();
+    FilterOptionsDto? filterOptions;
+    string SearchTerm = string.Empty;
+
+    // UI State
+    bool ShowMobileFilters = false;
+    bool IsGridView = true;
     ElementReference LoadMoreTrigger;
     DotNetObjectReference<Movies>? DotNetHelper;
 
+    // Computed properties
+    bool HasActiveFilters => !string.IsNullOrEmpty(filter.Letter) ||
+                            filter.YearFrom.HasValue || filter.YearTo.HasValue ||
+                            (filter.Genres?.Any() == true) ||
+                            (filter.Resolutions?.Any() == true);
 
+    int GetActiveFilterCount => (string.IsNullOrEmpty(filter.Letter) ? 0 : 1) +
+                              ((filter.YearFrom.HasValue || filter.YearTo.HasValue) ? 1 : 0) +
+                              (filter.Genres?.Count ?? 0) +
+                              (filter.Resolutions?.Count ?? 0);
 
-    protected override async Task OnInitializedAsync() => await LoadInitialData();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFilterOptions();
+        await LoadInitialData();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             DotNetHelper = DotNetObjectReference.Create(this);
-            // await JSRuntime.InvokeVoidAsync("registerInfiniteScroll", DotNetHelper);
-            
-            // Using JS isolation, Warring! Add 'export' on JS function to make it work!
             await using var jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/Pages/Movies/Movies.razor.js");
             await jsModule.InvokeVoidAsync("registerInfiniteScroll", DotNetHelper);
+        }
+    }
+
+    async Task LoadFilterOptions()
+    {
+        var result = await Repository.GetFilterOptionsAsync();
+        if (result.Success)
+        {
+            filterOptions = result.Data;
         }
     }
 
@@ -87,11 +320,13 @@ else
     {
         IsProcessing = true;
         CurrentPage = 1;
+        StateHasChanged();
 
-        var result = await Repository.GetPagedAsync(CurrentPage, PageSize);
+        var result = await Repository.GetFilteredPagedAsync(CurrentPage, PageSize, filter);
         if (result.Success && result.Data != null)
         {
             Entities = result.Data.Items;
+            TotalCount = result.Data.TotalCount;
             HasMoreData = result.Data.HasNextPage;
         }
 
@@ -107,7 +342,7 @@ else
         StateHasChanged();
 
         CurrentPage++;
-        var result = await Repository.GetPagedAsync(CurrentPage, PageSize);
+        var result = await Repository.GetFilteredPagedAsync(CurrentPage, PageSize, filter);
 
         if (result.Success && result.Data != null)
         {
@@ -120,7 +355,110 @@ else
         StateHasChanged();
     }
 
-    [JSInvokable] public async Task LoadMoreJS() => await LoadMoreData();
+    // Filter methods
+    async Task ApplyFilters()
+    {
+        ShowMobileFilters = false;
+        await ResetAndReload();
+    }
+
+    async Task ResetFilters()
+    {
+        filter = new MovieFilter();
+        SearchTerm = "";
+        ShowMobileFilters = false;
+        await ResetAndReload();
+    }
+
+    async Task ResetAndReload()
+    {
+        CurrentPage = 0;
+        Entities.Clear();
+        HasMoreData = true;
+        await LoadInitialData();
+    }
+
+    void SetLetterFilter(string? letter)
+    {
+        filter.Letter = letter;
+    }
+
+    void ToggleGenre(string genre, object? isChecked)
+    {
+        filter.Genres ??= new List<string>();
+        var checkedValue = isChecked as bool? == true;
+
+        if (checkedValue && !filter.Genres.Contains(genre))
+            filter.Genres.Add(genre);
+        else if (!checkedValue && filter.Genres.Contains(genre))
+            filter.Genres.Remove(genre);
+    }
+
+    void ToggleResolution(string resolution)
+    {
+        filter.Resolutions ??= new List<string>();
+
+        if (filter.Resolutions.Contains(resolution))
+            filter.Resolutions.Remove(resolution);
+        else
+            filter.Resolutions.Add(resolution);
+    }
+
+    void ClearYearFilter()
+    {
+        filter.YearFrom = null;
+        filter.YearTo = null;
+    }
+
+    void ClearSearch()
+    {
+        SearchTerm = "";
+        filter.SearchTerm = "";
+    }
+
+    void ToggleMobileFilters()
+    {
+        ShowMobileFilters = !ShowMobileFilters;
+    }
+
+    void ToggleViewMode()
+    {
+        IsGridView = !IsGridView;
+    }
+
+    // Properties for two-way binding
+    string YearFrom
+    {
+        get => filter.YearFrom?.ToString() ?? "";
+        set => filter.YearFrom = int.TryParse(value, out var year) ? year : null;
+    }
+
+    string YearTo
+    {
+        get => filter.YearTo?.ToString() ?? "";
+        set => filter.YearTo = int.TryParse(value, out var year) ? year : null;
+    }
+
+    string SortBy
+    {
+        get => filter.SortBy + (filter.SortDescending ? "_desc" : "");
+        set
+        {
+            if (value.EndsWith("_desc"))
+            {
+                filter.SortBy = value.Replace("_desc", "");
+                filter.SortDescending = true;
+            }
+            else
+            {
+                filter.SortBy = value;
+                filter.SortDescending = false;
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task LoadMoreJS() => await LoadMoreData();
 
     public void Dispose() => DotNetHelper?.Dispose();
 }

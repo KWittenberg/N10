@@ -16,6 +16,85 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
         return Result<List<MovieDto>>.Ok(dtos);
     }
+    public async Task<Result> DeleteAsync(Guid id)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var entity = await db.Movies.FindAsync(id);
+        if (entity is null) return Result.Error($"{entityName} Not Found!");
+
+        db.Movies.Remove(entity);
+        await db.SaveChangesAsync();
+
+        return Result.Ok($"{entityName} Deleted!");
+    }
+    #endregion
+
+
+    public async Task<Result<PaginatedResult<MovieDto>>> GetFilteredPagedAsync(int pageNumber, int pageSize, MovieFilter? filter = null)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var query = db.Movies.Include(x => x.Genres).AsNoTracking().AsQueryable();
+
+
+        if (!string.IsNullOrEmpty(filter?.Letter) && filter.Letter != "all") query = query.Where(m => m.SortTitle.StartsWith(filter.Letter));
+        if (filter?.YearFrom.HasValue == true) query = query.Where(m => m.Year >= filter.YearFrom);
+        if (filter?.YearTo.HasValue == true) query = query.Where(m => m.Year <= filter.YearTo);
+        if (filter?.Genres != null && filter.Genres.Any()) query = query.Where(m => m.Genres.Any(g => filter.Genres.Contains(g.TmdbName)));
+        if (filter?.Resolutions != null && filter.Resolutions.Any()) query = query.Where(m => filter.Resolutions.Contains(m.Resolution));
+
+
+        query = filter?.SortBy switch
+        {
+            "year" => filter.SortDescending ? query.OrderByDescending(m => m.Year) : query.OrderBy(m => m.Year),
+            "rating" => filter.SortDescending ? query.OrderByDescending(m => m.ImdbRating) : query.OrderBy(m => m.ImdbRating),
+            "title" or _ => filter.SortDescending ? query.OrderByDescending(m => m.SortTitle) : query.OrderBy(m => m.SortTitle)
+        };
+
+        var totalCount = await query.CountAsync();
+        var dtos = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(MovieMapping.ToDtoExpression)
+            .ToListAsync();
+
+        if (dtos.Count == 0 && pageNumber == 1) return Result<PaginatedResult<MovieDto>>.Error("Nema pronađenih filmova sa zadanim filterima!");
+
+        return Result<PaginatedResult<MovieDto>>.Ok(new PaginatedResult<MovieDto>(dtos, pageNumber, pageSize, totalCount));
+    }
+
+    public async Task<Result<FilterOptionsDto>> GetFilterOptionsAsync()
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var options = new FilterOptionsDto
+        {
+            AvailableYears = await db.Movies
+                .Where(m => m.Year.HasValue)
+                .Select(m => m.Year.Value)
+                .Distinct()
+                .OrderBy(y => y)
+                .ToListAsync(),
+
+            AvailableGenres = await db.MovieGenres
+                .Select(mg => mg.TmdbName)
+                .Distinct()
+                .OrderBy(g => g)
+                .ToListAsync(),
+
+            AvailableResolutions = await db.Movies
+                .Where(m => m.Resolution != null)
+                .Select(m => m.Resolution)
+                .Distinct()
+                .OrderBy(r => r)
+                .ToListAsync()
+        };
+
+        return Result<FilterOptionsDto>.Ok(options);
+    }
+
+
 
     public async Task<Result<PaginatedResult<MovieDto>>> GetPagedAsync(int pageNumber, int pageSize)
     {
@@ -31,19 +110,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
         return Result<PaginatedResult<MovieDto>>.Ok(new PaginatedResult<MovieDto>(dtos, pageNumber, pageSize, totalCount));
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
-    {
-        await using var db = await context.CreateDbContextAsync();
 
-        var entity = await db.Movies.FindAsync(id);
-        if (entity is null) return Result.Error($"{entityName} Not Found!");
-
-        db.Movies.Remove(entity);
-        await db.SaveChangesAsync();
-
-        return Result.Ok($"{entityName} Deleted!");
-    }
-    #endregion
 
 
 
