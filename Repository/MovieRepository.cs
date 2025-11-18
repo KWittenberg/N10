@@ -160,7 +160,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
             foreach (var g in details.Genres)
             {
-                if (!movie.Genres.Any(x => x.TmdbId == g.Id))
+                if (movie.Genres.Any(x => x.TmdbId == g.Id))
                 {
                     movie.Genres.Add(new MovieGenre
                     {
