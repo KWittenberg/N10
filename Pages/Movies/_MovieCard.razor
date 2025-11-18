@@ -7,21 +7,53 @@
     </div>
     <!-- Hide Info / Isključio dok ne nabavim slike od filmova-->
     @* <div class="card-overlay"> *@
-    <div class="">
-        <div class="m-3 badge bg-white text-black position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
+    <div class="card-overlay">
+        <div class="m-3 badge bg-transparent40 text-white position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
 
+
+        <div class="m-3 position-absolute top-0 end-0 d-flex flex-column align-items-end gap-1">
+            @if (Item.Version is not null)
+            {
+                <span class="badge text-warning bg-transparent20">@Item.Version</span>
+            }
+            
+            @if (Item.Release is not null)
+            {
+                <span class="badge bg-transparent20">@Item.Release</span>
+            }
+
+            @if (Item.Source is not null)
+            {
+                <span class="badge bg-transparent20">@Item.Source</span>
+            }
+
+            @if (Item.Resolution is not null)
+            {
+                <span class="badge @GetResolutionClass(Item.Resolution)">@GetResolutionDisplayText(Item.Resolution)</span>
+            }
+        </div>
+
+        @* @if (Item.Release is not null)
+        {
+            <div class="m-3 badge position-absolute top-0 end-0">
+                <span class="p">@Item.Release</span>
+            </div>
+        }
+        
         @if (Item.Resolution is not null)
         {
             <div class="m-3 badge position-absolute top-0 end-0 @GetResolutionClass(Item.Resolution)">
                 <span class="p">@GetResolutionDisplayText(Item.Resolution)</span>
             </div>
-        }
+        } *@
 
         @* <a href="/movie/@Item?.TmdbId" class="card-title-link">
             <h4 class="m-3 position-absolute bottom-0 start-0 text-truncate">@Item.Title</h4>
         </a> *@
-        
-        <a href="/movie/@Item?.TmdbId" class="pb-2 h4 title-link position-absolute bottom-0 start-0 w-100 px-3 text-truncate">@Item.Title</a>
+
+        <a href="/movie/@Item?.TmdbId" class="pb-2 h4 title-link position-absolute bottom-0 start-0 w-100 px-3 text-truncate" target="_blank">
+            @(string.IsNullOrEmpty(Item?.TmdbTitle) ? Item?.Title : Item.TmdbTitle)
+        </a>
     </div>
 </div>
 
