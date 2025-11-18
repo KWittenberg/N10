@@ -160,11 +160,15 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
             foreach (var g in details.Genres)
             {
-                movie.Genres.Add(new MovieGenre
+                if (!movie.Genres.Any(x => x.TmdbId == g.Id))
                 {
-                    TmdbId = g.Id,
-                    TmdbName = g.Name
-                });
+                    movie.Genres.Add(new MovieGenre
+                    {
+                        TmdbId = g.Id,
+                        TmdbName = g.Name
+                    });
+                }
+
             }
 
             movie.IsMetadataFetched = true;
@@ -173,9 +177,9 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
             db.Movies.Update(movie);
             await db.SaveChangesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // ako pojedini film padne, preskači
+            return Result.Error(ex.Message);
         }
 
         return Result.Ok($"{entityName} Succifuly Populated From Tmdb!");
