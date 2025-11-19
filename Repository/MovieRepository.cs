@@ -38,6 +38,8 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
         var query = db.Movies.Include(x => x.Genres).AsNoTracking().AsQueryable();
 
 
+        if (!string.IsNullOrEmpty(filter?.SearchTerm)) query = query.Where(m => m.Title.Contains(filter.SearchTerm));
+
         if (!string.IsNullOrEmpty(filter?.Letter) && filter.Letter != "all") query = query.Where(m => m.SortTitle.StartsWith(filter.Letter));
         if (filter?.YearFrom.HasValue == true) query = query.Where(m => m.Year >= filter.YearFrom);
         if (filter?.YearTo.HasValue == true) query = query.Where(m => m.Year <= filter.YearTo);

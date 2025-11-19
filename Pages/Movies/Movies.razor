@@ -11,16 +11,13 @@
     <!-- Mobile Filter Toggle -->
     @* <div class="col-12 d-lg-none mb-3"> *@
 
-
-
     <!-- Search -->
     <div class="d-flex justify-content-center align-items-center gap-4">
-        @* <label class="form-label">Pretraži filmove</label> *@
         <div class="input-group">
-            <input type="text" class="form-control rounded-start-pill" @bind="SearchTerm" @bind:event="oninput" placeholder=" Search Movies" />
+            <input type="text" class="form-control" @bind="SearchTerm" @oninput="OnSearchInput" placeholder=" Search Movies..." />
             @if (!string.IsNullOrEmpty(SearchTerm))
             {
-                <button class="btn btn-outline-primary rounded-end-pill" @onclick="ClearSearch"><i class="bi bi-x"></i></button>
+                <button class="btn btn-outline-secondary" @onclick="ClearSearch">X</button>
             }
         </div>
         <div class="">
@@ -32,16 +29,12 @@
                 }
             </button>
         </div>
-
     </div>
-
-
-
 
     <!-- Filter -->
     @* <div class="@(ShowMobileFilters ? "d-block" : "d-none d-lg-block")"> *@
     <div class="mt-4 @(ShowMobileFilters ? "d-block" : "d-none")">
-        <div class="card border-0 bg-transparent20">
+        <div class="card bg-transparent10">
             <div class="card-body">
 
                 <!-- Alphabet Filter -->
@@ -192,7 +185,7 @@
 
     <!-- Results Count & Button Grid/List -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5>Pronađeno filmova: <span class="text-primary">@(Entities.Count > 0 ? Entities.Count : "0")</span></h5>
+        <h5>Movies: <span class="ms-2 text-primary">@(Entities.Count > 0 ? "..." : "0")</span></h5>
         <div class="d-flex gap-2">
             <button class="btn btn-outline-secondary" @onclick="ToggleViewMode">
                 <i class="bi @(IsGridView ? "bi-list" : "bi-grid")"></i>
@@ -209,8 +202,8 @@
         <!-- Nema pronađenih filmova -->
         <div class="text-center py-5">
             @* <i class="fas fa-film fa-3x text-muted mb-3"></i> *@
-            <i class="bi bi-film mb-3"></i>
-            <h4 class="text-muted">Nema pronađenih filmova</h4>
+            <i class="bi bi-film"></i>
+            <h4 class="mt-3 text-muted">Nema pronađenih filmova</h4>
             <p class="text-muted">Pokušajte promijeniti filtere</p>
             <button class="btn btn-primary" @onclick="ResetFilters">Reset All</button>
         </div>
@@ -267,7 +260,7 @@
 
     // Pagination
     int CurrentPage = 0;
-    int PageSize = 20;
+    int PageSize = 100;
     int TotalCount = 0;
     bool HasMoreData = true;
     bool IsProcessing = true;
@@ -276,7 +269,7 @@
     // Filters
     MovieFilter filter = new();
     FilterOptionsDto? filterOptions;
-    string SearchTerm = string.Empty;
+    //string SearchTerm = string.Empty;
 
     // UI State
     bool ShowMobileFilters = false;
@@ -356,6 +349,47 @@
         StateHasChanged();
     }
 
+    #region SEARCH
+    string searchTerm = string.Empty;
+    string SearchTerm
+    {
+        get => searchTerm;
+        set
+        {
+            searchTerm = value;
+            filter.SearchTerm = value;
+            // Ne zovemo odmah, već ćemo koristiti debounce
+            DebounceSearch();
+        }
+    }
+
+    CancellationTokenSource? searchTokenSource;
+
+    async void DebounceSearch()
+    {
+        searchTokenSource?.Cancel();
+        searchTokenSource = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(500, searchTokenSource.Token);
+            if (!searchTokenSource.Token.IsCancellationRequested) await ResetAndReload();
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignoriraj ako je otkazano
+        }
+    }
+
+    void OnSearchInput(ChangeEventArgs e) => SearchTerm = e.Value?.ToString() ?? "";
+
+    async Task ClearSearch()
+    {
+        SearchTerm = string.Empty;
+        await ResetAndReload();
+    }
+    #endregion
+
+
     // Filter methods
     async Task ApplyFilters()
     {
@@ -414,12 +448,6 @@
         filter.YearTo = null;
     }
 
-    void ClearSearch()
-    {
-        SearchTerm = string.Empty;
-        filter.SearchTerm = string.Empty;
-    }
-
     void ToggleMobileFilters() => ShowMobileFilters = !ShowMobileFilters;
 
     void ToggleViewMode() => IsGridView = !IsGridView;
@@ -427,24 +455,24 @@
     // Properties for two-way binding
     string YearFrom
     {
-        get => filter.YearFrom?.ToString() ?? "";
+        get => filter.YearFrom?.ToString() ?? string.Empty;
         set => filter.YearFrom = int.TryParse(value, out var year) ? year : null;
     }
 
     string YearTo
     {
-        get => filter.YearTo?.ToString() ?? "";
+        get => filter.YearTo?.ToString() ?? string.Empty;
         set => filter.YearTo = int.TryParse(value, out var year) ? year : null;
     }
 
     string SortBy
     {
-        get => filter.SortBy + (filter.SortDescending ? "_desc" : "");
+        get => filter.SortBy + (filter.SortDescending ? "_desc" : string.Empty);
         set
         {
             if (value.EndsWith("_desc"))
             {
-                filter.SortBy = value.Replace("_desc", "");
+                filter.SortBy = value.Replace("_desc", string.Empty);
                 filter.SortDescending = true;
             }
             else
