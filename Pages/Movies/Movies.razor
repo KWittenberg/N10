@@ -11,7 +11,7 @@
     <!-- Mobile Filter Toggle -->
     @* <div class="col-12 d-lg-none mb-3"> *@
 
-    <!-- Search -->
+    <!-- Search & Filters -->
     <div class="d-flex justify-content-center align-items-center gap-4">
         <div class="input-group">
             <input type="text" class="form-control" @bind="SearchTerm" @oninput="OnSearchInput" placeholder=" Search Movies..." />
@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <!-- Filter -->
+    <!-- Filter Options -->
     @* <div class="@(ShowMobileFilters ? "d-block" : "d-none d-lg-block")"> *@
     <div class="mt-4 @(ShowMobileFilters ? "d-block" : "d-none")">
         <div class="card bg-transparent10">
