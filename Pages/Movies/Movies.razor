@@ -6,254 +6,269 @@
 
 <title>@Title</title>
 
-<!-- Filter Sidebar -->
-<div class="row">
+
+<div class="mt-5 @App?.GetContentClass()">
     <!-- Mobile Filter Toggle -->
-    <div class="col-12 d-lg-none mb-3">
-        <button class="btn btn-outline-primary w-100" @onclick="ToggleMobileFilters">
-            <i class="fas fa-filter"></i> Filteri
-            @if (HasActiveFilters)
+    @* <div class="col-12 d-lg-none mb-3"> *@
+
+
+
+    <!-- Search -->
+    <div class="d-flex justify-content-center align-items-center gap-4">
+        @* <label class="form-label">Pretraži filmove</label> *@
+        <div class="input-group">
+            <input type="text" class="form-control rounded-start-pill" @bind="SearchTerm" @bind:event="oninput" placeholder=" Search Movies" />
+            @if (!string.IsNullOrEmpty(SearchTerm))
             {
-                <span class="badge bg-primary ms-2">@GetActiveFilterCount</span>
+                <button class="btn btn-outline-primary rounded-end-pill" @onclick="ClearSearch"><i class="bi bi-x"></i></button>
             }
-        </button>
+        </div>
+        <div class="">
+            <button class="btn btn-outline-primary w-100" @onclick="ToggleMobileFilters">
+                <i class="fas fa-filter"></i> Filters
+                @if (HasActiveFilters)
+                {
+                    <span class="badge bg-primary ms-2">@GetActiveFilterCount</span>
+                }
+            </button>
+        </div>
+
     </div>
 
-    <!-- Filter Sidebar -->
-    <div class="p-2 col-lg-3 @(ShowMobileFilters ? "d-block" : "d-none d-lg-block")">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Filteri</h5>
-            </div>
+
+
+
+    <!-- Filter -->
+    @* <div class="@(ShowMobileFilters ? "d-block" : "d-none d-lg-block")"> *@
+    <div class="mt-4 @(ShowMobileFilters ? "d-block" : "d-none")">
+        <div class="card border-0 bg-transparent20">
             <div class="card-body">
-                <!-- Search -->
-                <div class="mb-3">
-                    <label class="form-label">Pretraži filmove</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" @bind-value="@SearchTerm" placeholder="Naziv filma..." />
-                        @if (!string.IsNullOrEmpty(SearchTerm))
-                        {
-                            <button class="btn btn-outline-secondary" @onclick="ClearSearch"><i class="bi bi-x"></i></button>
-                        }
-                    </div>
-                </div>
 
                 <!-- Alphabet Filter -->
-                <div class="mb-3">
-                    <label class="form-label">Početno slovo</label>
-                    <div class="alphabet-filter">
-                        <button class="btn @(filter.Letter == null ? "btn-primary" : "btn-outline-primary") btn-sm m-1"
-                                @onclick="() => SetLetterFilter(null)">
-                            Svi
+                <div class="alphabet-filter">
+                    <button class="btn @(filter.Letter == null ? "btn-primary" : "btn-outline-primary") btn-sm m-1" @onclick="() => SetLetterFilter(null)">
+                        All
+                    </button>
+                    @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                    {
+                        <button class="btn @(filter.Letter == letter.ToString() ? "btn-primary" : "btn-outline-primary") btn-sm m-1" @onclick="() => SetLetterFilter(letter.ToString())">
+                            @letter
                         </button>
-                        @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-                        {
-                            <button class="btn @(filter.Letter == letter.ToString() ? "btn-primary" : "btn-outline-primary") btn-sm m-1"
-                                    @onclick="() => SetLetterFilter(letter.ToString())">
-                                @letter
-                            </button>
-                        }
-                    </div>
+                    }
                 </div>
 
-                <!-- Year Range -->
-                <div class="mb-3">
-                    <label class="form-label">Godina: @YearFrom - @YearTo</label>
-                    <div class="row">
-                        <div class="col-6">
-                            <select class="form-select" @bind="YearFrom">
-                                <option value="">Od godine</option>
-                                @foreach (var year in filterOptions?.AvailableYears ?? new())
-                                {
-                                    <option value="@year">@year</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <select class="form-select" @bind="YearTo">
-                                <option value="">Do godine</option>
-                                @foreach (var year in filterOptions?.AvailableYears ?? new())
-                                {
-                                    <option value="@year">@year</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                <div class="row">
 
-                <!-- Genres -->
-                <div class="mb-3">
-                    <label class="form-label">Žanrovi</label>
-                    <div class="genre-filter" style="max-height: 200px; overflow-y: auto;">
-                        @foreach (var genre in filterOptions?.AvailableGenres ?? new())
-                        {
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox"
-                                       id="genre-@genre"
-                                       checked="@(filter.Genres?.Contains(genre) == true)"
-                                       @onchange="(e) => ToggleGenre(genre, e.Value)" />
-                                <label class="form-check-label" for="genre-@genre">
-                                    @genre
-                                </label>
+                    <div class="col-md-6">
+                        <!-- Resolutions -->
+                        <div class="">
+                            <label class="form-label">Resolution</label>
+                            <div class="resolution-filter">
+                                @foreach (var resolution in filterOptions?.AvailableResolutions ?? new())
+                                {
+                                    <button class="btn @(filter.Resolutions?.Contains(resolution) == true ? "btn-info" : "btn-outline-info") btn-sm m-1"
+                                            @onclick="() => ToggleResolution(resolution)">
+                                        @resolution
+                                    </button>
+                                }
                             </div>
-                        }
+                        </div>
+                        <!-- Year Range -->
+                        <div class="">
+                            <label class="form-label">Godina: @YearFrom - @YearTo</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <select class="form-select" @bind="YearFrom">
+                                        <option value="">Od godine</option>
+                                        @foreach (var year in filterOptions?.AvailableYears ?? new())
+                                        {
+                                            <option value="@year">@year</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <select class="form-select" @bind="YearTo">
+                                        <option value="">Do godine</option>
+                                        @foreach (var year in filterOptions?.AvailableYears ?? new())
+                                        {
+                                            <option value="@year">@year</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Resolutions -->
-                <div class="mb-3">
-                    <label class="form-label">Rezolucija</label>
-                    <div class="resolution-filter">
-                        @foreach (var resolution in filterOptions?.AvailableResolutions ?? new())
-                        {
-                            <button class="btn @(filter.Resolutions?.Contains(resolution) == true ? "btn-success" : "btn-outline-success") btn-sm m-1"
-                                    @onclick="() => ToggleResolution(resolution)">
-                                @resolution
-                            </button>
-                        }
+
+
+
+                    <!-- Genres -->
+                    <div class="col-md-6">
+                        <label class="form-label">Genres</label>
+                        <div class="genre-filter" style="max-height: 200px; overflow-y: auto;">
+                            @foreach (var genre in filterOptions?.AvailableGenres ?? new())
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="genre-@genre"
+                                           checked="@(filter.Genres?.Contains(genre) == true)"
+                                           @onchange="(e) => ToggleGenre(genre, e.Value)" />
+                                    <label class="form-check-label" for="genre-@genre">
+                                        @genre
+                                    </label>
+                                </div>
+                            }
+                        </div>
                     </div>
+
+
+
+
+
                 </div>
 
                 <!-- Sort -->
-                <div class="mb-3">
-                    <label class="form-label">Sortiraj po</label>
-                    <select class="form-select" @bind="SortBy">
-                        <option value="title">Naslov (A-Ž)</option>
-                        <option value="title_desc">Naslov (Ž-A)</option>
-                        <option value="year">Godina (stariji)</option>
-                        <option value="year_desc">Godina (noviji)</option>
-                        <option value="rating">IMDb ocjena</option>
-                    </select>
-                </div>
-
                 <!-- Action Buttons -->
-                <div class="d-grid gap-2">
-                    <button class="btn btn-primary" @onclick="ApplyFilters">
-                        <i class="fas fa-search"></i> Primijeni filtere
-                    </button>
-                    @if (HasActiveFilters)
-                    {
-                        <button class="btn btn-outline-danger" @onclick="ResetFilters">
-                            <i class="fas fa-times"></i> Resetuj filtere
-                        </button>
-                    }
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="">
+                        @* <label class="form-label">Sortiraj po</label> *@
+                        <select class="form-select" @bind="SortBy">
+                            <option value="title">Title [A-Z]</option>
+                            <option value="title_desc">Title [Z-A]</option>
+                            <option value="year">Year [old]</option>
+                            <option value="year_desc">Year [new]</option>
+                            <option value="rating">IMDb ocjena</option>
+                        </select>
+                    </div>
+
+
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <button class="btn btn-primary" @onclick="ApplyFilters"><i class="bi bi-search me-2"></i>Apply Filters</button>
+                        @if (HasActiveFilters)
+                        {
+                            <button class="btn btn-outline-secondary" @onclick="ResetFilters"><i class="bi bi-x me-2"></i>Reset All</button>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="p-4 col-lg-9">
-        <!-- Active Filters -->
-        @if (HasActiveFilters)
-        {
-            <div class="card mb-4">
-                <div class="card-body py-2">
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <small class="text-muted">Aktivni filteri:</small>
-                        @if (!string.IsNullOrEmpty(filter.Letter))
-                        {
-                            <span class="badge bg-primary">
-                                Slovo: @filter.Letter
-                                <button class="btn-close btn-close-white ms-1" @onclick="() => SetLetterFilter(null)"></button>
-                            </span>
-                        }
-                        @if (filter.YearFrom.HasValue || filter.YearTo.HasValue)
-                        {
-                            <span class="badge bg-primary">
-                                Godina: @(filter.YearFrom?.ToString() ?? "...") - @(filter.YearTo?.ToString() ?? "...")
-                                <button class="btn-close btn-close-white ms-1" @onclick="ClearYearFilter"></button>
-                            </span>
-                        }
-                        @foreach (var genre in filter.Genres ?? new())
-                        {
-                            <span class="badge bg-success">
-                                @genre
-                                <button class="btn-close btn-close-white ms-1" @onclick="() => ToggleGenre(genre, false)"></button>
-                            </span>
-                        }
-                        @foreach (var res in filter.Resolutions ?? new())
-                        {
-                            <span class="badge bg-warning text-dark">
-                                @res
-                                <button class="btn-close ms-1" @onclick="() => ToggleResolution(res)"></button>
-                            </span>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
 
-        <!-- Results Count & Button Grid/List -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5>Pronađeno filmova: <span class="text-primary">@(Entities.Count > 0 ? Entities.Count : "0")</span></h5>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary" @onclick="ToggleViewMode">
-                    <i class="bi @(IsGridView ? "bi-list" : "bi-grid")"></i>
-                </button>
-            </div>
-        </div>
 
-        @if (IsProcessing && !Entities.Any())
-        {
-            <_Loading />
-        }
-        else if (!Entities.Any())
-        {
-            <!-- Nema pronađenih filmova -->
-            <div class="text-center py-5">
-                @* <i class="fas fa-film fa-3x text-muted mb-3"></i> *@
-                <i class="bi bi-film mb-3"></i>
-                <h4 class="text-muted">Nema pronađenih filmova</h4>
-                <p class="text-muted">Pokušajte promijeniti filtere</p>
-                <button class="btn btn-primary" @onclick="ResetFilters">
-                    Resetuj filtere
-                </button>
-            </div>
-        }
-        else
-        {
-            <div class="@(IsGridView ? "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6" : "list-view")">
-                @foreach (var movie in Entities)
-                {
-                    @if (IsGridView)
-                    {
-                        <_MovieCard Item="movie" />
-                    }
-                    else
-                    {
-                        <_MovieListItem Item="movie" />
-                    }
-                }
-            </div>
-
-            @if (IsLoadingMore)
-            {
-                <div class="text-center my-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Učitavanje...</span>
-                    </div>
-                </div>
-            }
-
-            @if (HasMoreData && !IsLoadingMore)
-            {
-                <div @ref="LoadMoreTrigger" class="text-center my-4">
-                    <button class="btn btn-primary" @onclick="LoadMoreData">
-                        Učitaj još filmova (@(CurrentPage* PageSize)/@TotalCount)
-                    </button>
-                </div>
-            }
-
-            @if (!HasMoreData && Entities.Any())
-            {
-                <div class="text-center my-4 text-muted">
-                    <p>Prikazani su svi filmovi (@TotalCount)</p>
-                </div>
-            }
-        }
-    </div>
 </div>
+
+
+<!-- Main Content -->
+<div class="mt-5 mb-5 @App?.GetContentClass()">
+    <!-- Active Filters -->
+    @if (HasActiveFilters)
+    {
+        <div class="mb-4 card border-0 bg-transparent20">
+            <div class="card-body py-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <small class="text-muted">Active filters:</small>
+                    @if (!string.IsNullOrEmpty(filter.Letter))
+                    {
+                        <span class="badge bg-primary">
+                            Slovo: @filter.Letter
+                            <button class="btn-close btn-close-white ms-1" @onclick="() => SetLetterFilter(null)"></button>
+                        </span>
+                    }
+                    @if (filter.YearFrom.HasValue || filter.YearTo.HasValue)
+                    {
+                        <span class="badge bg-primary">
+                            Year: @(filter.YearFrom?.ToString() ?? "...") - @(filter.YearTo?.ToString() ?? "...")
+                            <button class="btn-close btn-close-white ms-1" @onclick="ClearYearFilter"></button>
+                        </span>
+                    }
+                    @foreach (var genre in filter.Genres ?? new())
+                    {
+                        <span class="badge bg-success">
+                            @genre
+                            <button class="btn-close btn-close-white ms-1" @onclick="() => ToggleGenre(genre, false)"></button>
+                        </span>
+                    }
+                    @foreach (var res in filter.Resolutions ?? new())
+                    {
+                        <span class="badge bg-warning text-dark">
+                            @res
+                            <button class="btn-close ms-1" @onclick="() => ToggleResolution(res)"></button>
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Results Count & Button Grid/List -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>Pronađeno filmova: <span class="text-primary">@(Entities.Count > 0 ? Entities.Count : "0")</span></h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @onclick="ToggleViewMode">
+                <i class="bi @(IsGridView ? "bi-list" : "bi-grid")"></i>
+            </button>
+        </div>
+    </div>
+
+    @if (IsProcessing && !Entities.Any())
+    {
+        <_Loading />
+    }
+    else if (!Entities.Any())
+    {
+        <!-- Nema pronađenih filmova -->
+        <div class="text-center py-5">
+            @* <i class="fas fa-film fa-3x text-muted mb-3"></i> *@
+            <i class="bi bi-film mb-3"></i>
+            <h4 class="text-muted">Nema pronađenih filmova</h4>
+            <p class="text-muted">Pokušajte promijeniti filtere</p>
+            <button class="btn btn-primary" @onclick="ResetFilters">Reset All</button>
+        </div>
+    }
+    else
+    {
+        <div class="@(IsGridView ? "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6" : "list-view")">
+            @foreach (var movie in Entities)
+            {
+                @if (IsGridView)
+                {
+                    <_MovieCard Item="movie" />
+                }
+                else
+                {
+                    <_MovieListItem Item="movie" />
+                }
+            }
+        </div>
+
+        @if (IsLoadingMore)
+        {
+            <div class="text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Učitavanje...</span>
+                </div>
+            </div>
+        }
+
+        @if (HasMoreData && !IsLoadingMore)
+        {
+            <div @ref="LoadMoreTrigger" class="text-center my-4">
+                <button class="btn btn-primary" @onclick="LoadMoreData">
+                    Učitaj još filmova (@(CurrentPage* PageSize)/@TotalCount)
+                </button>
+            </div>
+        }
+
+        @if (!HasMoreData && Entities.Any())
+        {
+            <div class="text-center my-4 text-muted">
+                <p>Prikazani su svi filmovi (@TotalCount)</p>
+            </div>
+        }
+    }
+</div>
+
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
@@ -310,10 +325,7 @@
     async Task LoadFilterOptions()
     {
         var result = await Repository.GetFilterOptionsAsync();
-        if (result.Success)
-        {
-            filterOptions = result.Data;
-        }
+        if (result.Success) filterOptions = result.Data;
     }
 
     async Task LoadInitialData()
@@ -342,8 +354,8 @@
         StateHasChanged();
 
         CurrentPage++;
-        var result = await Repository.GetFilteredPagedAsync(CurrentPage, PageSize, filter);
 
+        var result = await Repository.GetFilteredPagedAsync(CurrentPage, PageSize, filter);
         if (result.Success && result.Data != null)
         {
             Entities.AddRange(result.Data.Items);
@@ -378,30 +390,23 @@
         await LoadInitialData();
     }
 
-    void SetLetterFilter(string? letter)
-    {
-        filter.Letter = letter;
-    }
+    void SetLetterFilter(string? letter) => filter.Letter = letter;
 
     void ToggleGenre(string genre, object? isChecked)
     {
         filter.Genres ??= new List<string>();
         var checkedValue = isChecked as bool? == true;
 
-        if (checkedValue && !filter.Genres.Contains(genre))
-            filter.Genres.Add(genre);
-        else if (!checkedValue && filter.Genres.Contains(genre))
-            filter.Genres.Remove(genre);
+        if (checkedValue && !filter.Genres.Contains(genre)) filter.Genres.Add(genre);
+        else if (!checkedValue && filter.Genres.Contains(genre)) filter.Genres.Remove(genre);
     }
 
     void ToggleResolution(string resolution)
     {
         filter.Resolutions ??= new List<string>();
 
-        if (filter.Resolutions.Contains(resolution))
-            filter.Resolutions.Remove(resolution);
-        else
-            filter.Resolutions.Add(resolution);
+        if (filter.Resolutions.Contains(resolution)) filter.Resolutions.Remove(resolution);
+        else filter.Resolutions.Add(resolution);
     }
 
     void ClearYearFilter()
@@ -412,19 +417,13 @@
 
     void ClearSearch()
     {
-        SearchTerm = "";
-        filter.SearchTerm = "";
+        SearchTerm = string.Empty;
+        filter.SearchTerm = string.Empty;
     }
 
-    void ToggleMobileFilters()
-    {
-        ShowMobileFilters = !ShowMobileFilters;
-    }
+    void ToggleMobileFilters() => ShowMobileFilters = !ShowMobileFilters;
 
-    void ToggleViewMode()
-    {
-        IsGridView = !IsGridView;
-    }
+    void ToggleViewMode() => IsGridView = !IsGridView;
 
     // Properties for two-way binding
     string YearFrom
