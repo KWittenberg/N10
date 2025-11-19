@@ -13,7 +13,7 @@
 {
     @if (Entities is null)
     {
-        <div class="mb-5 @App?.GetContentClass() d-flex justify-content-center align-content-center">
+        <div class="@App?.GetContentClass() d-flex justify-content-center align-content-center">
             <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
         </div>
     }
@@ -49,7 +49,6 @@ else
 
                     <div class="p-2 d-flex justify-content-between align-items-center">
                         <h4 class="p-0 m-0 ms-2">@Title</h4>
-
                         <div class="d-inline-flex align-items-center">
                             <i class="bi bi-search"></i>
                             <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
@@ -60,7 +59,7 @@ else
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
-                                <option value="150">150</option>
+                                <option value="200">200</option>
                                 @* @foreach (var value in Enum.GetValues<ItemsPerPage>())
                                 {
                                     <option value="@((int)value)">@value</option>
@@ -78,13 +77,15 @@ else
                         </ColumnOptions>
                     </PropertyColumn> *@
 
-                    <TemplateColumn Title="Title" Align="Align.Start">
+                    <TemplateColumn Title="Title" Align="Align.Start" SortBy="@titleSort">
                         @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
-                        <span class="ms-4" style="cursor: pointer;"
-                              @onclick="() => PlayInVlc(context.Title, context.FileName)"><i class="bi bi-play-circle-fill"></i></span>
+                        <span class="ms-4" style="cursor: pointer;" @onclick="() => PlayInVlc(context.Title, context.FileName)">
+                            <i class="bi bi-play-circle-fill"></i>
+                        </span>
 
-                        <a class="ms-3 text-decoration-none text-white" style="cursor: pointer;"
-                           @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">@context.Title</a>
+                        <span class="ms-3 @((context.IsMetadataFetched) ? "text-primary" : "text-muted")" style="cursor: pointer;" @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">
+                            @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
+                        </span>
                     </TemplateColumn>
 
                     <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
@@ -114,16 +115,23 @@ else
                         <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
                     }
 
-                    <TemplateColumn Title="IsMetadata" Align="Align.Center">
+                    <TemplateColumn Title="Metadata" Align="Align.Center" SortBy="@metadataSort">
                         <div class="d-flex justify-content-center">
-                            <input class="form-check form-check-input text-warning" type="checkbox" checked="@context.IsMetadataFetched">
+                            @if (context.IsMetadataFetched)
+                            {
+                                <i class="fas fa-check-circle fa-lg text-success" title="Metadata fetched"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times-circle fa-lg text-danger" title="Metadata missing"></i>
+                            }
                         </div>
                     </TemplateColumn>
 
                     <TemplateColumn Title="Actions" Align="Align.Center">
                         <ChildContent>
-                            <a class="text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></a>
-                            <a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
+                            <span class="text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></span>
+                            <span class="ms-2 text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></span>
                         </ChildContent>
                     </TemplateColumn>
                 </QuickGrid>
@@ -174,6 +182,8 @@ else
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
 
+    GridSort<MovieDto> titleSort = GridSort<MovieDto>.ByAscending(x => x.SortTitle);
+    GridSort<MovieDto> metadataSort = GridSort<MovieDto>.ByAscending(x => x.IsMetadataFetched);
     readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
 
 

@@ -2,10 +2,14 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100vh; /* ogranièi layout na visinu prozora */
+    /*align-items: stretch;*/
 }
 
 main {
     flex: 1;
+    min-height: 0; /* bitno da child može pravilno skaluirati unutar flex kontejnera */
+    overflow-y: auto; /* vertikalni scrollbar samo kad je potreban */
 }
 
 .sidebar {
@@ -13,39 +17,6 @@ main {
     background-color: rgba(var(--bs-black-rgb), 0.2);
 }
 
-/*.top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-}
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
-
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
-}*/
 
 @media (min-width: 641px) {
     .page {
@@ -53,10 +24,11 @@ main {
     }
 
     .sidebar {
-        width: 170px;
-        height: 100vh;
         position: sticky;
         top: 0;
+        width: 170px;
+        height: 100vh;
+        overflow-y: hidden;
     }
 
     .top-row {
