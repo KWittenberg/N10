@@ -2,7 +2,6 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IMovieRepository Repository
-@inject IMovieService Service
 @inject ITmdbService TmdbService
 
 <title>@Title</title>
@@ -253,10 +252,10 @@ else
 
     async Task ScanNew()
     {
-        await App!.ShowToast($"Scan For New Movies!", "success");
-        await Repository.SyncParsedMoviesAsync();
+        await App!.ShowToast($"START - Scan For New Movies!", "success");
+        await Repository.SyncParsedMoviesAsync(Globals.X265Path);
         await RefreshEntitiesAsync();
-        await App!.ShowToast($"Scan Finish and Add in Database!", "success");
+        await App!.ShowToast($"END - Scan Finish and Add in Database!", "success");
     }
 
     async Task PopulateFromTmdb()

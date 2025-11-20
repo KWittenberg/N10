@@ -18,7 +18,6 @@ public interface IMovieRepository
     Task<Result<PaginatedResult<MovieDto>>> GetPagedAsync(int pageNumber, int pageSize);
 
 
-
     Task<Result<PaginatedResult<MovieDto>>> GetFilteredPagedAsync(int pageNumber, int pageSize, MovieFilter? filter = null);
 
     Task<Result<FilterOptionsDto>> GetFilterOptionsAsync();
@@ -27,11 +26,9 @@ public interface IMovieRepository
 
 
 
-    Task<Result> PopulateFromTmdbByIdAsync(Guid id);
-
-
-
-    Task SyncParsedMoviesAsync();
+    Task SyncParsedMoviesAsync(string path);
 
     Task PopulateFromTmdbAsync();
+
+    Task<Result> PopulateFromTmdbByIdAsync(Guid id);
 }
