@@ -38,7 +38,9 @@ public class MovieService() : IMovieService
         {
             cancellationToken.ThrowIfCancellationRequested(); // Baci exception ako je otkazano
 
-            var allFiles = Directory.EnumerateFiles(Globals.X265Path, "*.*", SearchOption.TopDirectoryOnly);
+            // Change Folder Path as needed
+            // var allFiles = Directory.EnumerateFiles(Globals.X265Path, "*.*", SearchOption.TopDirectoryOnly);
+            var allFiles = Directory.EnumerateFiles(Globals.LocalMovies, "*.*", SearchOption.TopDirectoryOnly);
 
             var fileNames = allFiles
                 .Where(file => extensions.Contains(Path.GetExtension(file)))
@@ -73,7 +75,7 @@ public class MovieService() : IMovieService
             ["FINAL"] = (m, _) => m.Version = AddVersion(m, "FINAL"),
             ["FRENCH"] = (m, _) => m.Version = AddVersion(m, "FRENCH"),
             ["IMAX"] = (m, _) => m.Version = AddVersion(m, "IMAX"),
-            ["IN"] = (m, _) => m.Version = AddVersion(m, "IN"),
+            ["HR"] = (m, _) => m.Version = AddVersion(m, "HR"),
             ["INTERNAL"] = (m, _) => m.Version = AddVersion(m, "INTERNAL"),
             ["JAPANESE"] = (m, _) => m.Version = AddVersion(m, "JAPANESE"),
             ["KOREAN"] = (m, _) => m.Version = AddVersion(m, "KOREAN"),
@@ -83,6 +85,7 @@ public class MovieService() : IMovieService
             ["ROGUE"] = (m, _) => m.Version = AddVersion(m, "ROGUE"),
             ["RUSSIAN"] = (m, _) => m.Version = AddVersion(m, "RUSSIAN"),
             ["SPECIAL"] = (m, _) => m.Version = AddVersion(m, "SPECIAL"),
+            ["SWEDISH"] = (m, _) => m.Version = AddVersion(m, "SWEDISH"),
             ["THEATRICAL"] = (m, _) => m.Version = AddVersion(m, "THEATRICAL"),
             ["ULYSSES"] = (m, _) => m.Version = AddVersion(m, "ULYSSES"),
             ["UNCUT"] = (m, _) => m.Version = AddVersion(m, "UNCUT"),
@@ -193,6 +196,8 @@ public class MovieService() : IMovieService
     }
 
 
+
+    // --- NOT IN USE | LOŠIJI PARSER KORIŠTENJEM REGEX-a ---
     public async Task<Movie> ParseFilenameWithRegexAsync(string filename)
     {
         var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);

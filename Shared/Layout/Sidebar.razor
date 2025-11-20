@@ -1,0 +1,88 @@
+﻿@implements IDisposable
+@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar bg-transparent">
+    <div class="container-fluid">
+        <AuthorizeView>
+            <Authorized>
+                <div class="navbar-brand d-flex align-items-center" role="button" data-bs-toggle="collapse" data-bs-target="#adminMenu">
+                    <img src="img/logo/a-logo.png" alt="logo" class="me-2" style="height: 2rem;" />
+                    <h5 class="mb-0">Aida</h5>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="navbar-brand">Guest</div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+<div class="nav flex-column p-2">
+    <div class="collapse" id="adminMenu">
+        <div class="border-top border-bottom py-2">
+            <NavLink class="nav-link" href="admin/roles"><i class="bi bi-x-diamond-fill"></i> Roles</NavLink>
+            <NavLink class="nav-link" href="admin/users"><i class="bi bi-people-fill"></i> Users</NavLink>
+            <NavLink class="nav-link" href="admin/email"><i class="bi bi-envelope-fill"></i> Send Email</NavLink>
+        </div>
+    </div>
+
+    <NavLink class="nav-link mt-2" href="admin"><i class="bi bi-columns-gap"></i> Dashboard</NavLink>
+
+    <div class="accordion" id="mediaAccordion">
+        <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-transparent ps-3" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#mediaMenu">
+                    <i class="bi bi-play me-2"></i> Media
+                </button>
+            </h2>
+            <div id="mediaMenu" class="accordion-collapse collapse" data-bs-parent="#mediaAccordion">
+                <div class="accordion-body p-0 ps-4">
+                    <NavLink class="nav-link" href="admin/movies"><i class="bi bi-film"></i> Movies</NavLink>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <NavLink class="nav-link mt-2" href="admin/notes"><i class="bi bi-stickies-fill"></i> Notes</NavLink>
+    <NavLink class="nav-link" href="counter"><i class="bi bi-plus-square-fill"></i> Counter</NavLink>
+    <NavLink class="nav-link" href="weather"><i class="bi bi-list-nested"></i> Weather</NavLink>
+    <NavLink class="nav-link" href="auth"><i class="bi bi-lock"></i> Auth Required</NavLink>
+
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="nav-link" href="Account/Manage">
+                <i class="bi bi-person-fill"></i> @context.User.Identity?.Name
+            </NavLink>
+            <form action="Account/Logout" method="post">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                <button type="submit" class="nav-link text-start bg-transparent border-0">
+                    <i class="bi bi-arrow-bar-left"></i> Logout
+                </button>
+            </form>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="nav-link" href="Account/Register"><i class="bi bi-person"></i> Register</NavLink>
+            <NavLink class="nav-link" href="Account/Login"><i class="bi bi-person-badge"></i> Login</NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose() => NavigationManager.LocationChanged -= OnLocationChanged;
+}

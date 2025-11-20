@@ -86,12 +86,12 @@ else
                             @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
                         </span>
                     </TemplateColumn>
+                    <PropertyColumn Property="x => x.Version" Title="Version" Align="Align.Center" Sortable="true" />
                     <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
                     <PropertyColumn Property="x => x.TmdbId" Title="TmdbId" Align="Align.Center" Sortable="true" />
 
                     @if (App!.IsExpanded)
                     {
-                        <PropertyColumn Property="x => x.Version" Title="Version" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.Color" Title="Color" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.Resolution" Title="Resolution" Align="Align.Center" Sortable="true" />
                         <PropertyColumn Property="x => x.Source" Title="Source" Align="Align.Center" Sortable="true" />

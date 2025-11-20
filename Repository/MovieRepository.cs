@@ -69,6 +69,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
     #endregion
 
 
+    #region Frontend Methods
     public async Task<Result<PaginatedResult<MovieDto>>> GetFilteredPagedAsync(int pageNumber, int pageSize, MovieFilter? filter = null)
     {
         await using var db = await context.CreateDbContextAsync();
@@ -135,7 +136,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
     }
 
 
-
+    // Simple pagination without filters
     public async Task<Result<PaginatedResult<MovieDto>>> GetPagedAsync(int pageNumber, int pageSize)
     {
         await using var db = await context.CreateDbContextAsync();
@@ -149,9 +150,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
         return Result<PaginatedResult<MovieDto>>.Ok(new PaginatedResult<MovieDto>(dtos, pageNumber, pageSize, totalCount));
     }
-
-
-
+    #endregion
 
 
 
@@ -164,37 +163,38 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
         var dbMovies = await db.Movies.ToListAsync();
 
-        // HASH SET radi brže usporedbe
+        // HASH SET za bržu usporedbu
         var parsedFilesSet = parsed.Select(x => x.FileName).ToHashSet();
 
         // A) DELETE - file više ne postoji
-        foreach (var dbMovie in dbMovies)
+        var toDelete = dbMovies.Where(dbMovie => !parsedFilesSet.Contains(dbMovie.FileName)).ToList();
+        foreach (var dbMovie in toDelete)
         {
-            if (!parsedFilesSet.Contains(dbMovie.FileName)) db.Movies.Remove(dbMovie);
+            db.Movies.Remove(dbMovie);
         }
 
         // B) INSERT / UPDATE
-        foreach (var p in parsed)
+        foreach (var parsedMovie in parsed)
         {
-            var dbMovie = await db.Movies.FirstOrDefaultAsync(x => x.FileName == p.FileName);
+            var dbMovie = await db.Movies.FirstOrDefaultAsync(x => x.FileName == parsedMovie.FileName);
 
             if (dbMovie is null)
             {
-                // Add
+                // ADD new movie
                 var newMovie = new Movie
                 {
-                    FileName = p.FileName,
-                    Title = p.Title,
-                    SortTitle = CreateSortTitle(p.Title) ?? string.Empty,
-                    Year = p.Year,
-                    Version = p.Version,
-                    Resolution = p.Resolution,
-                    Color = p.Color,
-                    Source = p.Source,
-                    Audio = p.Audio,
-                    Video = p.Video,
-                    Release = p.Release,
-                    TmdbId = p.TmdbId,
+                    FileName = parsedMovie.FileName,
+                    Title = parsedMovie.Title,
+                    SortTitle = CreateSortTitle(parsedMovie.Title) ?? string.Empty,
+                    Year = parsedMovie.Year,
+                    Version = parsedMovie.Version,
+                    Resolution = parsedMovie.Resolution,
+                    Color = parsedMovie.Color,
+                    Source = parsedMovie.Source,
+                    Audio = parsedMovie.Audio,
+                    Video = parsedMovie.Video,
+                    Release = parsedMovie.Release,
+                    TmdbId = parsedMovie.TmdbId,
                     IsMetadataFetched = false
                 };
 
@@ -202,37 +202,42 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
             }
             else
             {
-                // update (ako treba)
-                bool changed = false;
+                // UPDATE existing movie - samo ako su se promijenile bitne stvari
+                bool hasImportantChanges = false;
 
-                if (dbMovie.Title != p.Title)
+                // Provjeri promjene u naslovu ili godini - to su bitne promjene
+                if (dbMovie.Title != parsedMovie.Title || dbMovie.Year != parsedMovie.Year)
                 {
-                    dbMovie.Title = p.Title;
-                    changed = true;
+                    dbMovie.Title = parsedMovie.Title;
+                    dbMovie.Year = parsedMovie.Year;
+                    dbMovie.SortTitle = CreateSortTitle(parsedMovie.Title) ?? string.Empty;
+                    hasImportantChanges = true;
                 }
 
-                if (dbMovie.SortTitle != p.SortTitle)
-                {
-                    dbMovie.SortTitle = p.SortTitle;
-                    changed = true;
-                }
+                // Ažuriraj tehničke podatke (uvijek) ali ne resetiraj metadata
+                dbMovie.Version = parsedMovie.Version;
+                dbMovie.Resolution = parsedMovie.Resolution;
+                dbMovie.Color = parsedMovie.Color;
+                dbMovie.Source = parsedMovie.Source;
+                dbMovie.Audio = parsedMovie.Audio;
+                dbMovie.Video = parsedMovie.Video;
+                dbMovie.Release = parsedMovie.Release;
 
-                if (dbMovie.Year != p.Year)
-                {
-                    dbMovie.Year = p.Year;
-                    changed = true;
-                }
-
-                if (changed)
+                // Ako su se bitne stvari promijenile, resetiraj metadata
+                if (hasImportantChanges)
                 {
                     dbMovie.IsMetadataFetched = false;
-                    db.Movies.Update(dbMovie);
+                    dbMovie.TmdbId = parsedMovie.TmdbId; // Resetiraj TMDB ID jer se film možda promijenio
                 }
+
+                db.Movies.Update(dbMovie);
             }
         }
 
         await db.SaveChangesAsync();
     }
+
+
 
 
     static readonly string[] IgnorePrefixes = ["the ", "a ", "an "];
@@ -403,71 +408,5 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
 
 
-
-    public async Task PopulateFromTmdbAsyncOLD()
-    {
-        await using var db = await context.CreateDbContextAsync();
-
-        var movies = await db.Movies.Include(x => x.Genres).Where(x => x.IsMetadataFetched == false).ToListAsync();
-        if (movies.Count == 0) return;
-
-        foreach (var movie in movies)
-        {
-            try
-            {
-                TmdbDetails? details = null;
-
-                if (movie.TmdbId is not null) details = await tmdbService.GetMovieByIdAsync(movie.TmdbId.Value);
-
-                if (details is null)
-                {
-                    var search = await tmdbService.SearchMoviesAsync(movie.Title, movie.Year?.ToString());
-                    if (search?.Results is null || search.Results.Count == 0) continue;
-
-                    var best = search.Results.First();
-                    if (best.Id == 0) continue;
-
-                    movie.TmdbId = best.Id;
-
-                    details = await tmdbService.GetMovieByIdAsync(best.Id);
-                    if (details is null) continue;
-                }
-
-                // MAPIRANJE TMDB → MOVIE
-                movie.TmdbTitle = details.Title;
-                movie.ImdbId = details.ImdbId;
-
-                movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
-                    ? "img/NoImage.webp"
-                    : details.PosterPath;
-
-                // Genres
-                movie.Genres.Clear();
-
-                foreach (var g in details.Genres)
-                {
-                    movie.Genres.Add(new MovieGenre
-                    {
-                        TmdbId = g.Id,
-                        TmdbName = g.Name
-                    });
-                }
-
-                movie.IsMetadataFetched = true;
-
-                // SAVE
-                db.Movies.Update(movie);
-                await db.SaveChangesAsync();
-
-                // 5) DELAY (anti-rate-limit)
-                await Task.Delay(300);
-            }
-            catch
-            {
-                // ako pojedini film padne, preskači
-                continue;
-            }
-        }
-    }
 
 }

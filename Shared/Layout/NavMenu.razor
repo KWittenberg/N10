@@ -9,7 +9,7 @@
                 <div class="navbar-brand" style="cursor: pointer;" @onclick="ToggleAdminMenu">
                     <div class="d-flex align-items-center">
                         <div class="me-2">
-                            <img src="img/logo/a-logo.png" alt="logo" class="img-fluid" style="height: 2rem;"/>
+                            <img src="img/logo/a-logo.png" alt="logo" class="img-fluid" style="height: 2rem;" />
                             @* <span class="bg-secondary text-dark rounded p-1">TS</span> *@
                         </div>
                         <h5 class="mb-0">Aida</h5>
@@ -55,17 +55,32 @@
                 <span class="bi bi-columns-gap" aria-hidden="true"></span> Dashboard
             </NavLink>
         </div>
+
+        <div>
+            <div class="ms-3" style="cursor: pointer;" @onclick="ToggleMediaMenu">
+                <i class="p-sm bi bi-play"></i>Media
+            </div>
+            @if (ShowMediaMenu)
+            {
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="admin/movies" Match="NavLinkMatch.All">
+                        <span class="bi bi-film" aria-hidden="true"></span> Movies
+                    </NavLink>
+                </div>
+            }
+        </div>
+
+
+
+
+
         <div class="mt-2 nav-item">
             <NavLink class="nav-link" href="admin/notes" Match="NavLinkMatch.All">
                 <span class="bi bi-stickies-fill" aria-hidden="true"></span> Notes
             </NavLink>
         </div>
-        <div class="nav-item">
-            <NavLink class="nav-link" href="admin/movies" Match="NavLinkMatch.All">
-                <span class="bi bi-film" aria-hidden="true"></span> Movies
-            </NavLink>
-        </div>
-        
+
+
         <div class="nav-item">
             <NavLink class="nav-link" href="counter">
                 <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Counter
@@ -120,9 +135,11 @@
 @code {
 
     bool ShowAdminMenu = false;
+    bool ShowMediaMenu = false;
     bool IsAdminSubmenuOpen = false;
 
     void ToggleAdminMenu() => ShowAdminMenu = !ShowAdminMenu;
+    void ToggleMediaMenu() => ShowMediaMenu = !ShowMediaMenu;
     void ToggleAdminSubmenu() => IsAdminSubmenuOpen = !IsAdminSubmenuOpen;
 
 
