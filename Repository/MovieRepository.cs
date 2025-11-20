@@ -16,6 +16,44 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
 
         return Result<List<MovieDto>>.Ok(dtos);
     }
+
+    public async Task<Result<MovieDto>> GetByIdAsync(Guid id)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var entity = await db.Movies.FindAsync(id);
+        if (entity is null) return Result<MovieDto>.Error($"{entityName} Not Found!");
+
+        return Result<MovieDto>.Ok(entity.ToDto());
+    }
+
+    public async Task<Result> AddAsync(MovieInput input)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var entity = input.ToEntity();
+
+        await db.Movies.AddAsync(entity);
+        await db.SaveChangesAsync();
+
+        return Result.Ok($"{entityName} Added!");
+    }
+
+    public async Task<Result> UpdateAsync(Guid id, MovieInput input)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var entity = await db.Movies.FindAsync(id);
+        if (entity is null) return Result.Error($"{entityName} Not Found!");
+
+        entity.UpdateFromInput(input);
+
+        db.Movies.Update(entity);
+        await db.SaveChangesAsync();
+
+        return Result.Ok($"{entityName} Updated!");
+    }
+
     public async Task<Result> DeleteAsync(Guid id)
     {
         await using var db = await context.CreateDbContextAsync();

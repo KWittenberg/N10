@@ -49,40 +49,68 @@ public static class MovieMapping
     };
 
     // AddAsync() - Convert Input to Entity
-    //public static Movie ToEntity(this MovieInput input) => new()
-    //{
-    //    ApplicationUserId = input.UserId,
-    //    NoteFolderId = input.NoteFolderId,
-    //    Title = input.Title,
-    //    Content = input.Content,
-    //    Color = input.Color,
-    //    ReminderAt = input.ReminderAt,
-    //    IsEncrypted = input.IsEncrypted,
-    //    EncryptionMetadata = input.EncryptionMetadata
-    //};
-    //// UpdateAsync() - Update existing entity from input
-    //public static void UpdateFromInput(this Movie entity, MovieInput input)
-    //{
-    //    entity.ApplicationUserId = input.UserId;
-    //    entity.NoteFolderId = input.NoteFolderId;
-    //    entity.Title = input.Title;
-    //    entity.Content = input.Content;
-    //    entity.Color = input.Color;
-    //    entity.ReminderAt = input.ReminderAt;
-    //    entity.IsEncrypted = input.IsEncrypted;
-    //    entity.EncryptionMetadata = input.EncryptionMetadata;
-    //}
+    public static Movie ToEntity(this MovieInput input) => new()
+    {
+        FileName = input.FileName,
+        Title = input.Title,
+        SortTitle = input.SortTitle,
+        Year = input.Year,
+        Version = input.Version,
+        Resolution = input.Resolution,
+        Color = input.Color,
+        Source = input.Source,
+        Audio = input.Audio,
+        Video = input.Video,
+        Release = input.Release,
+        TmdbId = input.TmdbId,
+        TmdbTitle = input.TmdbTitle,
+        TmdbImageUrl = input.TmdbImageUrl,
+        ImdbId = input.ImdbId,
+        ImdbRating = input.ImdbRating,
+        IsMetadataFetched = input.IsMetadataFetched,
+    };
 
-    //// UI -> Convert Dto to Input
-    //public static MovieInput ToInput(this MovieDto dto) => new()
-    //{
-    //    UserId = dto.UserId,
-    //    NoteFolderId = dto.NoteFolderId,
-    //    Title = dto.Title,
-    //    Content = dto.Content,
-    //    Color = dto.Color,
-    //    ReminderAt = dto.ReminderAt,
-    //    IsEncrypted = dto.IsEncrypted,
-    //    EncryptionMetadata = dto.EncryptionMetadata
-    //};
+    // UpdateAsync() - Update existing entity from input
+    public static void UpdateFromInput(this Movie entity, MovieInput input)
+    {
+        entity.FileName = input.FileName;
+        entity.Title = input.Title;
+        entity.SortTitle = input.SortTitle;
+        entity.Year = input.Year;
+        entity.Version = input.Version;
+        entity.Resolution = input.Resolution;
+        entity.Color = input.Color;
+        entity.Source = input.Source;
+        entity.Audio = input.Audio;
+        entity.Video = input.Video;
+        entity.Release = input.Release;
+        entity.TmdbId = input.TmdbId;
+        entity.TmdbTitle = input.TmdbTitle;
+        entity.TmdbImageUrl = input.TmdbImageUrl;
+        entity.ImdbId = input.ImdbId;
+        entity.ImdbRating = input.ImdbRating;
+        entity.IsMetadataFetched = input.IsMetadataFetched;
+    }
+
+    // UI -> Convert Dto to Input
+    public static MovieInput ToInput(this MovieDto dto) => new()
+    {
+        FileName = dto.FileName,
+        Title = dto.Title,
+        SortTitle = dto.SortTitle,
+        Year = dto.Year,
+        Version = dto.Version,
+        Resolution = dto.Resolution,
+        Color = dto.Color,
+        Source = dto.Source,
+        Audio = dto.Audio,
+        Video = dto.Video,
+        Release = dto.Release,
+        TmdbId = dto.TmdbId,
+        TmdbTitle = dto.TmdbTitle,
+        TmdbImageUrl = dto.TmdbImageUrl,
+        ImdbId = dto.ImdbId,
+        ImdbRating = dto.ImdbRating,
+        IsMetadataFetched = dto.IsMetadataFetched
+    };
 }

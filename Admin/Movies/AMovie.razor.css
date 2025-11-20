@@ -1,22 +1,10 @@
-﻿#movie-details {
-    min-height: 90vh;
-    background-size: cover;
-    background-position: center;
-    background-image: var(--background);
-    background-repeat: no-repeat;
+﻿.bg-header {
+    height: 150px;
+    background-color: rgba(var(--bs-black-rgb), 0.1);
 }
 
-#movie-wrapper {
-    background-color: rgba(0,0,0,0.5);
-}
-
-#movie-poster {
-    max-width: 100%;
-    border: 2px solid var(--cf-theme-800);
-}
-
-#movie-rating {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: var(--cf-theme-200);
+.page {
+    margin-top: -60px;
+    padding-right: 0.5rem !important;
+    padding-left: 0.5rem !important;
 }
