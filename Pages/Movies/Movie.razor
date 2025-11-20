@@ -2,9 +2,7 @@
 @layout FrontLayout
 
 @inject ITmdbService Service
-@inject NavigationManager Navigation
 
-<title>@Title</title>
 
 @if (IsProcessing || Entity is null)
 {
@@ -12,13 +10,15 @@
 }
 else
 {
+    <title>@Entity.Title</title>
+    
     <_YouTubeModal Entity="Entity" MovieTrailer="MovieTrailer" />
 
-    <div id="movie-details" style="--background: url(@BackdropPath)">
+    <div id="movie-details" style="--background: url(@($"{Globals.BaseTmdbImageUrl}{Entity?.BackdropPath}"))">
         <div class="@App?.GetContentClass() py-4">
             <div class="mt-5 row">
                 <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
-                    <img class="img-fluid" id="movie-poster" alt="movie poster" src="@ImageUrl" />
+                    <img class="img-fluid" id="movie-poster" alt="movie poster" src="@($"{Globals.BaseTmdbImageUrl}{Entity?.PosterPath}")" />
 
                     <_Rate Entity="@Entity" />
 
@@ -30,6 +30,15 @@ else
                             </button>
                         </div>
                     }
+                    @if (Entity?.BelongsToCollection is not null)
+                    {
+                        <div class="mt-5 text-center">
+                            <img class="img-fluid" id="movie-poster" alt="movie poster" src="@($"{Globals.BaseTmdbImageUrl}{Entity.BelongsToCollection.PosterPath}")" />
+                            <a class="text-decoration-none" href="https://www.themoviedb.org/collection/@Entity.BelongsToCollection.Id" target="_blank">
+                                <h5 class="mt-2">@Entity.BelongsToCollection.Name</h5>
+                            </a>
+                        </div>
+                    }
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
                     <div class="p-4 rounded bg-transparent50">
@@ -39,7 +48,7 @@ else
                         <div class="lead mb-3">@Entity.Tagline</div>
                         <div class="hstack gap-2">
                             <span>@ReleaseDate | </span>
-                            <span>@Hours hour(s) @Minutes minutes</span>
+                            <span>@(Entity?.Runtime / 60) hour(s) @(Entity?.Runtime % 60) minutes</span>
                         </div>
                         <div class="hstack gap-2 my-2">
                             @foreach (var genre in Entity.Genres)
@@ -47,7 +56,7 @@ else
                                 <span class="badge bg-dark-subtle">@genre.Name</span>
                             }
                         </div>
-                        @* <p>TMDB Id: @Entity.Id</p> *@
+                        
                         <h5 class="mt-4 fw-bold">Overview</h5>
                         <p>@Entity.Overview</p>
 
@@ -59,13 +68,6 @@ else
                         {
                             <_Casts Casts="Credits.Casts" />
                         }
-                    </div>
-
-                    <div class="my-4">
-                        <div class="hstack gap-2 my-2">
-                            <p>Belong To Collection</p>
-                            <span class="badge bg-dark-subtle">@Entity.BelongsToCollection</span>
-                        </div>
                     </div>
 
                     @if (Credits?.Casts is not null)
@@ -89,29 +91,18 @@ else
     TmdbVideo? MovieTrailer { get; set; }
 
     string? Title;
-    string? ImageUrl;
-    string? BackdropPath;
+    string? ReleaseDate;
 
     bool IsProcessing { get; set; } = true;
-
-    string? ReleaseDate;
-    int? Hours;
-    int? Minutes;
+    
 
 
     protected override async Task OnParametersSetAsync()
     {
         Entity = await Service.GetMovieByIdAsync(Id);
-        Title = Entity?.Title;
-
-        ImageUrl = $"{Globals.BaseTmdbImageUrl}{Entity?.PosterPath}";
-        BackdropPath = $"{Globals.BaseTmdbImageUrl}{Entity?.BackdropPath}";
-
+        
         bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
         if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy.");
-
-        Hours = Entity?.Runtime / 60;
-        Minutes = Entity?.Runtime % 60;
 
         MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
         Credits = await Service.GetMovieCreditsByIdAsync(Id);

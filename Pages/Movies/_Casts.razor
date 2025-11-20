@@ -5,9 +5,8 @@
         {
             @foreach (var cast in Casts)
             {
-                string url = $"https://www.themoviedb.org/person/{cast.Id}";
-
-                <a href="@url" target="_blank" class="text-decoration-none">@cast.Name</a>
+                <a href="@($"https://www.themoviedb.org/person/{cast.Id}")" target="_blank" class="text-decoration-none">@cast.Name</a>
+                
                 @if (cast != Casts.Last())
                 {
                     <span>, </span>

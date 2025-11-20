@@ -1,18 +1,15 @@
-﻿<!-- Search Card Item Component -->
+﻿<!-- Search Card Component -->
 
 <div class="card mb-3" style="background-color: rgba(var(--bs-black-rgb), 0.1);">
     <div class="row g-0">
         <div class="col-md-2">
-            @{
-                string ImageUrl = $"http://image.tmdb.org/t/p/w500{Movie.PosterPath}";
-            }
-            <a href="movie/@Movie.Id">
-                <img src="@ImageUrl" class="img-fluid rounded-start" alt="cover">
+            <a href="movie/@Movie.Id" target="_blank">
+                <img src="@($"{Globals.BaseTmdbImageUrl}{Movie.PosterPath}")" class="img-fluid rounded-start" alt="cover">
             </a>
         </div>
         <div class="col-md-10">
             <div class="card-body">
-                <a href="movie/@Movie.Id" class="text-decoration-none"><h4 class="fw-bold">@Movie.Title</h4></a>
+                <a href="movie/@Movie.Id" class="text-decoration-none" target="_blank"><h4 class="fw-bold">@Movie.Title</h4></a>
                 <div class="hstack gap-2">
                     @{
                         bool dateParsed = DateTime.TryParse(Movie.ReleaseDate, out DateTime releaseDate);

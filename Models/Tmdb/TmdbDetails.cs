@@ -11,7 +11,7 @@ public class TmdbDetails
     public string? BackdropPath { get; set; }
 
     [JsonPropertyName("belongs_to_collection")]
-    public object BelongsToCollection { get; set; }
+    public BelongsToCollection? BelongsToCollection { get; set; }
 
     [JsonPropertyName("budget")]
     public int Budget { get; set; }
@@ -81,6 +81,22 @@ public class TmdbDetails
 
     [JsonPropertyName("vote_count")]
     public int VoteCount { get; set; }
+}
+
+
+public class BelongsToCollection
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("poster_path")]
+    public string? PosterPath { get; set; }
+
+    [JsonPropertyName("backdrop_path")]
+    public string? BackdropPath { get; set; }
 }
 
 public class Genre
