@@ -60,6 +60,14 @@ else
                             <_Casts Casts="Credits.Casts" />
                         }
                     </div>
+
+                    <div class="my-4">
+                        <div class="hstack gap-2 my-2">
+                            <p>Belong To Collection</p>
+                            <span class="badge bg-dark-subtle">@Entity.BelongsToCollection</span>
+                        </div>
+                    </div>
+
                     @if (Credits?.Casts is not null)
                     {
                         <_ActorSwiper Actors="@Credits.Casts" />
