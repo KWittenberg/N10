@@ -2,6 +2,7 @@
 
 public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITmdbService
 {
+    #region MOVIES
     public async Task<TmdbSearchList?> SearchMoviesAsync(string query, string? year = null, string? language = "en-US", bool includeAdult = true)
     {
         var yearParam = string.IsNullOrWhiteSpace(year) ? string.Empty : $"&year={year}";
@@ -65,4 +66,16 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         return videos?.Videos.FirstOrDefault(x => x.Site!.Contains("YouTube", StringComparison.OrdinalIgnoreCase)
                                                && x.Type!.Contains("Trailer", StringComparison.OrdinalIgnoreCase));
     }
+    #endregion
+
+
+    #region TV SERIES
+    public async Task<TmdbTvShowDetails?> GetTvShowByIdAsync(int id, string? language = "en-US")
+    {
+        var response = await client.GetAsync($"{options.Value.BaseUrl}tv/{id}&language={language}");
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<TmdbTvShowDetails>();
+    }
+    #endregion
 }
