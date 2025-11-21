@@ -99,22 +99,22 @@ else
                     }
 
                     <PropertyColumn Property="x => x.Release" Title="Release" Align="Align.Center" Sortable="true" />
+                    <TemplateColumn Title="Meta" Align="Align.Center" SortBy="@metadataSort">
+                        <div class="d-flex justify-content-center" style="width: 2rem;">
+                            @if (context.IsMetadataFetched)
+                            {
+                                <i class="fas fa-check-circle fa-lg text-success" title="Metadata fetched"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times-circle fa-lg text-danger" title="Metadata missing"></i>
+                            }
+                        </div>
+                    </TemplateColumn>
 
                     @if (App!.IsExpanded)
                     {
                         <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
-                        <TemplateColumn Title="Metadata" Align="Align.Center" SortBy="@metadataSort">
-                            <div class="d-flex justify-content-center">
-                                @if (context.IsMetadataFetched)
-                                {
-                                    <i class="fas fa-check-circle fa-lg text-success" title="Metadata fetched"></i>
-                                }
-                                else
-                                {
-                                    <i class="fas fa-times-circle fa-lg text-danger" title="Metadata missing"></i>
-                                }
-                            </div>
-                        </TemplateColumn>
                     }
 
                     <TemplateColumn Title="Actions" Align="Align.Center">

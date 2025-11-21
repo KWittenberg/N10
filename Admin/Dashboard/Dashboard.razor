@@ -29,11 +29,21 @@ else
 
         <div class="row">
             <div class="col-xl-3 col-md-6">
-                <a href="admin/roles"><_IconComponent Icon="NF" Title="NoteFolders" Value="@Entity.NoteFoldersCount" PredictedValue="10" /></a>
+                <a href="admin/roles"><_IconComponent Icon="NF" Title="Note Folders" Value="@Entity.NoteFoldersCount" PredictedValue="10" /></a>
             </div>
 
             <div class="col-xl-3 col-md-6">
                 <a href="admin/users"><_IconComponent Icon="N" Title="Notes" Value="@Entity.NotesCount" PredictedValue="100" /></a>
+            </div>
+        </div>
+
+        <div class="mt-3 row">
+            <div class="col-xl-3 col-md-6">
+                <a href="admin/movies"><_IconComponent Icon="M" Title="Movies" Value="@Entity.MoviesCount" PredictedValue="1000" /></a>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <a href="admin/tvs"><_IconComponent Icon="TV" Title="TV Shows" Value="@Entity.MoviesCount" PredictedValue="100" /></a>
             </div>
         </div>
     </div>

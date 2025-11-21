@@ -12,6 +12,8 @@ public class DashboardService(IDbContextFactory<ApplicationDbContext> dbFactory)
         var noteFolderCount = await db.NoteFolders.AsNoTracking().CountAsync();
         var noteCount = await db.Notes.AsNoTracking().CountAsync();
 
+        var movieCount = await db.Movies.AsNoTracking().CountAsync();
+
 
         //var ordersChart = await db.Orders.AsNoTracking().OrderByDescending(x => x.CreatedUtc).Select(o => new OrderChartDto(o.CreatedUtc, o.Total)).ToListAsync();
         //var ordersCount = ordersChart.Count();
@@ -24,7 +26,7 @@ public class DashboardService(IDbContextFactory<ApplicationDbContext> dbFactory)
         //var authorsCount = await db.Authors.AsNoTracking().CountAsync();
         //var couponsCount = await db.Coupons.AsNoTracking().CountAsync();
 
-        var output = new DashboardDto(roleCount, userCount, noteFolderCount, noteCount);
+        var output = new DashboardDto(roleCount, userCount, noteFolderCount, noteCount, movieCount, movieCount);
 
         return Result<DashboardDto>.Ok(output);
     }
