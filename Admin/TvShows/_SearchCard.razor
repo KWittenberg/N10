@@ -1,42 +1,57 @@
 ﻿<!-- Search Card Component -->
 
-<div class="card mb-3" style="background-color: rgba(var(--bs-black-rgb), 0.1);">
+<div class="card mb-3 custom-card">
     <div class="row g-0">
         <div class="col-md-2">
             <a href="tv/@Entity.Id" target="_blank">
-                <img src="@($"{Globals.BaseTmdbImageUrl}{Entity.PosterPath}")" class="img-fluid rounded-start" alt="cover">
+                <img src="@PosterUrl" class="img-fluid rounded-start" alt="@Entity.Name cover" loading="lazy">
             </a>
         </div>
         <div class="col-md-10">
             <div class="card-body">
                 <a href="tv/@Entity.Id" class="text-decoration-none" target="_blank">
                     <h4 class="fw-bold">
-                        @Entity.Name <span class="ms-4 h6">
-                            @if (!IsSame)
-                            {
-                                @Entity.OriginalName
-                                ;
-                            }
-                        </span>
+                        @Entity.Name
+                        @if (!IsSameName)
+                        {
+                            <span class="ms-4 h6 text-muted">@Entity.OriginalName</span>
+                        }
                     </h4>
                 </a>
 
-                <small class="text-body-secondary">@(string.IsNullOrEmpty(FirstAirDate) ? string.Empty : FirstAirDate)</small>
-                <span class="card-text"><small class="text-body-secondary"> | Tmdb: @Entity.Id</small></span>
+                <div class="mt-1">
+                    <small class="text-body-secondary">@FirstAirDate</small>
+                    <span class="card-text"><small class="text-body-secondary"> | Tmdb: @Entity.Id</small></span>
+                </div>
 
-                <h6 class="mt-2 d-flex align-items-center gap-2">
-                    Genres:
-                    @foreach (var genre in Entity.GenreIds)
+                <div class="mt-3">
+                    <h6 class="d-flex align-items-center gap-2">
+                        Genres:
+                        @foreach (var genre in Entity.GenreIds ?? [])
+                        {
+                            <span class="badge bg-primary">@genre</span>
+                        }
+                    </h6>
+                </div>
+
+                <div class="mt-3 d-flex align-items-center gap-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-star text-warning me-1"></i>
+                        Score: @Entity.VoteAverage.ToString("F1")
+                    </h6>
+                    @if (Entity.VoteCount > 0)
                     {
-                        <span class="badge bg-secondary">@genre.ToString()</span>
+                        <small class="text-body-secondary">@Entity.VoteCount.ToString("N0") votes</small>
                     }
-                </h6>
+                </div>
 
-                <h6>Score: @Entity.VoteAverage.ToString("F1")</h6>
-
-                <h5 class="mt-3 lead fw-bold">Overview</h5>
-                <p>@Entity.Overview</p>
-
+                @if (!string.IsNullOrWhiteSpace(Entity.Overview))
+                {
+                    <div class="mt-3">
+                        <h5 class="lead fw-bold">Overview</h5>
+                        <p class="card-text">@Entity.Overview</p>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -45,19 +60,16 @@
 
 @code
 {
-    [Parameter] public TmdbTvShowSearch Entity { get; set; } = new();
+    [Parameter, EditorRequired] public TmdbTvShowSearch Entity { get; set; } = null!;
 
-    string? FirstAirDate { get; set; }
-    bool IsSame = false;
-
-    protected override void OnParametersSet()
+    string PosterUrl => $"{Globals.BaseTmdbImageUrl}{Entity.PosterPath}";
+    bool IsSameName => Entity.Name == Entity.OriginalName;
+    string FirstAirDate => GetFirstAirDate();
+    
+    string GetFirstAirDate()
     {
-        @if (Entity.Name == Entity.OriginalName) IsSame = true;
+        if (string.IsNullOrEmpty(Entity.FirstAirDate) || !DateTime.TryParse(Entity.FirstAirDate, out var firstAirDate)) return string.Empty;
 
-        if (Entity.FirstAirDate is not null)
-        {
-            var firstAirDate = DateTime.Parse(Entity.FirstAirDate);
-            FirstAirDate = firstAirDate.ToString("dd. MMMM, yyyy.");
-        }
+        return firstAirDate.ToString("dd. MMMM, yyyy.");
     }
 }
