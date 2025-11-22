@@ -1,25 +1,57 @@
-﻿<div class="card mb-3" style="background-color: rgba(var(--bs-black-rgb), 0.1);">
+﻿<div class="card mb-3 custom-card">
     <div class="row g-0">
         <div class="col-md-2">
-            <a href="movie/@Movie.Id" target="_blank">
-                <img src="@($"{Globals.BaseTmdbImageUrl}{Movie.PosterPath}")" class="img-fluid rounded-start" alt="cover">
+            <a href="movie/@Entity.Id" target="_blank">
+                <img src="@PosterUrl" class="img-fluid rounded-start" alt="@Entity.Title cover" loading="lazy">
             </a>
         </div>
         <div class="col-md-10">
             <div class="card-body">
-                <a href="movie/@Movie.Id" class="text-decoration-none" target="_blank"><h4 class="fw-bold">@Movie.Title</h4></a>
-                <div class="hstack gap-2">
-                    @{
-                        bool dateParsed = DateTime.TryParse(Movie.ReleaseDate, out DateTime releaseDate);
-                    }
-                    @if (dateParsed)
+                <a href="movie/@Entity.Id" class="text-decoration-none" target="_blank">
+                    <h4 class="fw-bold">
+                        @Entity.Title
+                        @if (!IsSameTitle)
+                        {
+                            <span class="ms-4 h6 text-muted">@Entity.OriginalTitle</span>
+                        }
+                    </h4>
+                </a>
+
+                <p class="m-0 text-muted fst-italic">@Entity.Tagline</p>
+
+                <div class="mt-1">
+                    <small class="text-body-secondary">@FormattedReleaseDate</small>
+                    <span class="card-text"><small class="text-body-secondary"> | Tmdb: @Entity.Id</small></span>
+                </div>
+
+                <div class="mt-3">
+                    <h6 class="d-flex align-items-center gap-2">
+                        Genres:
+                        @foreach (var genre in Entity.Genres ?? [])
+                        {
+                            <span class="badge bg-primary">@genre.Name</span>
+                        }
+                    </h6>
+                </div>
+
+                <div class="mt-3 d-flex align-items-center gap-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-star text-warning me-1"></i>
+                        Score: @Entity.VoteAverage.ToString("F1")
+                    </h6>
+                    @if (Entity.VoteCount > 0)
                     {
-                        <p class="card-text"><small class="text-body-secondary">@releaseDate.ToString("dd. MMMM, yyyy.") | Tmdb: @Movie.Id</small></p>
+                        <small class="text-body-secondary">@Entity.VoteCount.ToString("N0") votes</small>
                     }
                 </div>
-                <p>Score: @((Movie.VoteAverage * 10).ToString("F2"))%</p>
-                <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
-                <p>@Movie.Overview</p>
+
+                @if (!string.IsNullOrWhiteSpace(Entity.Overview))
+                {
+                    <div class="mt-3">
+                        <h5 class="lead fw-bold">Overview</h5>
+                        <p class="card-text">@Entity.Overview</p>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -28,5 +60,16 @@
 
 @code
 {
-    [Parameter] public TmdbDetails Movie { get; set; } = new();
+    [Parameter, EditorRequired] public TmdbDetails Entity { get; set; } = null!;
+
+    string PosterUrl => $"{Globals.BaseTmdbImageUrl}{Entity.PosterPath}";
+    bool IsSameTitle => Entity.Title == Entity.OriginalTitle;
+    string FormattedReleaseDate => GetFormattedReleaseDate();
+
+    string GetFormattedReleaseDate()
+    {
+        if (string.IsNullOrEmpty(Entity.ReleaseDate) || !DateTime.TryParse(Entity.ReleaseDate, out var releaseDate)) return string.Empty;
+
+        return releaseDate.ToString("dd. MMMM, yyyy.");
+    }
 }

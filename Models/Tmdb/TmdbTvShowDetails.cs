@@ -14,7 +14,7 @@ public class TmdbTvShowDetails
     public List<CreatedBy> CreatedBy { get; set; } = [];
 
     [JsonPropertyName("episode_run_time")]
-    public List<object> EpisodeRunTime { get; set; } = [];
+    public List<int> EpisodeRunTime { get; set; } = [];
 
     [JsonPropertyName("first_air_date")]
     public string? FirstAirDate { get; set; }
@@ -153,7 +153,7 @@ public class LastEpisodeToAir
     public string? ProductionCode { get; set; }
 
     [JsonPropertyName("runtime")]
-    public int Runtime { get; set; }
+    public int? Runtime { get; set; }
 
     [JsonPropertyName("season_number")]
     public int SeasonNumber { get; set; }
