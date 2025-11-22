@@ -12,6 +12,7 @@ public static class ConfigureRepositories
         services.AddScoped<INoteFolderRepository, NoteFolderRepository>();
 
         services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<ITvShowRepository, TvShowRepository>();
 
 
         return services;

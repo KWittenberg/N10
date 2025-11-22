@@ -1,0 +1,233 @@
+﻿@page "/admin/tvs"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject ITvShowRepository Repository
+@inject ITmdbService TmdbService
+
+<title>@Title</title>
+
+<_PageHeader Title="@Title" />
+
+@if (IsProcessing || Entities is null)
+{
+    @* @if (Entities is null)
+    {
+        <div class="@App?.GetContentClass() d-flex justify-content-center align-content-center">
+            <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
+        </div>
+    } *@
+    <_Loading />
+}
+else
+{
+    <div class="mb-5 @App?.GetContentClass()">
+
+        @if (SearchTmdb is not null)
+        {
+            <div class="mt-5 row align-items-center">
+                <div class="col-12 col-md-6">
+                    @* <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
+                    <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button> *@
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
+                        <div class="input-group">
+                            <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
+                            <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (TmdbSearch is null && TmdbDetails is null)
+        {
+            <div class="mt-2 table-responsive border rounded">
+                <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
+
+                    <div class="p-2 d-flex justify-content-between align-items-center">
+                        <h4 class="p-0 m-0 ms-2">@Title</h4>
+                        <div class="d-inline-flex align-items-center">
+                            <i class="bi bi-search"></i>
+                            <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
+                        </div>
+                        <div class="me-2 d-inline-flex align-items-center" stile="width: 5rem;">
+                            <label class="me-2 small text-muted">Items:</label>
+                            <select class="form-select form-select-sm" @bind="PaginationState.ItemsPerPage">
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <TemplateColumn Title="Title" Align="Align.Start" SortBy="@titleSort">
+                        <span class="ms-3 @((context.IsMetadataFetched) ? "text-primary" : "text-muted")" style="cursor: pointer;" @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">
+                            @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
+                        </span>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.SortTitle" Title="Sort" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.TmdbId" Title="TmdbId" Align="Align.Center" Sortable="true" />
+
+                    <TemplateColumn Title="Meta" Align="Align.Center" SortBy="@metadataSort">
+                        <div class="d-flex justify-content-center" style="width: 2rem;">
+                            @if (context.IsMetadataFetched)
+                            {
+                                <i class="fas fa-check-circle fa-lg text-success" title="Metadata fetched"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times-circle fa-lg text-danger" title="Metadata missing"></i>
+                            }
+                        </div>
+                    </TemplateColumn>
+
+                    @if (App!.IsExpanded)
+                    {
+                        <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
+                    }
+
+                    <TemplateColumn Title="Actions" Align="Align.Center">
+                        <ChildContent>
+                            <a class="text-white" href="admin/tv/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                            @* <span class="ms-1 text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></span>
+                            <span class="ms-2 text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></span> *@
+                        </ChildContent>
+                    </TemplateColumn>
+                </QuickGrid>
+                <div class="quickgrid-pagination">
+                    <Paginator State="PaginationState" />
+                </div>
+            </div>
+        }
+
+        @if (TmdbSearch is not null)
+        {
+            <div class="">
+                <div class="m-3 d-flex justify-content-start align-items-center">
+                    <button type="button" class="btn-close me-2" @onclick="() => TmdbSearch = null"></button>Close Search
+                </div>
+
+                @foreach (var tvShow in TmdbSearch.Results)
+                {
+                    <_SearchCard Entity="tvShow" />
+                }
+            </div>
+        }
+
+        @if (TmdbDetails is not null)
+        {
+            <div class="">
+                <div class="m-3 d-flex justify-content-start align-items-center">
+                    <button type="button" class="btn-close me-2" @onclick="() => TmdbDetails = null"></button>Close Details
+                </div>
+
+                <_DetailsCard Entity="TmdbDetails" />
+
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<TvShow>? Entities;
+    string? Search;
+
+    string SearchTmdb = string.Empty;
+    TmdbSearchList? TmdbSearch;
+    TmdbTvShowDetails? TmdbDetails;
+
+    const string Title = "TvShows";
+    bool IsProcessing { get; set; } = true;
+
+    GridSort<TvShow> titleSort = GridSort<TvShow>.ByAscending(x => x.SortTitle);
+    GridSort<TvShow> metadataSort = GridSort<TvShow>.ByAscending(x => x.IsMetadataFetched);
+    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
+
+
+
+    protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
+
+    async Task RefreshEntitiesAsync()
+    {
+        var result = await Repository.GetAllTvShowsInFolderAsync(Globals.TvShowPath);
+        //if (!result.Success || result.Data is null) return;
+
+        //Entities = result.Data;
+        Entities = result;
+        IsProcessing = false;
+        StateHasChanged();
+    }
+
+    IQueryable<TvShow> FilteredEntities
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Search)) return Entities.AsQueryable();
+            else return Entities.Where(x => x.Title.Contains(Search, StringComparison.OrdinalIgnoreCase)).AsQueryable();
+        }
+    }
+
+    async Task HandleValidSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(SearchTmdb);
+
+        TmdbSearch = await TmdbService.SearchTvShowsAsync(SearchTmdb);
+
+        SearchTmdb = string.Empty;
+        StateHasChanged();
+    }
+
+    async Task HandleSearch(int? tmdbId, string search, int? year)
+    {
+        if (tmdbId.HasValue) TmdbDetails = await TmdbService.GetTvShowByIdAsync(tmdbId.Value);
+        else TmdbSearch = await TmdbService.SearchTvShowsAsync(search, year.ToString());
+
+        SearchTmdb = string.Empty;
+        StateHasChanged();
+    }
+
+    @* async Task ScanNew()
+    {
+        await App!.ShowToast($"START - Scan For New Movies!", "success");
+        await Repository.SyncParsedMoviesAsync(Globals.X265Path);
+        await RefreshEntitiesAsync();
+        await App!.ShowToast($"END - Scan Finish and Add in Database!", "success");
+    }
+
+    async Task PopulateFromTmdb()
+    {
+        await App!.ShowToast($"Start Populate From Tmdb!", "success");
+        await Repository.PopulateFromTmdbAsync();
+        await RefreshEntitiesAsync();
+        await App!.ShowToast($"Finish and Add Details in Database!", "success");
+    }
+
+    async Task PopulateFromTmdb(Guid id)
+    {
+        await App!.ShowToast($"Start Populate From Tmdb!", "success");
+        await Repository.PopulateFromTmdbByIdAsync(id);
+        await RefreshEntitiesAsync();
+        await App!.ShowToast($"Finish and Add Details in Database!", "success");
+    }
+
+    #region ---> DELETE
+    void ShowDelete(MovieDto input)
+    {
+        App?.ShowDeleteConfirmation(input.Title, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+    }
+
+    async Task ConfirmDelete(Guid id)
+    {
+        var result = await Repository.DeleteAsync(id);
+        if (result.Success) await RefreshEntitiesAsync();
+
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+    }
+    #endregion *@
+}

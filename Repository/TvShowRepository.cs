@@ -1,8 +1,8 @@
 ﻿namespace N10.Repository;
 
-public class TvShowRepository(IDbContextFactory<ApplicationDbContext> context, ITmdbService tmdbService) //: IMovieRepository
+public class TvShowRepository(IDbContextFactory<ApplicationDbContext> context, ITmdbService tmdbService) : ITvShowRepository
 {
-    readonly string entityName = "Movie";
+    readonly string entityName = "TvShow";
 
     #region CRUD
     //public async Task<Result<List<MovieDto>>> GetAllAsync()
@@ -403,196 +403,243 @@ public class TvShowRepository(IDbContextFactory<ApplicationDbContext> context, I
 
 
 
-
-
-
-    #region GetAllTvShowsInFolder
-    public async Task<List<TvShow>> GetAllTvShowsInFolderAsync(string path, CancellationToken cancellationToken = default)
+    public async Task<List<TvShow>> GetAllTvShowsInFolderAsync(string basePath, CancellationToken cancellationToken = default)
     {
-        var fileNames = await ReadFolderAsync(path, cancellationToken);
+        var tvShows = new List<TvShow>();
 
-        var tvShowInfos = new List<TvShow>();
+        // 1. Pronađi sve foldere sa TV serijama
+        var tvShowFolders = await GetTvShowFoldersAsync(basePath, cancellationToken);
 
-        var tasks = fileNames.Select(async fileName =>
+        // 2. Za svaki folder parsiraj seriju i epizode
+        foreach (var folderPath in tvShowFolders)
         {
             try
             {
-                return await ParseFilenameAsync(fileName);
+                var tvShow = await ParseTvShowFromFolderAsync(folderPath, cancellationToken);
+                if (tvShow != null && tvShow.Episodes.Any()) tvShows.Add(tvShow);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing {fileName}: {ex.Message}");
-                return new TvShow { Name = $"Error: {fileName}" };
+                Console.WriteLine($"Error processing folder {folderPath}: {ex.Message}");
+                // Možemo kreirati TvShow sa minimalnim podacima ili preskočiti
             }
-        });
+        }
 
-        var results = await Task.WhenAll(tasks);
-        tvShowInfos.AddRange(results.Where(info => info != null));
-
-        return tvShowInfos;
+        return tvShows;
     }
 
-    async Task<List<string>> ReadFolderAsync(string path, CancellationToken cancellationToken = default)
+    async Task<List<string>> GetTvShowFoldersAsync(string basePath, CancellationToken cancellationToken)
     {
-        var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi" };
-
         return await Task.Run(() =>
         {
-            cancellationToken.ThrowIfCancellationRequested(); // Baci exception ako je otkazano
-
-            var allFiles = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly);
-
-            var fileNames = allFiles
-                .Where(file => extensions.Contains(Path.GetExtension(file)))
-                .Select(file => Path.GetFileName(file))
+            cancellationToken.ThrowIfCancellationRequested();
+            return Directory.GetDirectories(basePath)
+                .Select(Path.GetFullPath)
                 .ToList();
-
-            return fileNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
-
         }, cancellationToken);
     }
 
-    async Task<TvShow> ParseFilenameAsync(string filename)
+    async Task<TvShow> ParseTvShowFromFolderAsync(string folderPath, CancellationToken cancellationToken)
     {
-        var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
-        var info = new TvShow { FileName = filename };
+        var folderName = Path.GetFileName(folderPath);
 
+        // 1. PARSIRAJ FOLDER - kreiraj TvShow
+        var tvShow = ParseFolderName(folderName);
+
+        // 2. PARSIRAJ SVE EPIZODE U FOLDERU
+        var episodes = await ParseEpisodesInFolderAsync(folderPath, tvShow, cancellationToken);
+        tvShow.Episodes = episodes;
+
+        return tvShow;
+    }
+
+    public async Task<TvShow> AddTvShowFromFolderAsync(string folderPath, CancellationToken cancellationToken = default)
+    {
+        var folderName = Path.GetFileName(folderPath);
+
+        // 1. PARSIRAJ FOLDER
+        var tvShow = ParseFolderName(folderName);
+
+        // 2. PARSIRAJ SVE EPIZODE U FOLDERU
+        var episodes = await ParseEpisodesInFolderAsync(folderPath, tvShow, cancellationToken);
+        tvShow.Episodes = episodes;
+
+        return tvShow;
+    }
+
+    TvShow ParseFolderName(string folderName)
+    {
+        var tvShow = new TvShow { FolderName = folderName };
+        var tokens = Regex.Split(folderName, @"[.\s_-]+")
+                          .Where(t => !string.IsNullOrWhiteSpace(t))
+                          .ToList();
+
+        // Traži godinu (1900-2099) i TMDB ID
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            if (int.TryParse(tokens[i], out int number))
+            {
+                if (number >= 1900 && number <= 2099)
+                {
+                    tvShow.Year = number;
+                    // Naslov je sve prije godine
+                    tvShow.Title = string.Join(" ", tokens.Take(i));
+
+                    // Provjeri ima li TMDB ID nakon godine
+                    if (i + 1 < tokens.Count && int.TryParse(tokens[i + 1], out int tmdbId) && tmdbId > 0) tvShow.TmdbId = tmdbId;
+
+                    break;
+                }
+            }
+        }
+
+        // Fallback ako nije pronađena godina
+        if (string.IsNullOrEmpty(tvShow.Title)) tvShow.Title = folderName;
+
+        // Formatiranje naslova
+        tvShow.Title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(tvShow.Title.ToLowerInvariant().Trim());
+
+        return tvShow;
+    }
+
+    async Task<List<TvShowEpisode>> ParseEpisodesInFolderAsync(string folderPath, TvShow tvShow, CancellationToken cancellationToken)
+    {
+        var episodes = new List<TvShowEpisode>();
+        var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi" };
+
+        var files = await Task.Run(() =>
+        {
+            return Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly)
+                .Where(file => extensions.Contains(Path.GetExtension(file)))
+                .Select(Path.GetFileName)
+                .ToList();
+        }, cancellationToken);
+
+        foreach (var fileName in files)
+        {
+            var episode = ParseEpisodeFileName(fileName, tvShow);
+            episodes.Add(episode);
+        }
+
+        return episodes.OrderBy(e => e.Season).ThenBy(e => e.Episode).ToList();
+    }
+
+    TvShowEpisode ParseEpisodeFileName(string fileName, TvShow tvShow)
+    {
+        var episode = new TvShowEpisode
+        {
+            FileName = fileName,
+            TvShow = tvShow
+        };
+
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var tokens = Regex.Split(nameWithoutExt, @"[.\s_-]+")
                           .Where(t => !string.IsNullOrWhiteSpace(t))
                           .ToList();
 
-        var knownPatterns = new Dictionary<string, Action<TvShow, string>>(StringComparer.OrdinalIgnoreCase)
-        {
-            // Versions
-            ["4K"] = (m, _) => m.Version = AddVersion(m, "4K"),
-            ["CHINESE"] = (m, _) => m.Version = AddVersion(m, "CHINESE"),
-            ["COLLECTION"] = (m, _) => m.Version = AddVersion(m, "COLLECTION"),
-            ["CRITERION"] = (m, _) => m.Version = AddVersion(m, "CRITERION"),
-            ["CUT"] = (m, _) => m.Version = AddVersion(m, "CUT"),
-            ["DIRECTOR'S"] = (m, _) => m.Version = AddVersion(m, "DIRECTOR'S"),
-            ["EDITION"] = (m, _) => m.Version = AddVersion(m, "EDITION"),
-            ["EXTENDED"] = (m, _) => m.Version = AddVersion(m, "EXTENDED"),
-            ["FINAL"] = (m, _) => m.Version = AddVersion(m, "FINAL"),
-            ["FRENCH"] = (m, _) => m.Version = AddVersion(m, "FRENCH"),
-            ["IMAX"] = (m, _) => m.Version = AddVersion(m, "IMAX"),
-            ["HR"] = (m, _) => m.Version = AddVersion(m, "HR"),
-            ["INTERNAL"] = (m, _) => m.Version = AddVersion(m, "INTERNAL"),
-            ["JAPANESE"] = (m, _) => m.Version = AddVersion(m, "JAPANESE"),
-            ["KOREAN"] = (m, _) => m.Version = AddVersion(m, "KOREAN"),
-            ["MASTERED"] = (m, _) => m.Version = AddVersion(m, "MASTERED"),
-            ["REMASTERED"] = (m, _) => m.Version = AddVersion(m, "REMASTERED"),
-            ["REPACK"] = (m, _) => m.Version = AddVersion(m, "REPACK"),
-            ["ROGUE"] = (m, _) => m.Version = AddVersion(m, "ROGUE"),
-            ["RUSSIAN"] = (m, _) => m.Version = AddVersion(m, "RUSSIAN"),
-            ["SPECIAL"] = (m, _) => m.Version = AddVersion(m, "SPECIAL"),
-            ["SWEDISH"] = (m, _) => m.Version = AddVersion(m, "SWEDISH"),
-            ["THEATRICAL"] = (m, _) => m.Version = AddVersion(m, "THEATRICAL"),
-            ["ULYSSES"] = (m, _) => m.Version = AddVersion(m, "ULYSSES"),
-            ["UNCUT"] = (m, _) => m.Version = AddVersion(m, "UNCUT"),
-            ["UNRATED"] = (m, _) => m.Version = AddVersion(m, "UNRATED"),
-
-            // Resolution
-            ["480p"] = (m, _) => m.Resolution = "480p",
-            ["720p"] = (m, _) => m.Resolution = "720p",
-            ["1080p"] = (m, _) => m.Resolution = "1080p",
-            ["2160p"] = (m, _) => m.Resolution = "2160p",
-            ["4K"] = (m, _) => m.Resolution = "2160p",
-
-            // Color
-            ["8bit"] = (m, _) => m.Color = AddColor(m, "8bit"),
-            ["10bit"] = (m, _) => m.Color = AddColor(m, "10bit"),
-            ["12bit"] = (m, _) => m.Color = AddColor(m, "12bit"),
-            ["16bit"] = (m, _) => m.Color = AddColor(m, "16bit"),
-            ["HDR"] = (m, _) => m.Color = AddColor(m, "HDR"),
-            ["HDR10Plus"] = (m, _) => m.Color = AddColor(m, "HDR10Plus"),
-            ["HQ"] = (m, _) => m.Color = AddColor(m, "HQ"),
-
-            // Source
-            ["WEBRIP"] = (m, _) => m.Source = "WEBRip",
-            ["WEB-DL"] = (m, _) => m.Source = "WEB-DL",
-            ["BLURAY"] = (m, _) => m.Source = "BluRay",
-            ["BRRIP"] = (m, _) => m.Source = "BRRip",
-            ["HDRIP"] = (m, _) => m.Source = "HDRip",
-            ["DVDRIP"] = (m, _) => m.Source = "DVDRip",
-
-            // Audio
-            ["2CH"] = (m, _) => m.Audio = "2CH",
-            ["6CH"] = (m, _) => m.Audio = "6CH",
-            ["8CH"] = (m, _) => m.Audio = "8CH",
-            ["DTS"] = (m, _) => m.Audio = "DTS",
-            ["AAC"] = (m, _) => m.Audio = "AAC",
-            ["AC3"] = (m, _) => m.Audio = "AC3",
-            ["FLAC"] = (m, _) => m.Audio = "FLAC",
-
-            // Video
-            ["X264"] = (m, _) => m.Video = "x264",
-            ["X265"] = (m, _) => m.Video = "x265",
-            ["HEVC"] = (m, _) => m.Video = "HEVC",
-            ["AV1"] = (m, _) => m.Video = "AV1",
-
-            // Release
-            ["FGT"] = (m, _) => m.Release = "FGT",
-            ["PSA"] = (m, _) => m.Release = "PSA",
-            ["YIFY"] = (m, _) => m.Release = "YIFY",
-            ["UTR"] = (m, _) => m.Release = "UTR",
-            ["SPARKS"] = (m, _) => m.Release = "SPARKS",
-            ["RARBG"] = (m, _) => m.Release = "RARBG",
-            ["HDCzT"] = (m, _) => m.Release = "HDCzT",
-            ["Tigole"] = (m, _) => m.Release = "Tigole",
-            ["xxxpav69"] = (m, _) => m.Release = "xxxpav69"
-        };
-
-        // --- DETEKCIJA GODINE + TMDB ID-a ---
+        // --- DETEKCIJA SEASON/EPISODE ---
         for (int i = 0; i < tokens.Count; i++)
         {
-            var token = tokens[i];
+            var token = tokens[i].ToUpperInvariant();
 
-            if (int.TryParse(token, out int number))
+            // Standardni pattern S01E01
+            if (token.StartsWith("S") && token.Contains("E"))
             {
-                if (number >= 1900 && number <= 2099) info.Year = number;
-                else if (number > 0 && number < 9999999)
+                var match = Regex.Match(token, @"S(\d+)E(\d+)", RegexOptions.IgnoreCase);
+                if (match.Success)
                 {
-                    // heuristika: TMDB ID je obično zadnji ili predzadnji token
-                    if (i >= tokens.Count - 2) info.TmdbId = number;
+                    episode.Season = int.Parse(match.Groups[1].Value);
+                    episode.Episode = int.Parse(match.Groups[2].Value);
+
+                    // Episode title je sljedeći token (ako postoji i nije tehnički tag)
+                    if (i + 1 < tokens.Count && !IsTechnicalTag(tokens[i + 1]))
+                    {
+                        episode.EpisodeTitle = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(tokens[i + 1].ToLowerInvariant().Trim());
+                    }
+                    break;
                 }
             }
 
-            if (knownPatterns.TryGetValue(token.ToUpperInvariant(), out var apply)) apply(info, token);
+            // Pattern S01 E01 (odvojeno)
+            if (token == "S" && i + 1 < tokens.Count)
+            {
+                if (int.TryParse(tokens[i + 1], out int season))
+                {
+                    episode.Season = season;
+
+                    // Traži E/episode
+                    if (i + 2 < tokens.Count && tokens[i + 2].ToUpperInvariant().StartsWith("E"))
+                    {
+                        var episodeToken = tokens[i + 2].ToUpperInvariant();
+                        if (int.TryParse(episodeToken.Substring(1), out int episodeNum))
+                        {
+                            episode.Episode = episodeNum;
+
+                            // Episode title
+                            if (i + 3 < tokens.Count && !IsTechnicalTag(tokens[i + 3]))
+                            {
+                                episode.EpisodeTitle = string.Join(" ", tokens.Skip(i + 3).TakeWhile(t => !IsTechnicalTag(t)));
+                                episode.EpisodeTitle = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(episode.EpisodeTitle.ToLowerInvariant().Trim());
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
         }
 
-        // --- NASLOV ---
-        if (info.Year.HasValue)
+        // --- DETEKCIJA TEHNIČKIH TAGOVA ---
+        var technicalTags = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
         {
-            int yearIndex = tokens.FindIndex(t => t == info.Year.Value.ToString());
-            info.Name = string.Join(" ", tokens.Take(yearIndex));
-        }
-        else
+            // Resolution
+            ["480P"] = _ => episode.Resolution = "480p",
+            ["720P"] = _ => episode.Resolution = "720p",
+            ["1080P"] = _ => episode.Resolution = "1080p",
+            ["2160P"] = _ => episode.Resolution = "2160p",
+            ["4K"] = _ => episode.Resolution = "2160p",
+
+            // Source
+            ["WEBRIP"] = _ => episode.Source = "WEBRip",
+            ["WEB-DL"] = _ => episode.Source = "WEB-DL",
+            ["BLURAY"] = _ => episode.Source = "BluRay",
+            ["BRRIP"] = _ => episode.Source = "BRRip",
+
+            // Audio
+            ["2CH"] = _ => episode.Audio = "2CH",
+            ["6CH"] = _ => episode.Audio = "6CH",
+            ["8CH"] = _ => episode.Audio = "8CH",
+            ["DTS"] = _ => episode.Audio = "DTS",
+            ["AAC"] = _ => episode.Audio = "AAC",
+
+            // Video
+            ["X264"] = _ => episode.Video = "x264",
+            ["X265"] = _ => episode.Video = "x265",
+            ["HEVC"] = _ => episode.Video = "HEVC",
+
+            // Release
+            ["PSA"] = _ => episode.Release = "PSA",
+            ["UTR"] = _ => episode.Release = "UTR",
+            ["RARBG"] = _ => episode.Release = "RARBG"
+        };
+
+        foreach (var token in tokens)
         {
-            // fallback ako nema godine
-            info.Name = string.Join(" ", tokens);
+            if (technicalTags.TryGetValue(token.ToUpperInvariant(), out var action)) action(token);
         }
 
-        // --- FORMATIRANJE NASLOVA ---
-        info.Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Name.ToLowerInvariant().Trim());
-
-        return await Task.FromResult(info);
+        return episode;
     }
 
-    // --- HELPER METODA ---
-    static string AddVersion(TvShow m, string value)
+    bool IsTechnicalTag(string token)
     {
-        if (string.IsNullOrEmpty(m.Version)) return value;
-        if (m.Version.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Version; // već postoji, preskoči
+        var technicalKeywords = new HashSet<string> {
+            "480P", "720P", "1080P", "2160P", "4K", "8BIT", "10BIT", "HDR",
+            "WEBRIP", "WEB-DL", "BLURAY", "BRRIP", "HDRIP", "DVDRIP",
+            "2CH", "6CH", "8CH", "DTS", "AAC", "AC3", "FLAC",
+            "X264", "X265", "HEVC", "AV1",
+            "PSA", "UTR", "RARBG", "YIFY", "SPARKS"
+        };
 
-        return $"{m.Version}.{value}";
+        return technicalKeywords.Contains(token.ToUpperInvariant());
     }
-
-    static string AddColor(TvShow m, string value)
-    {
-        if (string.IsNullOrEmpty(m.Color)) return value;
-        if (m.Color.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Color; // već postoji, preskoči
-
-        return $"{m.Color}.{value}";
-    }
-    #endregion
 }

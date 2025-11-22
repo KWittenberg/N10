@@ -14,6 +14,8 @@ public static class Globals
     public const string VlcPath = @"C:\Program Files\VideoLAN\VLC\vlc.exe";
 
     public const string X265Path = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\X265";
+    public const string TvShowPath = @"\\192.168.1.1\TOSHIBA_ExternalUSB30_2_ba41\TV Shows";
+
     public const string LocalMovies = @"C:\MOVIES";
 
     public const string BgUrl = "img/bg/0.Simple Gray.jpg";

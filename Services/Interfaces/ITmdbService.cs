@@ -13,5 +13,7 @@ public interface ITmdbService
 
 
 
+    Task<TmdbSearchList?> SearchTvShowsAsync(string query, string? year = null, string? language = "en-US", bool includeAdult = true);
+
     Task<TmdbTvShowDetails?> GetTvShowByIdAsync(int id, string? language = "en-US");
 }

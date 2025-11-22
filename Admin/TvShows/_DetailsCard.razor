@@ -1,0 +1,57 @@
+﻿<div class="card mb-3" style="background-color: rgba(var(--bs-black-rgb), 0.1);">
+    <div class="row g-0">
+        <div class="col-md-2">
+            <a href="movie/@Entity.Id" target="_blank">
+                <img src="@($"{Globals.BaseTmdbImageUrl}{Entity.PosterPath}")" class="img-fluid rounded-start" alt="cover">
+            </a>
+        </div>
+        <div class="col-md-10">
+            <div class="card-body">
+                <a href="movie/@Entity.Id" class="text-decoration-none" target="_blank">
+                    <h4 class="fw-bold">@Entity.Name <span class="ms-4 h6">[ @Entity.OriginalName ]</span></h4>
+                </a>
+                <p class="m-0">@Entity.Tagline</p>
+                <small class="text-body-secondary">@(string.IsNullOrEmpty(FirstAirDate) ? string.Empty : FirstAirDate)</small>
+                <small class="text-body-secondary">@(string.IsNullOrEmpty(LastAirDate) ? string.Empty : $"- {LastAirDate}")</small>
+                <span class="card-text"><small class="text-body-secondary"> | Tmdb: @Entity.Id</small></span>
+                <p>Seasons: <span class="h6">@Entity.NumberOfSeasons</span> Episodes: <span class="h6">@Entity.NumberOfEpisodes</span></p>
+
+                <h6 class="mt-2 d-flex align-items-center gap-2">
+                    Genres:
+                    @foreach (var genre in Entity.Genres)
+                    {
+                        <span class="badge bg-secondary">@genre.Name</span>
+                    }
+                </h6>
+
+                <h6>Score: @Entity.VoteAverage.ToString("F1")</h6>
+
+                <h5 class="mt-3 lead fw-bold">Overview</h5>
+                <p>@Entity.Overview</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code
+{
+    [Parameter] public TmdbTvShowDetails Entity { get; set; } = new();
+
+    string? FirstAirDate { get; set; }
+    string? LastAirDate { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Entity.FirstAirDate is not null)
+        {
+            var firstAirDate = DateTime.Parse(Entity.FirstAirDate);
+            FirstAirDate = firstAirDate.ToString("dd. MMMM, yyyy.");
+        }
+        if (Entity.LastAirDate is not null)
+        {
+            var lastAirDate = DateTime.Parse(Entity.LastAirDate);
+            LastAirDate = lastAirDate.ToString("dd. MMMM, yyyy.");
+        }
+    }
+}

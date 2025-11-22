@@ -1,0 +1,34 @@
+﻿<!-- Search Card Component -->
+
+<div class="card mb-3" style="background-color: rgba(var(--bs-black-rgb), 0.1);">
+    <div class="row g-0">
+        <div class="col-md-2">
+            <a href="movie/@Entity.Id" target="_blank">
+                <img src="@($"{Globals.BaseTmdbImageUrl}{Entity.PosterPath}")" class="img-fluid rounded-start" alt="cover">
+            </a>
+        </div>
+        <div class="col-md-10">
+            <div class="card-body">
+                <a href="movie/@Entity.Id" class="text-decoration-none" target="_blank"><h4 class="fw-bold">@Entity.Title</h4></a>
+                <div class="hstack gap-2">
+                    @{
+                        bool dateParsed = DateTime.TryParse(Entity.ReleaseDate, out DateTime releaseDate);
+                    }
+                    @if (dateParsed)
+                    {
+                        <p class="card-text"><small class="text-body-secondary">@releaseDate.ToString("dd. MMMM, yyyy.") | Tmdb: @Entity.Id</small></p>
+                    }
+                </div>
+                <p>Score: @((Entity.VoteAverage * 10).ToString("F2"))%</p>
+                <h5 class="lead fw-bold pt-3 mt-3">Overview</h5>
+                <p>@Entity.Overview</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code
+{
+    [Parameter] public TmdbSearch Entity { get; set; } = new();
+}

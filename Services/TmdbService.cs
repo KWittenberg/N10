@@ -70,6 +70,16 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
 
 
     #region TV SERIES
+    public async Task<TmdbSearchList?> SearchTvShowsAsync(string query, string? year = null, string? language = "en-US", bool includeAdult = true)
+    {
+        var yearParam = string.IsNullOrWhiteSpace(year) ? string.Empty : $"&year={year}";
+        var url = $"{options.Value.BaseUrl}search/tv?query={Uri.EscapeDataString(query)}&include_adult={includeAdult}&language={language}&page=1{yearParam}";
+        var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<TmdbSearchList>();
+    }
+
     public async Task<TmdbTvShowDetails?> GetTvShowByIdAsync(int id, string? language = "en-US")
     {
         var response = await client.GetAsync($"{options.Value.BaseUrl}tv/{id}&language={language}");
