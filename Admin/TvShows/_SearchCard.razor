@@ -3,19 +3,27 @@
 <div class="card mb-3" style="background-color: rgba(var(--bs-black-rgb), 0.1);">
     <div class="row g-0">
         <div class="col-md-2">
-            <a href="movie/@Entity.Id" target="_blank">
+            <a href="tv/@Entity.Id" target="_blank">
                 <img src="@($"{Globals.BaseTmdbImageUrl}{Entity.PosterPath}")" class="img-fluid rounded-start" alt="cover">
             </a>
         </div>
         <div class="col-md-10">
             <div class="card-body">
-                <a href="movie/@Entity.Id" class="text-decoration-none" target="_blank">
-                    <h4 class="fw-bold">@Entity.Name <span class="ms-4 h6">[ @Entity.OriginalName ]</span></h4>
+                <a href="tv/@Entity.Id" class="text-decoration-none" target="_blank">
+                    <h4 class="fw-bold">
+                        @Entity.Name <span class="ms-4 h6">
+                            @if (!IsSame)
+                            {
+                                @Entity.OriginalName
+                                ;
+                            }
+                        </span>
+                    </h4>
                 </a>
-                
+
                 <small class="text-body-secondary">@(string.IsNullOrEmpty(FirstAirDate) ? string.Empty : FirstAirDate)</small>
                 <span class="card-text"><small class="text-body-secondary"> | Tmdb: @Entity.Id</small></span>
-                
+
                 <h6 class="mt-2 d-flex align-items-center gap-2">
                     Genres:
                     @foreach (var genre in Entity.GenreIds)
@@ -40,9 +48,12 @@
     [Parameter] public TmdbTvShowSearch Entity { get; set; } = new();
 
     string? FirstAirDate { get; set; }
+    bool IsSame = false;
 
     protected override void OnParametersSet()
     {
+        @if (Entity.Name == Entity.OriginalName) IsSame = true;
+
         if (Entity.FirstAirDate is not null)
         {
             var firstAirDate = DateTime.Parse(Entity.FirstAirDate);

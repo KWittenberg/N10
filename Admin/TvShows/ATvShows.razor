@@ -145,7 +145,8 @@ else
     const string Title = "TvShows";
     bool IsProcessing { get; set; } = true;
 
-    GridSort<TvShow> titleSort = GridSort<TvShow>.ByAscending(x => x.SortTitle);
+    //GridSort<TvShow> titleSort = GridSort<TvShow>.ByAscending(x => x.SortTitle);
+    GridSort<TvShow> titleSort = GridSort<TvShow>.ByAscending(x => x.Title);
     GridSort<TvShow> metadataSort = GridSort<TvShow>.ByAscending(x => x.IsMetadataFetched);
     readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
 
