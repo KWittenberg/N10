@@ -6,7 +6,6 @@
     padding: 0.6rem;
     border: none;
     overflow: hidden;
-    /*cursor: pointer;*/
 }
 
     .card:hover {
@@ -50,22 +49,11 @@
 
 
 
-/*.card-title-link {
-    pointer-events: auto;
-    text-decoration: none;
-    color: inherit;
-}*/
-
-/*.card-title-link:hover h4 {
-        text-decoration: underline;
-        color: #fff;
-    }*/
-
-.resolution-badge {
+/*.resolution-badge {
     padding: 0.5em 0.75em;
     border-radius: 0.375rem;
     font-weight: 500;
-}
+}*/
 
 .resolution-720p {
     background-color: #fbbf24; /* žuta */

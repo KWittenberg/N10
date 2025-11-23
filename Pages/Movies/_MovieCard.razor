@@ -2,58 +2,29 @@
 
 <div class="card">
     <div class="card-image-container">
-        <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Item.TmdbImageUrl}")" class="card-img" alt="..."
-             @onclick="() => PlayInVlc(Item.FileName)">
+        <img src="@ImageUrl" class="card-img" alt="@Item?.Title" loading="lazy" @onclick="() => PlayInVlc(Item?.FileName)">
     </div>
-    <!-- Hide Info / Isključio dok ne nabavim slike od filmova-->
-    @* <div class="card-overlay"> *@
-    <div class="card-overlay">
-        <div class="m-3 badge bg-transparent40 text-white position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
 
+    @* <div class="card-overlay"> *@
+    <div class="">
+        @if (Item?.Year is not null)
+        {
+            <div class="m-3 badge bg-transparent40 text-white position-absolute top-0 start-0"><span class="p">@Item.Year</span></div>
+        }
 
         <div class="m-3 position-absolute top-0 end-0 d-flex flex-column align-items-end gap-1">
-            @if (Item.Version is not null)
+            @if (Item?.Version is not null)
             {
                 <span class="badge text-warning bg-transparent20">@Item.Version</span>
             }
-            
-            @if (Item.Release is not null)
-            {
-                <span class="badge bg-transparent20">@Item.Release</span>
-            }
 
-            @if (Item.Source is not null)
+            @if (Item?.Resolution is not null)
             {
-                <span class="badge bg-transparent20">@Item.Source</span>
-            }
-
-            @if (Item.Resolution is not null)
-            {
-                <span class="badge @GetResolutionClass(Item.Resolution)">@GetResolutionDisplayText(Item.Resolution)</span>
+                <span class="badge @GetResolutionClass(Item.Resolution)">@ResolutionDisplay</span>
             }
         </div>
 
-        @* @if (Item.Release is not null)
-        {
-            <div class="m-3 badge position-absolute top-0 end-0">
-                <span class="p">@Item.Release</span>
-            </div>
-        }
-        
-        @if (Item.Resolution is not null)
-        {
-            <div class="m-3 badge position-absolute top-0 end-0 @GetResolutionClass(Item.Resolution)">
-                <span class="p">@GetResolutionDisplayText(Item.Resolution)</span>
-            </div>
-        } *@
-
-        @* <a href="/movie/@Item?.TmdbId" class="card-title-link">
-            <h4 class="m-3 position-absolute bottom-0 start-0 text-truncate">@Item.Title</h4>
-        </a> *@
-
-        <a href="/movie/@Item?.TmdbId" class="pb-2 h4 title-link position-absolute bottom-0 start-0 w-100 px-3 text-truncate" target="_blank">
-            @(string.IsNullOrEmpty(Item?.TmdbTitle) ? Item?.Title : Item.TmdbTitle)
-        </a>
+        <a href="/movie/@Item?.Id" class="pb-2 h4 title-link position-absolute bottom-0 start-0 w-100 px-3 text-truncate" target="_blank">@Title</a>
     </div>
 </div>
 
@@ -64,7 +35,8 @@
 
     [Parameter] public MovieDto? Item { get; set; }
 
-
+    string ImageUrl => string.IsNullOrEmpty(Item?.TmdbImageUrl) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Item.TmdbImageUrl}";
+    string Title => string.IsNullOrEmpty(Item?.TmdbTitle) ? Item?.Title ?? "Unknown" : Item.TmdbTitle;
 
     string GetResolutionClass(string? resolution)
     {
@@ -77,29 +49,26 @@
         };
     }
 
-    string GetResolutionDisplayText(string? resolution)
+    string? ResolutionDisplay => Item?.Resolution?.ToLower() switch
     {
-        return resolution?.ToLower() switch
-        {
-            "2160p" => "4K",
-            _ => resolution
-        };
-    }
+        "720p" => "SD",
+        "1080p" => "HD",
+        "2160p" => "4K",
+        _ => Item?.Resolution
+    };
 
     async Task PlayInVlc(string? filename)
     {
-        await App!.ShowToast($"Startam: {Item.Title}", "success");
+        await App!.ShowToast($"Play: {Item.Title}", "success");
 
         if (string.IsNullOrEmpty(filename)) return;
 
         try
         {
-            // Prilagodite putanju do vašeg media foldera
             string mediaPath = Path.Combine(Globals.X265Path, filename);
 
             if (!File.Exists(mediaPath))
             {
-                // Logger?.LogWarning($"File not found: {mediaPath}");
                 await App!.ShowToast($"File not found: {mediaPath}", "error");
                 return;
             }
@@ -117,16 +86,6 @@
         catch (Exception ex)
         {
             await App!.ShowToast($"Error starting VLC with file: {filename}", "error");
-            //Logger?.LogError(ex, $"Error starting VLC with file: {filename}");
-            // Možete dodati i neku notifikaciju za korisnika
         }
     }
-
-
-
-
-
 }
-@* <a href="/movie/@Item?.TmdbId">
-        <img src="@(string.IsNullOrEmpty(Item.TmdbImageUrl) ? Globals.NoImage : Item.TmdbImageUrl)" class="card-img" alt="...">
-    </a> *@

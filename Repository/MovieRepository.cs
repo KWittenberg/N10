@@ -1,8 +1,6 @@
 ﻿namespace N10.Repository;
 
-public class MovieRepository(IDbContextFactory<ApplicationDbContext> context,
-                                IMovieService movieService,
-                                ITmdbService tmdbService) : IMovieRepository
+public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, ITmdbService tmdbService) : IMovieRepository
 {
     readonly string entityName = "Movie";
 
