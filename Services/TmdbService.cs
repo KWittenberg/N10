@@ -87,5 +87,25 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
 
         return await response.Content.ReadFromJsonAsync<TmdbTvShowDetails>();
     }
+
+    public async Task<TmdbCredits?> GetTvShowCreditsByIdAsync(int id, string? language = "en-US")
+    {
+        var response = await client.GetAsync($"{options.Value.BaseUrl}tv/{id}/credits?language={language}");
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<TmdbCredits>();
+    }
+
+    public async Task<TmdbVideo?> GetTvShowTrailerByIdAsync(int id, string? language = "en-US")
+    {
+        var url = $"{options.Value.BaseUrl}tv/{id}/videos?language={language}";
+        var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        var videos = await response.Content.ReadFromJsonAsync<TmdbVideos>();
+
+        return videos?.Videos.FirstOrDefault(x => x.Site!.Contains("YouTube", StringComparison.OrdinalIgnoreCase)
+                                               && x.Type!.Contains("Trailer", StringComparison.OrdinalIgnoreCase));
+    }
     #endregion
 }

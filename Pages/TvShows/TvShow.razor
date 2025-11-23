@@ -11,8 +11,8 @@
 else
 {
     <title>@Entity.Name</title>
-    
-    @* <_YouTubeModal Entity="Entity" MovieTrailer="MovieTrailer" /> *@
+
+    <_YouTubeModal Entity="Entity" Trailer="Trailer" />
 
     <div id="movie-details" style="--background: url(@($"{Globals.BaseTmdbImageUrl}{Entity?.BackdropPath}"))">
         <div class="@App?.GetContentClass() py-4">
@@ -22,7 +22,7 @@ else
 
                     <_Rate Entity="@Entity" />
 
-                    @if (!string.IsNullOrEmpty(MovieTrailer?.Key))
+                    @if (!string.IsNullOrEmpty(Trailer?.Key))
                     {
                         <div class="mt-3" id="btn-trailer">
                             <button class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#youtube-modal">
@@ -42,32 +42,63 @@ else
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
                     <div class="p-4 rounded bg-transparent50">
-                        <a href="https://www.themoviedb.org/tv/@Entity.Id" class="text-decoration-none" target="_blank">
-                            <h1 class="mb-0">@Entity.Name</h1>
+
+                        <a href="@TmdbIdUrl" class="text-decoration-none" target="_blank">
+                            <h1 class="fw-bold">
+                                @Entity?.Name
+                                @if (!IsSameName)
+                                {
+                                    <span class="ms-4 h6 text-muted">@Entity?.OriginalName</span>
+                                }
+                            </h1>
                         </a>
-                        <div class="lead mb-3">@Entity.Tagline</div>
-                        <div class="hstack gap-2">
-                            <span>@ReleaseDate | </span>
-                            @* <span>@(Entity?.Runtime / 60) hour(s) @(Entity?.Runtime % 60) minutes</span> *@
+
+                        <p class="m-0 text-muted fst-italic">@Entity?.Tagline</p>
+
+                        <div class="mt-1">
+                            <small class="text-body-secondary">@FirstAirDate</small>
+                            <small class="text-body-secondary">@LastAirDate</small>
+                            <span class="card-text"><small class="text-body-secondary"> | Tmdb: @Entity?.Id</small></span>
+                            <p>Seasons: <span class="h6">@Entity?.NumberOfSeasons</span> Episodes: <span class="h6">@Entity?.NumberOfEpisodes</span></p>
                         </div>
-                        <div class="hstack gap-2 my-2">
-                            @foreach (var genre in Entity.Genres)
+
+                        <div class="mt-3">
+                            <h6 class="d-flex align-items-center gap-2">
+                                <span class="">Genres:</span>
+                                @foreach (var genre in Entity?.Genres ?? [])
+                                {
+                                    <span class="badge bg-dark-subtle">@genre.Name</span>
+                                }
+                            </h6>
+                        </div>
+
+                        <div class="mt-3 d-flex align-items-center gap-3">
+                            <h6 class="mb-0">
+                                <i class="fas fa-star text-warning me-1"></i>
+                                Score: @Entity?.VoteAverage.ToString("F1")
+                            </h6>
+                            @if (Entity?.VoteCount > 0)
                             {
-                                <span class="badge bg-dark-subtle">@genre.Name</span>
+                                <small class="text-body-secondary">@Entity.VoteCount.ToString("N0") votes</small>
                             }
                         </div>
-                        
-                        <h5 class="mt-4 fw-bold">Overview</h5>
-                        <p>@Entity.Overview</p>
 
-                        @* @if (Credits?.Crews is not null)
+                        @if (!string.IsNullOrWhiteSpace(Entity?.Overview))
+                        {
+                            <div class="mt-3">
+                                <h5 class="lead fw-bold">Overview</h5>
+                                <p class="card-text">@Entity.Overview</p>
+                            </div>
+                        }
+
+                        @if (Credits?.Crews is not null)
                         {
                             <_Crews Crews="Credits.Crews" />
                         }
                         @if (Credits?.Casts is not null)
                         {
                             <_Casts Casts="Credits.Casts" />
-                        } *@
+                        }
                     </div>
 
                     @* @if (Credits?.Casts is not null)
@@ -88,25 +119,46 @@ else
 
     TmdbTvShowDetails? Entity { get; set; }
     TmdbCredits? Credits { get; set; }
-    TmdbVideo? MovieTrailer { get; set; }
-
-    string? ReleaseDate;
+    TmdbVideo? Trailer { get; set; }
 
     bool IsProcessing { get; set; } = true;
-    
+
+
+    string TmdbIdUrl => $"https://www.themoviedb.org/tv/{Entity?.Id}";
+    string PosterUrl => $"{Globals.BaseTmdbImageUrl}{Entity?.PosterPath}";
+    bool IsSameName => Entity?.Name == Entity?.OriginalName;
+    string FirstAirDate => GetFirstAirDate();
+    string LastAirDate => GetLastAirDate();
 
 
     protected override async Task OnParametersSetAsync()
     {
         Entity = await Service.GetTvShowByIdAsync(Id);
-        
-        // bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
-        // if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy.");
 
-        // MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
-        // Credits = await Service.GetMovieCreditsByIdAsync(Id);
+        Trailer = await Service.GetTvShowTrailerByIdAsync(Id);
+        Credits = await Service.GetTvShowCreditsByIdAsync(Id);
 
         IsProcessing = false;
         StateHasChanged();
     }
+
+
+
+    string GetFirstAirDate()
+    {
+        if (string.IsNullOrEmpty(Entity?.FirstAirDate) || !DateTime.TryParse(Entity.FirstAirDate, out var firstAirDate)) return string.Empty;
+
+        return firstAirDate.ToString("dd. MMMM, yyyy.");
+    }
+
+    string GetLastAirDate()
+    {
+        if (string.IsNullOrEmpty(Entity?.LastAirDate) || !DateTime.TryParse(Entity.LastAirDate, out var lastAirDate)) return string.Empty;
+
+        return $"- {lastAirDate.ToString("dd. MMMM, yyyy.")}";
+    }
+
+
+
+
 }

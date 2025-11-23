@@ -1,0 +1,27 @@
+<div class="d-inline-flex align-items-baseline flex-wrap">
+    <h6 class="me-2">Cast:</h6>
+    <span class="p-sm text-white-50">
+        @if (Casts?.Any() ?? false)
+        {
+            @foreach (var cast in Casts)
+            {
+                <a href="@($"https://www.themoviedb.org/person/{cast.Id}")" target="_blank" class="text-decoration-none">@cast.Name</a>
+                
+                @if (cast != Casts.Last())
+                {
+                    <span>, </span>
+                }
+            }
+        }
+        else
+        {
+            <span class="text-muted">N/A</span>
+        }
+    </span>
+</div>
+
+
+
+@code {
+    [Parameter] public List<TmdbCast> Casts { get; set; } = [];
+}

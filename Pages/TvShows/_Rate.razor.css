@@ -1,0 +1,33 @@
+﻿.movie-stars {
+    position: relative;
+    display: inline-block;
+    height: 1.2em; /* Prilagodite veličinu zvjezdica */
+    overflow: hidden;
+}
+
+.stars-empty, .stars-full {
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* Da se ne wrap-a */
+}
+
+    .stars-empty i {
+        color: gray; /* Sive prazne zvjezdice */
+    }
+
+.stars-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden; /* Clipa prema width-u */
+}
+
+    .stars-full i {
+        color: var(--cf-theme-core) !important;
+    }
+
+.rating-circle {
+    padding: 1rem;
+    border: 1.5px dashed white;
+    border-radius: 50%;
+}

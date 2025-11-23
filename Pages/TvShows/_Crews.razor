@@ -1,0 +1,27 @@
+<div class="d-inline-flex align-items-baseline flex-wrap">
+    <h6 class="me-2">Director:</h6>
+    <span class="p-sm text-white-50">
+        @if (Crews?.Any() ?? false)
+        {
+            @foreach (var cast in Crews.Where(c => c.Job == "Executive Producer"))
+            {
+                string url = $"https://www.themoviedb.org/person/{cast.Id}";
+
+                <a href="@url" target="_blank" class="text-decoration-none">@cast.Name</a>
+                @if (cast != Crews.Last())
+                {
+                    <span>, </span>
+                }
+            }
+        }
+        else
+        {
+            <span class="text-muted">N/A</span>
+        }
+    </span>
+</div>
+
+
+@code {
+    [Parameter] public List<TmdbCrew> Crews { get; set; } = [];
+}
