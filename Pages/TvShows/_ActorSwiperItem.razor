@@ -1,0 +1,16 @@
+﻿@if (Actor is not null)
+{
+    <div class="align-items-center swiper-item px-2">
+        <img src="@Actor.ProfilePath" alt="Actor Image" class="actor-img" />
+
+        <div class="mt-2 text-center">
+            <div class="text-muted text-nowrap">@Actor.Character</div>
+            <div class="fw-bold text-nowrap">@Actor.Name</div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public TmdbCast? Actor { get; set; }
+}

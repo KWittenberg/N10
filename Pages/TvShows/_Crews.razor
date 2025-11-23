@@ -1,9 +1,9 @@
 <div class="d-inline-flex align-items-baseline flex-wrap">
-    <h6 class="me-2">Director:</h6>
+    <h6 class="me-2">Creators:</h6>
     <span class="p-sm text-white-50">
         @if (Crews?.Any() ?? false)
         {
-            @foreach (var cast in Crews.Where(c => c.Job == "Executive Producer"))
+            @foreach (var cast in Crews.Where(c => c.Job == "Executive Producer" && c.KnownForDepartment == "Writing"))
             {
                 string url = $"https://www.themoviedb.org/person/{cast.Id}";
 

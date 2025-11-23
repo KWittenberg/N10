@@ -93,7 +93,23 @@ public class TmdbService(HttpClient client, IOptions<TmdbOptions> options) : ITm
         var response = await client.GetAsync($"{options.Value.BaseUrl}tv/{id}/credits?language={language}");
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<TmdbCredits>();
+        var credits = await response.Content.ReadFromJsonAsync<TmdbCredits>();
+
+        foreach (var castMember in credits?.Casts!)
+        {
+            castMember.ProfilePath = string.IsNullOrEmpty(castMember.ProfilePath)
+                ? "/images/profile.jpg"
+                : $"https://image.tmdb.org/t/p/w500{castMember.ProfilePath}";
+        }
+
+        foreach (var crewMember in credits.Crews)
+        {
+            crewMember.ProfilePath = string.IsNullOrEmpty(crewMember.ProfilePath)
+                ? "/images/profile.jpg"
+                : $"https://image.tmdb.org/t/p/w500{crewMember.ProfilePath}";
+        }
+
+        return credits;
     }
 
     public async Task<TmdbVideo?> GetTvShowTrailerByIdAsync(int id, string? language = "en-US")
