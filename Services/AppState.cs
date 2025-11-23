@@ -145,14 +145,22 @@ public class AppState(AuthenticationStateProvider authStateProvider,
 
 
     #region Toast
-    //public event Action<string, string>? OnShowToast;  //Sinhrona koristi Func, Timer ne radi na sinhronoj!!!
     public event Func<string, string, Task>? OnShowToast;
 
-    public async Task ShowToast(string message, string type = "success")
+    public Task ShowToast(string message, string type = "success")
     {
-        if (OnShowToast is not null) await OnShowToast.Invoke(message, type);
+        if (OnShowToast is not null) _ = OnShowToast.Invoke(message, type);
 
+        return Task.CompletedTask;
     }
+
+
+    // public event Action<string, string>? OnShowToast;  //Sinhrona koristi Func, Timer ne radi na sinhronoj!!!
+
+    //public async Task ShowToast(string message, string type = "success")
+    //{
+    //    if (OnShowToast is not null) await OnShowToast.Invoke(message, type);
+    //}
     #endregion
 
     #region Progress

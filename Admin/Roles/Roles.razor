@@ -1,50 +1,51 @@
 ﻿@page "/admin/roles"
 @attribute [Authorize(Roles = "Admin")]
-@inject IRoleRepository Repository
 
-<title>@Title</title>
+@inject ApplicationDbContext Context
 
-<_PageHeader Title="@Title" AddButtonText="Add Role" OnAddButtonClick="() => Show = !Show" />
-<_RoleInputModal Show="Show" OnAddEventCallback="LoadEntities" />
+<PageTitle>@Title</PageTitle>
 
-@if (IsProcessing || Entities is null)
+<_PageHeader Title="@Title" />
+
+@if (roles is null)
 {
     <_Loading />
 }
 else
 {
     <div class="@App?.GetContentClass()">
-
-        @if (Input is not null)
-        {
-            <EditForm Enhance Model=@Input OnValidSubmit=@HandleValidSubmit>
-                <div class="mt-5 row justify-content-end">
-                    <div class="col-12 col-md-6">
+        <div class="mt-5 row align-items-center">
+            <div class="col-12 col-md-6">
+            </div>
+            <div class="col-12 col-md-6">
+                <EditForm Enhance Model="@currentRole" OnValidSubmit="@HandleSave">
+                    <DataAnnotationsValidator />
+                    <div class="d-flex align-items-end gap-2">
                         <div class="input-group">
-                            <InputText class="form-control" @bind-Value="Input.Name" placeholder="Add new role" required />
-                            <button class="btn btn-primary" type="submit">ADD</button>
+                            <InputText class="form-control" @bind-Value="currentRole.Name" placeholder=" name.." required />
+                            <ValidationMessage For="@(() => currentRole.Name)" />
+                        </div>
+                        <div class="d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">@(isEditing ? "Update" : "Add")</button>
+                            @if (isEditing)
+                            {
+                                <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                            }
                         </div>
                     </div>
-                </div>
-            </EditForm>
-        }
+                </EditForm>
+            </div>
+        </div>
         <div class="mt-5 quickgrid-wrapper table-responsive">
-            <QuickGrid Class="table table-striped table-hover align-middle" Items="Entities.AsQueryable()">
+            <QuickGrid Class="table table-striped table-hover align-middle" Items="roles">
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
-                <PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
-                @* <PropertyColumn Property="x => x.ConcurrencyStamp" Title="ConcurrencyStamp" Align="Align.Center" Sortable="true" /> *@
-                <TemplateColumn Title="Actions" Align="Align.Center">
-                    @* <HeaderTemplate>
-                        <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="() => ShowRoleInputModal = !ShowRoleInputModal">
-                            <i class="bi bi-plus-circle me-2"></i>
-                            Add Role
-                        </button>
-                        </HeaderTemplate>*@ 
-                                <ChildContent>
-                        <a class="text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></a>
-                    </ChildContent>
 
+                <TemplateColumn Title="Actions" Align="Align.Center">
+                    <ChildContent>
+                        <span class="text-primary" @onclick="() => EditRole(context)"><i class="bi bi-pencil-square"></i></span>
+                        <span class="ms-2 text-danger" @onclick="() => DeleteRole(context)"><i class="bi bi-trash"></i></span>
+                    </ChildContent>
                 </TemplateColumn>
             </QuickGrid>
         </div>
@@ -53,59 +54,100 @@ else
 
 
 @code {
-    #region ---> START
     [CascadingParameter] AppState? App { get; set; }
 
-    List<RoleDto>? Entities { get; set; }
+    IQueryable<IdentityRole<Guid>>? roles;
+    // List<IdentityRole<Guid>>? roles;
+    IdentityRole<Guid> currentRole = new();
 
-    const string Title = "Roles";
-
-    bool IsProcessing { get; set; } = true;
-
-    bool Show { get; set; } = false;
-
+    bool isEditing = false;
+    string Title = "Roles";
 
 
-    protected override async Task OnInitializedAsync() => await LoadEntities();
+    protected override async Task OnInitializedAsync() => await LoadRoles();
 
-    async Task LoadEntities()
+
+    //async Task LoadRoles() => roles = await Context.Roles.OrderBy(r => r.Name).ToListAsync();
+    async Task LoadRoles()
     {
-        var result = await Repository.GetAllAsync();
-        if (!result.Success || result.Data is null) return;
-
-        Entities = result.Data;
-        IsProcessing = false;
-        StateHasChanged();
+        roles = Context.Roles.OrderBy(r => r.Name).AsQueryable();
+        await Task.CompletedTask; // Nije potreban await, ali ostavljamo zbog signature
     }
-    #endregion
 
-    #region ---> INPUT
-    RoleInput? Input { get; set; } = new RoleInput() { Name = string.Empty };
-
-    async Task HandleValidSubmit()
+    void EditRole(IdentityRole<Guid> role)
     {
-        ArgumentNullException.ThrowIfNull(Input);
-
-        var result = await Repository.AddAsync(Input);
-        if (result.Success) await LoadEntities();
-                
-        Input = new RoleInput() { Name = string.Empty };
-        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+        currentRole = new IdentityRole<Guid>
+        {
+            Id = role.Id,
+            Name = role.Name ?? string.Empty
+        };
+        isEditing = true;
     }
-    #endregion
+
+    void CancelEdit()
+    {
+        currentRole = new IdentityRole<Guid>();
+        isEditing = false;
+    }
+
+    async Task HandleSave()
+    {
+        if (string.IsNullOrWhiteSpace(currentRole.Name)) return;
+
+        try
+        {
+            if (isEditing)
+            {
+                // Update postojeće role
+                var existingRole = await Context.Roles.FindAsync(currentRole.Id);
+                if (existingRole != null)
+                {
+                    existingRole.Name = currentRole.Name;
+                    Context.Roles.Update(existingRole);
+                }
+            }
+            else Context.Roles.Add(currentRole);// Kreiraj novu role
+
+            await Context.SaveChangesAsync();
+            await App!.ShowToast($"Role {(isEditing ? "updated" : "created")} successfully!", "success");
+
+            // Reset form and reload
+            CancelEdit();
+            await LoadRoles();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to save role: {ex.Message}", "error");
+        }
+    }
 
     #region ---> DELETE
-    void ShowDelete(RoleDto input)
+    void DeleteRole(IdentityRole<Guid> role)
     {
-        App?.ShowDeleteConfirmation(input.Name, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
+        App?.ShowDeleteConfirmation(role.Name, role.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(role)));
     }
 
-    async Task ConfirmDelete(Guid id)
+    async Task ConfirmDelete(IdentityRole<Guid> role)
     {
-        var result = await Repository.DeleteAsync(id);
-        if (result.Success) await LoadEntities();
+        var hasUsers = await Context.UserRoles.AnyAsync(ur => ur.RoleId == role.Id);
 
-        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+        if (hasUsers)
+        {
+            await App!.ShowToast("Cannot delete role that has users assigned!", "error");
+            return;
+        }
+
+        try
+        {
+            Context.Roles.Remove(role);
+            await Context.SaveChangesAsync();
+            await App!.ShowToast("Role deleted successfully!", "success");
+            await LoadRoles();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to delete role: {ex.Message}", "error");
+        }
     }
     #endregion
 

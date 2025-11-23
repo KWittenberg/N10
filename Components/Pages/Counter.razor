@@ -14,6 +14,19 @@
 </div>
 
 
+<div class="mt-5 @App?.GetContentClass()">
+    <h1>Toast</h1>
+
+    <button class="btn btn-info" @onclick="ShowToastInfo">Info</button>
+    
+    <button class="btn btn-success" @onclick="ShowToastSuccess">Success</button>
+
+    <button class="btn btn-warning" @onclick="ShowToastWarning">Warning</button>
+    
+    <button class="btn btn-danger" @onclick="ShowToastDanger">Danger</button>
+</div>
+
+
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
@@ -28,4 +41,12 @@
     {
         var result = currentCount / zero;
     }
+
+
+
+    void ShowToastInfo() => App?.ShowToast("This is a Info message!", "info");
+    void ShowToastSuccess() => App?.ShowToast("This is a Success message!", "success");
+    void ShowToastWarning() => App?.ShowToast("This is a Warning message!", "warning");
+    void ShowToastDanger() => App?.ShowToast("This is a Danger message!", "error");
+    
 }

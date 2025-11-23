@@ -1,0 +1,97 @@
+﻿@inject AppState App
+@implements IDisposable
+
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        @foreach (var toast in currentToasts)
+        {
+            @* <div class="toast show @toast.Type" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">@toast.Title</strong>
+                    <small class="text-muted">upravo sad</small>
+                    <button type="button" class="btn-close" @onclick="() => RemoveToast(toast.Id)"></button>
+                </div>
+                <div class="toast-body">
+                    @toast.Message
+                </div>
+            </div> *@
+
+            <div class="toast show align-items-center @toast.BgColor border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="@toast.Icon me-2"></i>@toast.Message
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    List<ToastModel> currentToasts = new();
+    int toastCounter = 0;
+
+    
+    protected override void OnInitialized()
+    {
+        // Registriraj se za toast evente iz AppState-a
+        if (App != null) App.OnShowToast += ShowToast;
+    }
+
+    async Task ShowToast(string message, string type)
+    {
+        var icon = type switch
+        {
+            "success" => "fs-6 bi bi-check-circle",
+            "error" => "fs-6 bi bi-x-circle",
+            "info" => "fs-6 bi bi-info-circle",
+            "warning" => "fs-6 bi bi-exclamation-circle",
+            _ => "fs-6 bi bi-check-circle"
+        };
+        
+        var bgColor = type switch
+        {
+            "success" => "text-bg-success",
+            "error" => "text-bg-danger",
+            "info" => "text-bg-info",
+            "warning" => "text-bg-warning",
+            _ => "text-bg-success"
+        };
+                
+        var toast = new ToastModel
+        {
+            Id = toastCounter++,
+            Title = type == "success" ? "Success" : "Error",
+            Message = message,
+            Type = type,
+            Icon = icon,
+            BgColor = bgColor
+        };
+
+        currentToasts.Add(toast);
+        StateHasChanged();
+
+        // Automatski ukloni toast nakon 5 sekundi
+        await Task.Delay(5000);
+        RemoveToast(toast.Id);
+    }
+
+    void RemoveToast(int id)
+    {
+        currentToasts.RemoveAll(t => t.Id == id);
+        StateHasChanged();
+    }
+    
+    class ToastModel
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Type { get; set; } = "success";
+        public string Icon { get; set; } = string.Empty;
+        public string BgColor { get; set; } = string.Empty;
+    }
+
+    public void Dispose() => App.OnShowToast -= ShowToast;
+}
