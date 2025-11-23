@@ -1,17 +1,10 @@
 ﻿namespace N10.Services;
 
-// OVO je sve što ti treba!
 public class UserService(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
 {
-
-    // Nepotrebno ???
-    private readonly ApplicationDbContext _context = context;
-    private readonly UserManager<ApplicationUser> _userManager = userManager;
-
-    // Jednostavne metode - bez previše apstrakcije
     public async Task<List<ApplicationUser>> GetUsersAsync(string? search = null)
     {
-        var query = _context.Users.AsNoTracking();
+        var query = context.Users.AsNoTracking();
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -24,17 +17,16 @@ public class UserService(ApplicationDbContext context, UserManager<ApplicationUs
         return await query.ToListAsync();
     }
 
-    public async Task<ApplicationUser?> GetUserAsync(Guid id)
-        => await _userManager.FindByIdAsync(id.ToString());
+    public async Task<ApplicationUser?> GetUserAsync(Guid id) => await userManager.FindByIdAsync(id.ToString());
 
     // Avatar operacije
     public async Task UpdateAvatarAsync(Guid userId, string avatarPath)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await context.Users.FindAsync(userId);
         if (user != null)
         {
             user.AvatarUrl = avatarPath;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 }

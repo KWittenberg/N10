@@ -1,9 +1,7 @@
-﻿@page "/movie/{id:guid?}"
+﻿@page "/movie/{id:int}"
 @layout FrontLayout
 
-@inject IMovieRepository Repository
 @inject ITmdbService Service
-
 
 @if (IsProcessing || Entity is null)
 {
@@ -11,9 +9,9 @@
 }
 else
 {
-    <title>@TmdbMovie?.Title</title>
+    <title>@Entity?.Title</title>
     
-    <_YouTubeModal Entity="TmdbMovie" MovieTrailer="MovieTrailer" />
+    <_YouTubeModal Entity="Entity" MovieTrailer="MovieTrailer" />
 
     <div id="movie-details" style="--background: url(@BackdropPath)">
         <div class="@App?.GetContentClass() py-4">
@@ -21,7 +19,7 @@ else
                 <div class="col-12 col-md-4 col-xl-3 text-center text-md-start mb-3">
                     <img class="img-fluid" id="movie-poster" alt="movie poster" src="@PosterPath" />
 
-                    <_Rate Entity="@TmdbMovie" />
+                    <_Rate Entity="@Entity" />
 
                     @if (!string.IsNullOrEmpty(MovieTrailer?.Key))
                     {
@@ -31,33 +29,33 @@ else
                             </button>
                         </div>
                     }
-                    @if (TmdbMovie?.BelongsToCollection is not null)
+                    @if (Entity?.BelongsToCollection is not null)
                     {
                         <div class="mt-5 text-center">
                             <img class="img-fluid" id="movie-poster" alt="movie poster" src="@CollectionPosterPath" />
-                            <a class="text-decoration-none" href="@BelongsToCollectionId" target="_blank"><h5 class="mt-2">@TmdbMovie.BelongsToCollection.Name</h5></a>
+                            <a class="text-decoration-none" href="@BelongsToCollectionId" target="_blank"><h5 class="mt-2">@Entity.BelongsToCollection.Name</h5></a>
                         </div>
                     }
                 </div>
                 <div class="col-12 col-md-8 col-xl-9">
                     <div class="p-4 rounded bg-transparent50">
-                        <a href="https://www.themoviedb.org/movie/@Entity.Id" class="text-decoration-none" target="_blank">
-                            <h1 class="mb-0">@TmdbMovie?.Title</h1>
+                        <a href="https://www.themoviedb.org/movie/@Entity?.Id" class="text-decoration-none" target="_blank">
+                            <h1 class="mb-0">@Entity?.Title</h1>
                         </a>
-                        <div class="lead mb-3">@TmdbMovie.Tagline</div>
+                        <div class="lead mb-3">@Entity?.Tagline</div>
                         <div class="hstack gap-2">
                             <span>@ReleaseDate | </span>
-                            <span>@(TmdbMovie?.Runtime / 60) hour(s) @(TmdbMovie?.Runtime % 60) minutes</span>
+                            <span>@(Entity?.Runtime / 60) hour(s) @(Entity?.Runtime % 60) minutes</span>
                         </div>
                         <div class="hstack gap-2 my-2">
-                            @foreach (var genre in TmdbMovie.Genres)
+                            @foreach (var genre in Entity?.Genres!)
                             {
                                 <span class="badge bg-dark-subtle">@genre.Name</span>
                             }
                         </div>
                         
                         <h5 class="mt-4 fw-bold">Overview</h5>
-                        <p>@TmdbMovie?.Overview</p>
+                        <p>@Entity?.Overview</p>
 
                         @if (Credits?.Crews is not null)
                         {
@@ -83,42 +81,38 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    [Parameter] public Guid? Id { get; set; }
+    [Parameter] public int Id { get; set; }
 
-    MovieDto? Entity { get; set; }
-    TmdbDetails? TmdbMovie { get; set; }
+    TmdbDetails? Entity { get; set; }
     TmdbCredits? Credits { get; set; }
     TmdbVideo? MovieTrailer { get; set; }
 
     string? Title;
     string? ReleaseDate;
-
     bool IsProcessing { get; set; } = true;
 
 
-    string BackdropPath => string.IsNullOrEmpty(TmdbMovie?.BackdropPath) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{TmdbMovie?.BackdropPath}";
-    string PosterPath => string.IsNullOrEmpty(TmdbMovie?.PosterPath) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{TmdbMovie?.PosterPath}";
-    string CollectionPosterPath => string.IsNullOrEmpty(TmdbMovie?.BelongsToCollection?.PosterPath) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{TmdbMovie.BelongsToCollection.PosterPath}";
-    string BelongsToCollectionId => $"https://www.themoviedb.org/collection/{TmdbMovie?.BelongsToCollection?.Id}";
-
-
-
+    string BackdropPath => string.IsNullOrEmpty(Entity?.BackdropPath) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Entity?.BackdropPath}";
+    string PosterPath => string.IsNullOrEmpty(Entity?.PosterPath) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Entity?.PosterPath}";
+    string CollectionPosterPath => string.IsNullOrEmpty(Entity?.BelongsToCollection?.PosterPath) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Entity.BelongsToCollection.PosterPath}";
+    string BelongsToCollectionId => $"https://www.themoviedb.org/collection/{Entity?.BelongsToCollection?.Id}";
 
 
     protected override async Task OnParametersSetAsync()
     {
-        var result = await Repository.GetByIdAsync(Id!.Value);
-        //if (!result.Success) return;
+        Entity = await Service.GetMovieByIdAsync(Id);
+        if (Entity is null)
+        {
+            IsProcessing = false;
+            StateHasChanged();
+            return;
+        }
 
-        Entity = result.Data;
-                
-        TmdbMovie = await Service.GetMovieByIdAsync(Entity!.TmdbId!.Value);
-        
-        bool dateParsed = DateTime.TryParse(TmdbMovie?.ReleaseDate, out DateTime releaseDate);
+        bool dateParsed = DateTime.TryParse(Entity?.ReleaseDate, out DateTime releaseDate);
         if (dateParsed) ReleaseDate = releaseDate.ToString("dd. MMMM, yyyy.");
 
-        MovieTrailer = await Service.GetMovieTrailerByIdAsync(Entity!.TmdbId!.Value);
-        Credits = await Service.GetMovieCreditsByIdAsync(Entity!.TmdbId!.Value);
+        MovieTrailer = await Service.GetMovieTrailerByIdAsync(Id);
+        Credits = await Service.GetMovieCreditsByIdAsync(Id);
 
         IsProcessing = false;
         StateHasChanged();
