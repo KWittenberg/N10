@@ -185,7 +185,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("MoviesId");
 
-                    b.ToTable("MovieMovieGenre");
+                    b.ToTable("MovieMovieGenre", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.ApplicationUser", b =>
@@ -524,7 +524,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("Year");
 
-                    b.ToTable("Movies");
+                    b.ToTable("Movies", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.MovieGenre", b =>
@@ -546,7 +546,7 @@ namespace N10.Data.Migrations
                     b.HasIndex("TmdbName")
                         .IsUnique();
 
-                    b.ToTable("MovieGenres");
+                    b.ToTable("MovieGenres", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.Note", b =>
@@ -608,7 +608,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("NoteFolderId");
 
-                    b.ToTable("Notes");
+                    b.ToTable("Notes", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.NoteFolder", b =>
@@ -656,7 +656,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("ParentFolderId");
 
-                    b.ToTable("NoteFolders");
+                    b.ToTable("NoteFolders", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.NoteShare", b =>
@@ -688,7 +688,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("SharedWithUserId");
 
-                    b.ToTable("NoteShares");
+                    b.ToTable("NoteShares", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.NoteAttachment", b =>
@@ -705,7 +705,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("NoteId");
 
-                    b.ToTable("NoteAttachments");
+                    b.ToTable("NoteAttachments", (string)null);
                 });
 
             modelBuilder.Entity("N10.Entities.NoteImage", b =>
@@ -722,7 +722,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("NoteId");
 
-                    b.ToTable("NoteImages");
+                    b.ToTable("NoteImages", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -789,7 +789,7 @@ namespace N10.Data.Migrations
 
                             b1.HasKey("IdentityUserPasskeyCredentialId");
 
-                            b1.ToTable("AspNetUserPasskeys");
+                            b1.ToTable("AspNetUserPasskeys", (string)null);
 
                             b1.ToJson("Data");
 

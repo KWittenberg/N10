@@ -1,0 +1,137 @@
+﻿<div class="quickgrid-wrapper-sm table-responsive">
+    <QuickGrid Class="table table-striped table-hover align-middle p-sm" Items="FilteredEntities" Pagination="PaginationState">
+        <div class="p-2 d-flex justify-content-between align-items-center">
+            @* <h4 class="p-0 m-0 ms-2">@Title</h4> *@
+            <div class="d-inline-flex align-items-center">
+                <i class="bi bi-search"></i>
+                <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
+            </div>
+            <div class="me-2 d-inline-flex align-items-center" stile="width: 5rem;">
+                <label class="me-2 small text-muted">Items:</label>
+                <select class="form-select form-select-sm" @bind="PaginationState.ItemsPerPage">
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+            </div>
+        </div>
+
+        <TemplateColumn Title="Avatar" Align="Align.Center">
+            <img class="rounded-circle" style="width: 2rem" src="@(string.IsNullOrEmpty(context.AvatarUrl) ? Placeholder.AvatarUrl : context.AvatarUrl)" alt="Avatar">
+        </TemplateColumn>
+        <TemplateColumn Title="Roles" Align="Align.Center">
+            @foreach (var role in context.Roles!)
+            {
+                <div class="py-2 text-center">
+                    @{
+                        var roleColor = (role.Name == "Admin") ? "bg-danger" : "bg-primary";
+                    }
+                    <span class="badge rounded-pill @roleColor m-0">@role.Name</span>
+                </div>
+            }
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.FirstName" Title="First Name" Align="Align.Center" Sortable="true" />
+        <PropertyColumn Property="x => x.LastName" Title="Last Name" Align="Align.Center" Sortable="true" />
+        <PropertyColumn Property="x => x.CompanyName" Title="Company" Align="Align.Center" Sortable="true" />
+        <PropertyColumn Property="x => x.Email" Title="Email" Align="Align.Center" Sortable="true" />
+
+        @if (App!.IsExpanded)
+        {
+            <TemplateColumn Title="EmailConf" Align="Align.Center" SortBy="@EmailConfirmedSort">
+                <div class="d-flex justify-content-center">
+                    @if (context.EmailConfirmed)
+                    {
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle-fill text-danger"></i>
+                    }
+                </div>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.PhoneNumber" Title="Phone" Align="Align.Center" Sortable="true" />
+            <TemplateColumn Title="PhoneConf" Align="Align.Center" SortBy="@PhoneConfirmedSort">
+                <div class="d-flex justify-content-center">
+                    @if (context.PhoneNumberConfirmed)
+                    {
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle-fill text-danger"></i>
+                    }
+                </div>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.Country" Title="Country" Align="Align.Center" Sortable="true" />
+            <PropertyColumn Property="x => x.Zip" Title="Zip" Align="Align.Center" Sortable="true" />
+            <PropertyColumn Property="x => x.City" Title="City" Align="Align.Center" Sortable="true" />
+            <PropertyColumn Property="x => x.Street" Title="Street" Align="Align.Center" Sortable="true" />
+
+
+            @*<PropertyColumn Property="x => x.Latitude" Title="Latitude" Align="Align.Center" Sortable="true" />
+					<PropertyColumn Property="x => x.Longitude" Title="Longitude" Align="Align.Center" Sortable="true" />
+					<PropertyColumn Property="x => x.PlaceId" Title="PlaceId" Align="Align.Center" Sortable="true" /> *@
+            <TemplateColumn Title="Active" Align="Align.Center" SortBy="@IsActiveSort">
+                <div class="d-flex justify-content-center">
+                    @if (context.IsActive)
+                    {
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle-fill text-danger"></i>
+                    }
+                </div>
+            </TemplateColumn>
+            @* <TemplateColumn Title="IsDeleted" Align="Align.Center">
+                        <div class="d-flex justify-content-center">
+                            <input class="form-check form-check-input text-warning" type="checkbox" checked="@context.IsDeleted">
+                        </div>
+                    </TemplateColumn> 
+                    <PropertyColumn Property="x => x.CreatedId" Title="CreatedId" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.CreatedUtc" Title="CreatedUtc" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.LastModifiedId" Title="LastModifiedId" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="x => x.LastModifiedUtc" Title="LastModifiedUtc" Align="Align.Center" Sortable="true" />*@
+        }
+        <TemplateColumn Title="Actions" Align="Align.Center">
+            <a class="me-2" href="admin/user/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
+            @* <span class="text-danger" @onclick="() => Delete(context)" title="Remove"><i class="bi bi-trash"></i></span> *@
+        </TemplateColumn>
+    </QuickGrid>
+    <div class="quickgrid-pagination">
+        <Paginator State="PaginationState" />
+    </div>
+</div>
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+    
+    [Parameter] public IQueryable<UserDto>? Entities { get; set; } 
+    
+    IQueryable<UserDto> FilteredEntities
+    {
+        get
+        {
+            if (Entities is null) return Enumerable.Empty<UserDto>().AsQueryable();
+            if (string.IsNullOrWhiteSpace(Search)) return Entities;
+
+            var searchLower = Search.ToLower();
+            return Entities.Where(x =>
+            (x.FirstName ?? "").ToLower().Contains(searchLower) ||
+            (x.LastName ?? "").ToLower().Contains(searchLower) ||
+            (x.CompanyName ?? "").ToLower().Contains(searchLower) ||
+            (x.Email ?? "").ToLower().Contains(searchLower)
+            );
+        }
+    }
+    
+    string? Search;
+    
+    GridSort<UserDto> EmailConfirmedSort = GridSort<UserDto>.ByAscending(x => x.EmailConfirmed);
+    GridSort<UserDto> PhoneConfirmedSort = GridSort<UserDto>.ByAscending(x => x.PhoneNumberConfirmed);
+    GridSort<UserDto> IsActiveSort = GridSort<UserDto>.ByAscending(x => x.IsActive);
+
+    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
+}
