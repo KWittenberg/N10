@@ -2,7 +2,9 @@
 
 public class UserDto
 {
-    public Guid Id { get; init; } = Guid.Empty;
+    public Guid? Id { get; init; }
+
+    //public Guid Id { get; init; } = Guid.Empty;
 
     // public string? UserName { get; set; } = string.Empty;
 
@@ -10,33 +12,33 @@ public class UserDto
 
 
 
-    public string? FirstName { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
 
-    public string? LastName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
 
-    public string? CompanyName { get; set; } = string.Empty;
+    public string? CompanyName { get; set; }
 
     public DateOnly? DateOfBirth { get; set; }
 
 
 
-    public string? Email { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 
     public bool EmailConfirmed { get; set; }
 
-    public string? PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
 
     public bool PhoneNumberConfirmed { get; set; }
 
 
 
-    public string? Country { get; set; } = string.Empty;
+    public string? Country { get; set; }
 
-    public string? Zip { get; set; } = string.Empty;
+    public string? Zip { get; set; }
 
-    public string? City { get; set; } = string.Empty;
+    public string? City { get; set; }
 
-    public string? Street { get; set; } = string.Empty;
+    public string? Street { get; set; }
 
 
 

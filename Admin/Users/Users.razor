@@ -5,7 +5,7 @@
 
 <PageTitle>@Title</PageTitle>
 
-<_PageHeader Title="@Title" AddButtonText="Add User" AddButtonLink="user" />
+<_PageHeader Title="@Title" AddButtonText="Add User" OnAddButtonClick="() => AddEdit(null)" />
 
 @if (Entities is null)
 {
@@ -14,7 +14,14 @@
 else
 {
     <div class="@App?.GetContentClass()">
-        <_Table Entities="Entities" OnDelete="Delete" />
+        @if (isEditing)
+        {
+            <_Form Input="Input"/>
+        }
+        @if (!isEditing)
+        {
+            <_Table Entities="Entities" EntityName="EntityName" OnEdit="AddEdit" OnLoadEntities="LoadEntities" />
+        }
     </div>
 }
 
@@ -23,13 +30,13 @@ else
     [CascadingParameter] AppState? App { get; set; }
 
     IQueryable<UserDto>? Entities;
-    ApplicationUser CurrentEntity = new();
+    UserDto? Input;
 
     string Title = "Users";
     string EntityName = "User";
     bool isEditing = false;
 
-    
+
     #region ---> INITIALIZATION
     protected override async Task OnInitializedAsync() => await LoadEntities();
 
@@ -76,33 +83,10 @@ else
     }
     #endregion
 
-    #region ---> DELETE
-    void Delete(UserDto user)
+    async Task AddEdit(UserDto? input)
     {
-        App?.ShowDeleteConfirmation($"{user.FirstName} {user.LastName}", user.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(user)));
+        Input = input;
+        isEditing = true;
+        await Task.CompletedTask;
     }
-
-    async Task ConfirmDelete(UserDto userdto)
-    {
-        try
-        {
-            var user = Context.Users.Find(userdto.Id);
-            if (user is null)
-            {
-                await App!.ShowToast($"{EntityName} not found!", "error");
-                return;
-            }
-
-            Context.Users.Remove(user);
-            await Context.SaveChangesAsync();
-            await App!.ShowToast($"{EntityName} deleted successfully!", "success");
-            await LoadEntities();
-        }
-        catch (Exception ex)
-        {
-            await App!.ShowToast($"Failed to delete {EntityName}: {ex.Message}", "error");
-        }
-    }
-    #endregion
-
 }

@@ -2,6 +2,7 @@
 
 public class UserInput
 {
+    public Guid? Id { get; set; }
 
     public string FirstName { get; set; } = string.Empty;
 

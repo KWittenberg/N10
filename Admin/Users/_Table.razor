@@ -1,4 +1,6 @@
-﻿<div class="quickgrid-wrapper-sm table-responsive">
+﻿@inject ApplicationDbContext Context
+
+<div class="quickgrid-wrapper-sm table-responsive">
     <QuickGrid Class="table table-striped table-hover align-middle p-sm" Items="FilteredEntities" Pagination="PaginationState">
         <div class="p-2 d-flex justify-content-between align-items-center">
             @* <h4 class="p-0 m-0 ms-2">@Title</h4> *@
@@ -95,8 +97,8 @@
                     <PropertyColumn Property="x => x.LastModifiedUtc" Title="LastModifiedUtc" Align="Align.Center" Sortable="true" />*@
         }
         <TemplateColumn Title="Actions" Align="Align.Center">
-            <a class="me-2" href="admin/user/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
-            <span class="text-danger" @onclick="() => OnDelete.InvokeAsync(context)" title="Remove"><i class="bi bi-trash"></i></span>
+            <span title="Edit" @onclick="() => OnEdit.InvokeAsync(context)"><i class="bi bi-pencil-square"></i></span>
+            <span class="ms-2 text-danger" @onclick="() => Delete(context)" title="Delete"><i class="bi bi-trash"></i></span>
         </TemplateColumn>
     </QuickGrid>
     <div class="quickgrid-pagination">
@@ -108,8 +110,12 @@
 @code {
     [CascadingParameter] AppState? App { get; set; }
     
-    [Parameter] public IQueryable<UserDto>? Entities { get; set; } 
-    [Parameter] public EventCallback<UserDto> OnDelete { get; set; }
+    [Parameter] public IQueryable<UserDto>? Entities { get; set; }
+    [Parameter] public string? EntityName { get; set; }
+
+    [Parameter] public EventCallback OnLoadEntities { get; set; }
+    [Parameter] public EventCallback<UserDto> OnEdit { get; set; }
+    
 
     IQueryable<UserDto> FilteredEntities
     {
@@ -135,4 +141,33 @@
     GridSort<UserDto> IsActiveSort = GridSort<UserDto>.ByAscending(x => x.IsActive);
 
     readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
+
+    #region ---> DELETE
+    void Delete(UserDto user)
+    {
+        App?.ShowDeleteConfirmation($"{user.FirstName} {user.LastName}", user.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(user)));
+    }
+
+    async Task ConfirmDelete(UserDto userdto)
+    {
+        try
+        {
+            var user = Context.Users.Find(userdto.Id);
+            if (user is null)
+            {
+                await App!.ShowToast($"{EntityName} not found!", "error");
+                return;
+            }
+
+            Context.Users.Remove(user);
+            await Context.SaveChangesAsync();
+            await App!.ShowToast($"{EntityName} deleted successfully!", "success");
+            await OnLoadEntities.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to delete {EntityName}: {ex.Message}", "error");
+        }
+    }
+    #endregion
 }
