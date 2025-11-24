@@ -96,7 +96,7 @@
         }
         <TemplateColumn Title="Actions" Align="Align.Center">
             <a class="me-2" href="admin/user/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
-            @* <span class="text-danger" @onclick="() => Delete(context)" title="Remove"><i class="bi bi-trash"></i></span> *@
+            <span class="text-danger" @onclick="() => OnDelete.InvokeAsync(context)" title="Remove"><i class="bi bi-trash"></i></span>
         </TemplateColumn>
     </QuickGrid>
     <div class="quickgrid-pagination">
@@ -109,7 +109,8 @@
     [CascadingParameter] AppState? App { get; set; }
     
     [Parameter] public IQueryable<UserDto>? Entities { get; set; } 
-    
+    [Parameter] public EventCallback<UserDto> OnDelete { get; set; }
+
     IQueryable<UserDto> FilteredEntities
     {
         get
