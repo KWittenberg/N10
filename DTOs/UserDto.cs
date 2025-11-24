@@ -22,6 +22,9 @@ public class UserDto
 
 
 
+    public string? Password { get; set; }
+
+
     public string Email { get; set; } = string.Empty;
 
     public bool EmailConfirmed { get; set; }

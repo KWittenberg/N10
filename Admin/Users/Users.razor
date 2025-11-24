@@ -14,11 +14,11 @@
 else
 {
     <div class="@App?.GetContentClass()">
-        @if (isEditing)
+        @if (IsEditing)
         {
-            <_Form Input="Input"/>
+            <_Form Input="Input" OnBack="() => IsEditing = false"/>
         }
-        @if (!isEditing)
+        @if (!IsEditing)
         {
             <_Table Entities="Entities" EntityName="EntityName" OnEdit="AddEdit" OnLoadEntities="LoadEntities" />
         }
@@ -34,7 +34,7 @@ else
 
     string Title = "Users";
     string EntityName = "User";
-    bool isEditing = false;
+    bool IsEditing = false;
 
 
     #region ---> INITIALIZATION
@@ -86,7 +86,7 @@ else
     async Task AddEdit(UserDto? input)
     {
         Input = input;
-        isEditing = true;
+        IsEditing = true;
         await Task.CompletedTask;
     }
 }
