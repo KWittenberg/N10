@@ -17,8 +17,6 @@ public static class ConfigureServices
 
 
 
-        services.AddScoped<IDashboardService, DashboardService>();
-
         //services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 
