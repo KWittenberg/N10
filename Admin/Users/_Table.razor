@@ -109,13 +109,13 @@
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
-    
+
     [Parameter] public IQueryable<UserDto>? Entities { get; set; }
     [Parameter] public string? EntityName { get; set; }
 
     [Parameter] public EventCallback OnLoadEntities { get; set; }
     [Parameter] public EventCallback<UserDto> OnEdit { get; set; }
-    
+
 
     IQueryable<UserDto> FilteredEntities
     {
@@ -133,9 +133,9 @@
             );
         }
     }
-    
+
     string? Search;
-    
+
     GridSort<UserDto> EmailConfirmedSort = GridSort<UserDto>.ByAscending(x => x.EmailConfirmed);
     GridSort<UserDto> PhoneConfirmedSort = GridSort<UserDto>.ByAscending(x => x.PhoneNumberConfirmed);
     GridSort<UserDto> IsActiveSort = GridSort<UserDto>.ByAscending(x => x.IsActive);
@@ -145,7 +145,10 @@
     #region ---> DELETE
     void Delete(UserDto user)
     {
-        App?.ShowDeleteConfirmation($"{user.FirstName} {user.LastName}", user.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(user)));
+        var title = string.Join(" ", new[] { user.FirstName, user.LastName }.Where(name => !string.IsNullOrWhiteSpace(name))).Trim();
+        if (string.IsNullOrEmpty(title)) title = user.Email ?? "this user";
+        
+        App?.ShowDeleteConfirmation(title, user.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(user)));
     }
 
     async Task ConfirmDelete(UserDto userdto)

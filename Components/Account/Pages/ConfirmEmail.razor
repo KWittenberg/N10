@@ -1,4 +1,5 @@
 ﻿@page "/Account/ConfirmEmail"
+@layout StaticLayout
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
@@ -10,20 +11,64 @@
 
 <PageTitle>Confirm email</PageTitle>
 
-<h1>Confirm email</h1>
-<StatusMessage Message="@statusMessage" />
+@* <h1>Confirm email</h1>
+<StatusMessage Message="@statusMessage" /> *@
+
+<div class="box">
+    <div class="e-card playing">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+
+        <div class="infotop">
+            @if (Succeeded)
+            {
+                <i class="bi bi-check-circle"></i>
+                <p>thank you for confirming your email</p>
+                <p>now you can <a href="Account/Login"><b>login</b></a></p>
+                <p id="redirectMessage">You will be auto redirected in 15 sec</p>
+            }
+            else
+            {
+                <i class="bi bi-x-circle"></i>
+                <p><StatusMessage Message="@statusMessage" /></p>
+                <p>error confirming your email</p>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    setTimeout(function () {
+        window.location.href = "Account/Login";
+    }, 15000);
+
+    let countdown = 15;
+    let interval = setInterval(function () {
+        countdown--;
+        document.getElementById("redirectMessage").textContent = "You will be auto redirected in " + countdown + " sec";
+
+        if (countdown <= 0) {
+            clearInterval(interval);
+        }
+    }, 1000);
+</script>
+
+
 
 @code {
-    private string? statusMessage;
+    [CascadingParameter] HttpContext HttpContext { get; set; } = default!;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromQuery] string? UserId { get; set; }
 
-    [SupplyParameterFromQuery]
-    private string? UserId { get; set; }
+    [SupplyParameterFromQuery] string? Code { get; set; }
+    
+    bool Succeeded { get; set; } = true;
+    
+    string? statusMessage;
 
-    [SupplyParameterFromQuery]
-    private string? Code { get; set; }
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,7 +88,8 @@
         {
             var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
             var result = await UserManager.ConfirmEmailAsync(user, code);
-            statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            // statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            Succeeded = result.Succeeded;
         }
     }
 }

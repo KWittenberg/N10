@@ -1,27 +1,32 @@
-﻿namespace N10.Extensions;
+﻿using Microsoft.AspNetCore.Components.Web;
+
+namespace N10.Extensions;
 
 public static class ConfigureServices
 {
     public static IServiceCollection AddServiceExtensions(this IServiceCollection services, IConfiguration configuration)
     {
+        #region EMAIL SERVICE CONFIGURATION
         services.AddScoped<IEmailService, EmailService>();
 
-        //services.AddScoped<HtmlRenderer>();
-        //services.AddScoped<IHtmlToStringService, HtmlToStringService>();
+        // Required for HtmlToStringService
+        services.AddScoped<HtmlRenderer>();
+        // Service to render Blazor components to string
+        services.AddScoped<HtmlToStringService>();
+        #endregion
+
 
 
         services.AddScoped<IDashboardService, DashboardService>();
 
         //services.AddScoped<ICurrentUserService, CurrentUserService>();
-        //services.AddScoped<AppState>(); // services.AddSingleton<AppState>();
-        //services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-        //services.AddTransient<ISeedService, SeedService>();
 
         services.AddScoped<IMovieService, MovieService>();
 
         services.AddTransient<TmdbAuthenticationHandler>();
         services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();
+
 
         // Alternative way to configure HttpClient with BaseAddress from configuration
         //services.AddHttpClient<ITmdbService, TmdbService>(client =>

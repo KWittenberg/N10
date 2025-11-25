@@ -20,7 +20,7 @@ else
         }
         @if (!IsEditing)
         {
-            <_Table Entities="Entities" EntityName="EntityName" OnEdit="AddEdit" OnLoadEntities="LoadEntities" />
+            <_Table Entities="Entities" EntityName="@EntityName" OnEdit="AddEdit" OnLoadEntities="LoadEntities" />
         }
     </div>
 }

@@ -1,10 +1,21 @@
 ﻿<!-- NavBar -->
 @* <div class="navbar container" style="background-image: url('@(string.IsNullOrEmpty(App.Background?.ImageUrl) ? Placeholder.BackgroundUrl : App.Background?.ImageUrl)')"> *@
 <div class="navbar container" style="background-image: url('@(Globals.BgUrl)');">
-    <a class="logo" href="/admin">
-        <img src="img/logo/a-logo.png" alt="logo">
-        <span class="d-none d-md-inline"><b>AI</b>DA</span>
-    </a>
+    <AuthorizeView Roles="Admin">
+        <NotAuthorized>
+            <span class="logo">
+                <img src="img/logo/a-logo.png" alt="logo">
+                <span class="d-none d-md-inline"><b>AI</b>DA</span>
+            </span>
+        </NotAuthorized>
+        <Authorized>
+            <a class="logo" href="/admin">
+                <img src="img/logo/a-logo.png" alt="logo">
+                <span class="d-none d-md-inline"><b>AI</b>DA</span>
+            </a>
+        </Authorized>
+    </AuthorizeView>
+
 
     <div class="d-flex justify-content-center align-items-center gap-3">
         <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">

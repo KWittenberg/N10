@@ -13,15 +13,16 @@
                             <path class="xmark-check" fill="none" d="M20 20 L40 40 M40 20 L20 40" />
                         </svg>
                     </div>
+                    <div class="mt-4">
+                        <h4>@Title</h4>
+                        <p-sm class="text-uppercase">@Message</p-sm>
+                    </div>
                     <div class="mt-5">
                         <h4>Are you sure ?</h4>
                         <p>Do you really want to delete these record:</p>
                     </div>
-                    <div class="mt-2">
-                        <h5>@Title</h5>
-                        <h7 class="text-uppercase">@Message</h7>
-                    </div>
-                    <div class="mt-5 mb-4">
+                    
+                    <div class="mt-4 mb-4">
                         <button type="button" class="btn btn-secondary w-25 shadow" @onclick="Hide">Cancel</button>
                         <button type="button" class="btn btn-danger w-25 shadow" @onclick="Delete">Delete</button>
                     </div>

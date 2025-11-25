@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
 
         // 2. Configuration & options
         services.Configure<AdminOptions>(configuration.GetSection(nameof(AdminOptions)));
+        services.Configure<GmailOptions>(configuration.GetSection(nameof(GmailOptions)));
         services.Configure<TmdbOptions>(configuration.GetSection(nameof(TmdbOptions)));
 
         // 3. Infrastructure/platform services
