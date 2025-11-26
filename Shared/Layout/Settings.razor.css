@@ -1,7 +1,7 @@
 ﻿.open-settings {
     color: white;
     position: fixed;
-    top: 80px;
+    top: 96px;
     right: 10px;
     z-index: 1150;
     transition: right 0.3s ease-in-out;

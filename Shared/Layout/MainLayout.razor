@@ -1,15 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
 @inject AppState App
-@inject IJSRuntime JsRuntime
 
-<div class="page">
+<div class="page background" style="background-image: url('@(BgImageUrl)')">
+    @* <div class="page"> *@
     <CascadingValue Value="@App">
         <_Toast />
         <Progress></Progress>
         <Confirmation />
         <DeleteConfirmation />
-        <Settings OnChangeContent="App.OnChangeContent" />
+        <Settings OnChangeContent="App.OnChangeContent" ActiveBackground="Bg" OnChangeBg="ChangeBg"/>
 
         @if (SidebarShow)
         {
@@ -40,4 +40,10 @@
 
 
     protected override async Task OnInitializedAsync() => await App.InitializeCurrentUserAsync();
+
+
+    Background Bg = new Background("Simple Gray", "img/bg/9.Simple Gray.jpg");
+    string BgImageUrl => Bg.ImageUrl;
+
+    void ChangeBg(Background input) => Bg = input;
 }

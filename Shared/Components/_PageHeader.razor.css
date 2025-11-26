@@ -1,20 +1,21 @@
 ﻿.bg-header {
-    height: 150px;
+    height: 80px;
     background-color: rgba(var(--bs-black-rgb), 0.1);
 }
 
 .page-header {
-    margin-top: -50px;
+    margin-top: -2.5rem;
     display: flex !important;
     justify-content: space-between;
-    align-items: center !important;
+    align-content: center !important;
 }
 
 .breadcrumb {
     display: flex !important;
     justify-content: start;
     align-items: center !important;
-    margin-left: 1.5rem;
+    margin-left: 1rem;
+    font-size: 1.5rem;
 }
 
     /*.breadcrumb a {
@@ -32,3 +33,5 @@
         color: whitesmoke;
         text-transform: uppercase !important;
     }*/
+
+    

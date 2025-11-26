@@ -30,6 +30,69 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
 
     <div class="offcanvas-body">
 
+        <ul class="mb-3 py-3 nav nav-pills mb-3 border-bottom" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-theme-tab" data-bs-toggle="pill" data-bs-target="#pills-theme" type="button" role="tab" aria-controls="pills-theme" aria-selected="true">Theme</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-bg-tab" data-bs-toggle="pill" data-bs-target="#pills-bg" type="button" role="tab" aria-controls="pills-bg" aria-selected="false">Background</button>
+            </li>
+        </ul>
+
+        <!-- Theme -->
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-theme" role="tabpanel" aria-labelledby="pills-theme-tab" tabindex="0">
+                <h4 class="text-center">Themes for your template</h4>
+                <div class="d-flex flex-wrap gap-3 align-items-center justify-content-center my-3">
+                    @foreach (string theme in siteThemes)
+                    {
+                        <div class="card" data-cf-theme="@theme">
+                            <div class="card-body">
+                                <h3 class="card-title d-flex align-items-center">
+                                    Theme:&nbsp;<span style="color: var(--cf-theme-core)">@theme</span>
+                                    <button class="ms-auto btn btn-sm btn-primary" @onclick="() => ChangeTheme(theme)">Set Theme</button>
+                                </h3>
+                                <h6 class="small fw-bold mt-3">Palette</h6>
+                                <div class="d-flex gap-0 align-items-center">
+                                    @foreach (string weight in Weights)
+                                    {
+                                        <div style="background-color: var(--cf-theme-@weight); width:24px; height: 24px;"></div>
+                                    }
+                                </div>
+                                <div class="my-3">
+                                    <button class="btn btn-sm btn-primary">Primary</button>
+                                    <button class="btn btn-sm btn-light">Light</button>
+                                    <button class="btn btn-sm btn-dark">Dark</button>
+                                </div>
+                                <p-sm>Text with a <a href="#">clickable link</a> in the middle.</p-sm>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Background -->
+            <div class="tab-pane fade" id="pills-bg" role="tabpanel" aria-labelledby="pills-bg-tab" tabindex="0">
+                <h4 class="text-center">Backgrounds for your template</h4>
+                @if (ActiveBackground is not null)
+                {
+                    <div class="items">
+                        @foreach (var item in Backgrounds)
+                        {
+                            <a type="button" @onclick="() => ChangeBg(item)">
+                                <img src=@item.ImageUrl alt=@item.Name>
+                                <span class="item">@item.Name</span>
+                                @if (ActiveBackground?.Name == @item.Name)
+                                {
+                                    <span class="icon"><i class="bi bi-check-circle"></i></span>
+                                }
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
         @* <div class="content">
             <p>Main Content</p>
             <div class="icon-title">
@@ -37,35 +100,6 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
                 <span>@(App!.IsExpanded ? "Wide" : "Compact")</span>
             </div>
         </div> *@
-
-        <h4 class="text-center">Built in themes for your template</h4>
-
-        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-center my-3">
-            @foreach (string theme in siteThemes)
-            {
-                <div class="card" data-cf-theme="@theme">
-                    <div class="card-body">
-                        <h3 class="card-title d-flex align-items-center">
-                            Theme:&nbsp;<span style="color: var(--cf-theme-core)">@theme</span>
-                            <button class="ms-auto btn btn-sm btn-primary" @onclick="() => ChangeTheme(theme)">Set Theme</button>
-                        </h3>
-                        <h6 class="small fw-bold mt-3">Palette</h6>
-                        <div class="d-flex gap-0 align-items-center">
-                            @foreach (string weight in Weights)
-                            {
-                                <div style="background-color: var(--cf-theme-@weight); width:24px; height: 24px;"></div>
-                            }
-                        </div>
-                        <div class="my-3">
-                            <button class="btn btn-sm btn-primary">Primary</button>
-                            <button class="btn btn-sm btn-light">Light</button>
-                            <button class="btn btn-sm btn-dark">Dark</button>
-                        </div>
-                        <p-sm>Text with a <a href="#">clickable link</a> in the middle.</p-sm>
-                    </div>
-                </div>
-            }
-        </div>
     </div>
 </div>
 
@@ -74,9 +108,27 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
     [CascadingParameter] AppState? App { get; set; }
 
     [Parameter] public EventCallback OnChangeContent { get; set; }
+    
+    [Parameter] public Background? ActiveBackground { get; set; }
+    [Parameter] public EventCallback<Background> OnChangeBg { get; set; }
 
     bool isDarkTheme = true;
     bool isInitialized = false;
+
+
+    List<Background> Backgrounds = Background.GetAll();
+    //Background? ActiveBackground { get; set; } = new Background("Galaxy", "img/bg/2.Galaxy.jpg");
+        
+    void ChangeBg(Background input)
+    {
+        ActiveBackground!.Name = input.Name;
+        OnChangeBg.InvokeAsync(input);
+    }
+
+
+
+
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

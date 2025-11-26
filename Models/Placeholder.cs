@@ -2,7 +2,7 @@
 
 public static class Placeholder
 {
-    public const string BackgroundUrl = "img/bg/9.Simple Gray.jpg";
+    public const string BackgroundUrl = "img/bg/2.Galaxy.jpg";
 
     public const string AvatarUrl = "img/avatar/user.png";
 

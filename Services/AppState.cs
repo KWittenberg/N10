@@ -113,31 +113,6 @@ public class AppState(AuthenticationStateProvider authStateProvider,
     public void OnChangeContent() => IsExpanded = !IsExpanded;
     #endregion
 
-    #region Background
-    //private Background _background = new Background("Simple Gray", Placeholder.BackgroundUrl);
-    //public Background Background
-    //{
-    //    get => _background;
-    //    set => _background = value;
-    //}
-
-    //public Task<Background?> GetBackground()
-    //{
-    //    return Task.FromResult<Background?>(_background ?? new Background("Simple Gray", Placeholder.BackgroundUrl));
-    //}
-
-    //public void SetBackground(Background input)
-    //{
-    //    Background = input;
-    //    hubContext.Clients.All.SendAsync("BackgroundUpdated", input);
-    //}
-
-    //public void DeleteBackground()
-    //{
-    //    Background = new Background("Simple Gray", Placeholder.BackgroundUrl);
-    //    hubContext.Clients.All.SendAsync("BackgroundUpdated", Background);
-    //}
-    #endregion
 
 
 
