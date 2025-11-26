@@ -1,92 +1,56 @@
 <div class="top-row navStyle">
+    <div class="px-3 d-flex justify-content-center align-items-center gap-3">
+        <i class="@ToggleSidebarIconClass" @onclick="OnToggleSidebar" title="@ToggleSidebarTooltipText"></i>
+        <a href=""><i class="bi bi-house-fill" title="Home"></i></a>
+    </div>
+    <div class="px-3 d-flex justify-content-center align-items-center gap-3">
+        <i class="@ToggleContentIconClass" @onclick="OnChangeContent" title="@ToggleContentTooltipText"></i>
+        @* <a href="themes" title="Themes"><i class="bi bi-palette"></i></a> *@
+        @* <_LanguageSwitcher /> *@
+        <AuthorizeView>
+            <Authorized>
+                <div class="d-flex justify-content-center align-items-center gap-3">
+                    <div>
+                        <span type="button" data-bs-toggle="dropdown">
+                            <img class="rounded-circle"
+                                 src="@(string.IsNullOrEmpty(App?.CurrentUser?.AvatarUrl) ? Placeholder.AvatarUrl : App?.CurrentUser?.AvatarUrl)" style="width: 1.5rem;"
+                                 title="Account">
+                        </span>
 
-	<div class="px-3 d-flex justify-content-center align-content-center">
-		<i class="bi @(SidebarShow ? "bi-chevron-left" : "bi-list")" @onclick="OnToggleSidebar"></i>
-	</div>
-
-
-
-	<div class="px-3 d-flex justify-content-center align-content-center gap-2">
-		<i class="bi @(App!.IsExpanded ? "bi bi-distribute-horizontal" : "bi bi-distribute-vertical")" @onclick="OnChangeContent"></i>
-		<a href="themes"><i class="bi bi-palette"></i></a>
-
-		
-		<div class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">@Language</a>
-			<ul class="dropdown-menu">
-				<li><a class="dropdown-item" href="" @onclick="SetCroatian">Croatian</a></li>
-				<li><a class="dropdown-item" href="" @onclick="SetEnglish">English</a></li>
-				<li><hr class="dropdown-divider"></li>
-				<li><a class="dropdown-item" href="#">Something else here</a></li>
-			</ul>
-		</div>
-		
-		@* <_LanguageSwitcher /> *@
-		
-		
-		<AuthorizeView>
-			<Authorized>
-				<div class="nav-item px-3 d-flex justify-content-center align-content-center">
-					@* @if (App?.CurrentUser is not null)
-                {
-                    <h7>Hi @App?.CurrentUser?.FirstName</h7>
-                } *@
-					<form action="Account/Logout" method="post">
-						<AntiforgeryToken />
-						<input type="hidden" name="ReturnUrl" value="#" />
-						<button type="submit" class="nav-link">
-							<span class="ms-2 bi bi-arrow-bar-left" aria-hidden="true"></span> Logout
-						</button>
-					</form>
-				</div>
-			</Authorized>
-		</AuthorizeView>
-		
-		
-	</div>
-
-	@* <a href="#" target="_blank">About</a> *@
+                        <ul class="mt-2 dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="Account/Manage">Account</a></li>
+                            <li><a class="dropdown-item" href="themes">Themes</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-item">
+                                <form action="Account/Logout" method="post" class="d-flex justify-content-end">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="" />
+                                    <button type="submit" class="ms-2 logout-button">
+                                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </div>
 </div>
 
 
-
 @code {
-	[CascadingParameter] AppState? App { get; set; }
+    string ToggleSidebarIconClass => SidebarShow ? "bi bi-chevron-left" : "bi bi-list";
+    string ToggleSidebarTooltipText => SidebarShow ? "Hide Sidebar" : "Show Sidebar";
+    //string ToggleContentIconClass => App!.IsExpanded ? "bi bi-distribute-horizontal" : "bi bi-distribute-vertical";
+    string ToggleContentIconClass => App!.IsExpanded ? "bi bi-fullscreen-exit" : "bi bi-fullscreen";
+    string ToggleContentTooltipText => App!.IsExpanded ? "Switch to Container" : "Switch to Wide";
 
-	[Parameter] public bool SidebarShow { get; set; }
+    [CascadingParameter] AppState? App { get; set; }
 
-	[Parameter] public EventCallback OnToggleSidebar { get; set; }
+    [Parameter] public bool SidebarShow { get; set; }
 
+    [Parameter] public EventCallback OnToggleSidebar { get; set; }
 
-	[Parameter] public EventCallback OnChangeContent { get; set; }
-
-
-	
-
-	string Language = "Croatian";
-
-	void SetCroatian()
-	{
-		Language = "Croatian";
-		ChangeCulture("hr-HR");
-		StateHasChanged();
-	}
-
-	void SetEnglish()
-	{
-		Language = "English";
-		ChangeCulture("en-US");
-		StateHasChanged();
-	}
-
-
-
-	void ChangeCulture(string culture)
-	{
-		// Response.Cookies.Append(
-		// 	CookieRequestCultureProvider.DefaultCookieName,
-		// 	CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
-		// 	new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
-		// );
-	}
+    [Parameter] public EventCallback OnChangeContent { get; set; }
 }

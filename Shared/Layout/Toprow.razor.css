@@ -7,6 +7,17 @@
     /*border-bottom: 1px solid #d6d5d5;*/
 }
 
+.logout-button {
+    /*color: grey;*/ /* Inicijalna boja teksta */
+    background-color: transparent; /* Bez pozadinske boje */
+    border: none; /* Bez okvira */
+    transition: color 0.3s ease; /* Animacija promene boje */
+}
+
+    .logout-button:hover {
+        color: whitesmoke; /* Boja teksta na hover */
+    }
+
 
 /* START - Code Foundry */
 .navStyle {

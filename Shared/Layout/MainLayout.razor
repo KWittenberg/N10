@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
+
 @inject AppState App
+@inject IJSRuntime JsRuntime
 
 <div class="page">
     <CascadingValue Value="@App">
@@ -12,8 +14,8 @@
         @if (SidebarShow)
         {
             <div class="sidebar">
-                @* <NavMenu /> *@
-                <Sidebar />
+                <NavMenu />
+                @* <Sidebar /> *@
             </div>
         }
 
