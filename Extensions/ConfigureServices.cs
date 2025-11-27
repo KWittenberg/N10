@@ -34,7 +34,12 @@ public static class ConfigureServices
 
 
 
-        services.AddScoped<LocalAiService>();
+        //services.AddScoped<LocalAiService>();
+        services.AddSingleton<LocalAiService>();
+
+        //services.AddScoped<LocalAI>(provider => new LocalAI(
+        //modelPath: @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+        //llamaPath: @"C:\llama\llama-cli.exe"));
 
         return services;
     }

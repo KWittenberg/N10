@@ -1,76 +1,105 @@
-﻿namespace N10.Services;
+﻿using LLama;
+using LLama.Common;
+using System.Text;
 
-public class LocalAiService(IConfiguration configuration)
+namespace N10.Services;
+
+public class LocalAiService : IDisposable
 {
-    readonly string modelPath = configuration["LocalAI:ModelPath"] ?? @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
-    readonly string llamaPath = configuration["LocalAI:LlamaPath"] ?? @"C:\llama\llama-cli.exe";
+    private readonly string _modelPath;
+    private LLamaWeights? _weights;
+    private LLamaContext? _context;
+    private readonly object _lock = new();
+    private bool _isInitialized = false;
+
+    public LocalAiService(IConfiguration configuration)
+    {
+        _modelPath = configuration["LocalAI:ModelPath"]
+            ?? @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+
+        // Eager initialization
+        if (File.Exists(_modelPath))
+        {
+            Task.Run(() => EnsureInitialized());
+        }
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_isInitialized) return;
+
+        lock (_lock)
+        {
+            if (_isInitialized) return;
+
+            if (!File.Exists(_modelPath))
+                throw new FileNotFoundException($"Model ne postoji: {_modelPath}");
+
+            var parameters = new ModelParams(_modelPath)
+            {
+                ContextSize = 2048,
+                GpuLayerCount = 0
+            };
+
+            _weights = LLamaWeights.LoadFromFile(parameters);
+            _context = _weights.CreateContext(parameters);
+
+            _isInitialized = true;
+        }
+    }
 
     public async Task<string> GetResponseAsync(string prompt)
     {
         try
         {
-            // Dodajemo system prompt za bolje odgovore
-            var fullPrompt = $"""
-            <|system|>
-            Ti si korisni asistent koji pomaže korisnicima. Odgovaraj na hrvatskom jeziku ako je moguće.
-            Budi prijatan, korisni i koncizan.
-            </s>
-            <|user|>
-            {prompt}
-            </s>
-            <|assistant|>
-            """;
+            EnsureInitialized();
 
-            var args = $"-m \"{modelPath}\" -p \"{fullPrompt}\" -n 256 -c 2048 --temp 0.7 --repeat_penalty 1.1 --log-disable";
+            if (_context == null)
+                return "❌ Model nije inicijaliziran.";
 
-            var psi = new ProcessStartInfo
+            // Jednostavan prompt bez komplikacija
+            var fullPrompt = $"Question: {prompt}\nAnswer:";
+
+            // Kreiraj executor za svaki request (stateless)
+            var executor = new StatelessExecutor(_weights, _context.Params);
+
+            var inferenceParams = new InferenceParams
             {
-                FileName = llamaPath,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                StandardOutputEncoding = System.Text.Encoding.UTF8,
-                StandardErrorEncoding = System.Text.Encoding.UTF8
+                MaxTokens = 256
+                // NE koristimo AntiPrompts - to uzrokuje problem!
             };
 
-            using var process = new Process { StartInfo = psi };
+            var response = new StringBuilder();
 
-            process.Start();
+            await foreach (var token in executor.InferAsync(fullPrompt, inferenceParams))
+            {
+                response.Append(token);
+            }
 
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
+            var result = response.ToString().Trim();
 
-            await process.WaitForExitAsync();
-
-            if (!string.IsNullOrEmpty(error)) Debug.WriteLine($"Llama error: {error}");
-
-            return CleanOutput(output);
+            return string.IsNullOrWhiteSpace(result)
+                ? "Model nije vratio odgovor."
+                : result;
         }
         catch (Exception ex)
         {
-            return $"Došlo je do greške: {ex.Message}";
+            return $"💥 Greška: {ex.Message}\n\nStack: {ex.StackTrace}";
         }
     }
 
-    string CleanOutput(string text)
+    public bool IsConfigured() => File.Exists(_modelPath);
+
+    public string GetConfigurationInfo()
     {
-        // Ukloni llama specifične logove i system promptove
-        var lines = text.Split('\n')
-            .Where(l => !l.Contains("llama_") &&
-                       !l.Contains("main:") &&
-                       !l.Contains("<|") &&
-                       !string.IsNullOrWhiteSpace(l))
-            .Select(l => l.Trim());
-
-        var cleaned = string.Join(' ', lines);
-
-        // Ukloni višestruke razmake
-        return Regex.Replace(cleaned, @"\s+", " ").Trim();
+        var status = IsConfigured() ? "✅ Konfiguriran" : "❌ Model ne postoji";
+        var initialized = _isInitialized ? "✅ Učitan" : "⏳ Čeka";
+        return $"Model: {Path.GetFileName(_modelPath)}\nStatus: {status}\nInit: {initialized}";
     }
 
-    public bool IsConfigured() => File.Exists(llamaPath) && File.Exists(modelPath);
-
-    public string GetConfigurationInfo() => $"Model: {Path.GetFileName(modelPath)}\nLlama: {llamaPath}\nConfigured: {IsConfigured()}";
+    public void Dispose()
+    {
+        _context?.Dispose();
+        _weights?.Dispose();
+    }
 }
