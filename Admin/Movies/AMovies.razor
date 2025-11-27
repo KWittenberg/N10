@@ -24,7 +24,7 @@ else
 
         @if (SearchTmdb is not null)
         {
-            <div class="mt-5 row align-items-center">
+            <div class="mt-3 row align-items-center">
                 <div class="col-12 col-md-6">
                     <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
                     <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
@@ -43,7 +43,7 @@ else
 
         @if (TmdbSearch is null && TmdbDetails is null)
         {
-            <div class="mt-2 table-responsive border rounded">
+            <div class="quickgrid-wrapper table-responsive">
                 <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
 
                     <div class="p-2 d-flex justify-content-between align-items-center">

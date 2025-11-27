@@ -32,6 +32,10 @@ public static class ConfigureServices
         //    client.BaseAddress = new Uri(configuration["TmdbOptions:BaseUrl"]!);
         //}).AddHttpMessageHandler<TmdbAuthenticationHandler>();
 
+
+
+        services.AddScoped<LocalAiService>();
+
         return services;
     }
 }

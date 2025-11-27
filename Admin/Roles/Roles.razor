@@ -13,31 +13,30 @@
 }
 else
 {
-    <div class="@App?.GetContentClass()">
-        <div class="mt-5 row align-items-center">
+    <div class="mt-3 @App?.GetContentClass()">
+        <div class="row align-items-center">
             <div class="col-12 col-md-6">
             </div>
-            <div class="col-12 col-md-6">
+            <div class="p-1 col-12 col-md-6">
                 <EditForm Enhance Model="@currentRole" OnValidSubmit="@HandleSave">
                     <DataAnnotationsValidator />
-                    <div class="d-flex align-items-end gap-2">
+                    <div class="d-flex align-items-end">
                         <div class="input-group">
                             <InputText class="form-control" @bind-Value="currentRole.Name" placeholder=" name.." required />
                             <ValidationMessage For="@(() => currentRole.Name)" />
+                            <button type="submit" class="btn btn-primary me-2">@(isEditing ? "Update" : "New")</button>
                         </div>
-                        <div class="d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">@(isEditing ? "Update" : "Add")</button>
-                            @if (isEditing)
-                            {
-                                <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
-                            }
-                        </div>
+                        @if (isEditing)
+                        {
+                            <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                        }
+
                     </div>
                 </EditForm>
             </div>
         </div>
-        <div class="mt-5 quickgrid-wrapper table-responsive">
-            <QuickGrid Class="table table-striped table-hover align-middle" Items="roles">
+        <div class="quickgrid-wrapper table-responsive">
+            <QuickGrid Class="table align-middle" Items="roles">
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
 

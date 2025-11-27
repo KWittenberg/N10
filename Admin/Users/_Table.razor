@@ -1,10 +1,10 @@
 ﻿@inject ApplicationDbContext Context
 
-<div class="quickgrid-wrapper-sm table-responsive">
-    <QuickGrid Class="table table-striped table-hover align-middle p-sm" Items="FilteredEntities" Pagination="PaginationState">
+<div class="quickgrid-wrapper table-responsive">
+    <QuickGrid Class="p-sm table table-hover align-middle" Items="FilteredEntities" Pagination="PaginationState">
         <div class="p-2 d-flex justify-content-between align-items-center">
             @* <h4 class="p-0 m-0 ms-2">@Title</h4> *@
-            <div class="d-inline-flex align-items-center">
+            <div class="ms-2 d-inline-flex align-items-center">
                 <i class="bi bi-search"></i>
                 <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
             </div>

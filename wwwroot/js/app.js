@@ -24,6 +24,16 @@ window.setTheme = (theme) => {
 
 
 
+// For AiChat.razor
+function scrollToBottom(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.scrollTop = element.scrollHeight;
+    }
+}
+
+
+
 
 
 // Init Bootstrap5 Tooltips
