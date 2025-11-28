@@ -6,45 +6,40 @@ namespace N10.Services;
 
 public class LocalAiService : IDisposable
 {
-    private readonly string _modelPath;
-    private LLamaWeights? _weights;
-    private LLamaContext? _context;
-    private readonly object _lock = new();
-    private bool _isInitialized = false;
+    readonly string modelPath;
+    LLamaWeights? weights;
+    LLamaContext? context;
+    readonly object _lock = new();
+    bool isInitialized = false;
 
     public LocalAiService(IConfiguration configuration)
     {
-        _modelPath = configuration["LocalAI:ModelPath"]
-            ?? @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+        modelPath = configuration["LocalAI:ModelPath"] ?? @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
 
         // Eager initialization
-        if (File.Exists(_modelPath))
-        {
-            Task.Run(() => EnsureInitialized());
-        }
+        if (File.Exists(modelPath)) Task.Run(() => EnsureInitialized());
     }
 
-    private void EnsureInitialized()
+    void EnsureInitialized()
     {
-        if (_isInitialized) return;
+        if (isInitialized) return;
 
         lock (_lock)
         {
-            if (_isInitialized) return;
+            if (isInitialized) return;
 
-            if (!File.Exists(_modelPath))
-                throw new FileNotFoundException($"Model ne postoji: {_modelPath}");
+            if (!File.Exists(modelPath)) throw new FileNotFoundException($"Model Not Found: {modelPath}");
 
-            var parameters = new ModelParams(_modelPath)
+            var parameters = new ModelParams(modelPath)
             {
-                ContextSize = 2048,
-                GpuLayerCount = 0
+                ContextSize = 2048, // The longest length of chat as memory.
+                GpuLayerCount = 0   // Use CPU only
             };
 
-            _weights = LLamaWeights.LoadFromFile(parameters);
-            _context = _weights.CreateContext(parameters);
+            weights = LLamaWeights.LoadFromFile(parameters);
+            context = weights.CreateContext(parameters);
 
-            _isInitialized = true;
+            isInitialized = true;
         }
     }
 
@@ -54,14 +49,10 @@ public class LocalAiService : IDisposable
         {
             EnsureInitialized();
 
-            if (_context == null)
-                return "❌ Model nije inicijaliziran.";
+            if (context == null) return "❌ Model is not initialized.";
 
-            // Jednostavan prompt bez komplikacija
             var fullPrompt = $"Question: {prompt}\nAnswer:";
-
-            // Kreiraj executor za svaki request (stateless)
-            var executor = new StatelessExecutor(_weights, _context.Params);
+            var executor = new StatelessExecutor(weights, context.Params);
 
             var inferenceParams = new InferenceParams
             {
@@ -78,9 +69,7 @@ public class LocalAiService : IDisposable
 
             var result = response.ToString().Trim();
 
-            return string.IsNullOrWhiteSpace(result)
-                ? "Model nije vratio odgovor."
-                : result;
+            return string.IsNullOrWhiteSpace(result) ? "Model nije vratio odgovor." : result;
         }
         catch (Exception ex)
         {
@@ -88,18 +77,18 @@ public class LocalAiService : IDisposable
         }
     }
 
-    public bool IsConfigured() => File.Exists(_modelPath);
+    public bool IsConfigured() => File.Exists(modelPath);
 
     public string GetConfigurationInfo()
     {
         var status = IsConfigured() ? "✅ Konfiguriran" : "❌ Model ne postoji";
-        var initialized = _isInitialized ? "✅ Učitan" : "⏳ Čeka";
-        return $"Model: {Path.GetFileName(_modelPath)}\nStatus: {status}\nInit: {initialized}";
+        var initialized = isInitialized ? "✅ Učitan" : "⏳ Čeka";
+        return $"Model: {Path.GetFileName(modelPath)}\nStatus: {status}\nInit: {initialized}";
     }
 
     public void Dispose()
     {
-        _context?.Dispose();
-        _weights?.Dispose();
+        context?.Dispose();
+        weights?.Dispose();
     }
 }
