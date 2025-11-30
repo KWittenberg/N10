@@ -13,12 +13,12 @@
     {
         <div class="alert alert-warning mb-2">
             <i class="bi bi-exclamation-triangle"></i>
-            <strong>Konfiguracija nije pronađena!</strong><br />
-            Provjerite da li su llama-cli.exe i GGUF model na odgovarajućim lokacijama.
+            <strong>Model Not Found !</strong><br />
+            Check that GGUF model are in the correct locations.
         </div>
     }
 
-    <p-sm class="text-muted"><i class="bi bi-cpu me-2"></i>Model: @Path.GetFileName(Configuration["LocalAI:ModelPath"])</p-sm>
+    <p-sm class="text-muted"><i class="bi bi-cpu me-2"></i>Model: @Path.GetFileName(Configuration["LocalAI:TinyPath"])</p-sm>
 
     <div class="mt-5 mb-5 chat-container">
         @foreach (var message in chatMessages)

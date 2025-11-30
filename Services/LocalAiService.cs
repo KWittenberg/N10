@@ -14,7 +14,8 @@ public class LocalAiService : IDisposable
 
     public LocalAiService(IConfiguration configuration)
     {
-        modelPath = configuration["LocalAI:ModelPath"] ?? @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+        // modelPath = configuration["LocalAI:ModelPath"] ?? @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+        modelPath = configuration["LocalAI:TinyPath"];
 
         // Eager initialization
         if (File.Exists(modelPath)) Task.Run(() => EnsureInitialized());
