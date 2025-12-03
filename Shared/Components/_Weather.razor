@@ -1,0 +1,112 @@
+﻿@inject OpenWeatherClient OpenWeatherClient
+
+@if (OpenWeather is not null)
+{
+    <div class="">
+        <div class="d-flex justify-content-center">
+            <div class="p-4 card" style="background-image: url(@BgImageUrl);">
+                <img class="" src="@($"//openweathermap.org/img/wn/{OpenWeather?.Weather?.FirstOrDefault()?.Icon}@4x.png")" alt="Weather Icon" />
+
+                <div class="d-flex justify-content-between">
+                    <div class="text-start">
+                        <h2>@OpenWeather?.Name<span class="ms-1 small-font"> [@OpenWeather?.Coord?.Lat @OpenWeather?.Coord?.Lon]</span></h2>
+                        <h1 class="pt-2 large-font">@($"{OpenWeather?.Main?.Temp}°C")</h1>
+                    </div>
+
+                    <div class="text-end">
+                        @foreach (var weather in OpenWeather?.Weather!)
+                        {
+                            <h2 class="">@weather.Main</h2>
+                            <h4 class="">@weather.Description</h4>
+                        }
+                    </div>
+                </div>
+                <div class="mt-3 d-flex justify-content-between align-items-end">
+                    <div class="text-start">
+                        <h1 class="">@DateTime.Now.ToShortTimeString()</h1>
+                        <h6 class="">@DateTime.Now.ToString("dd. MMMM, yyyy.")</h6>
+                    </div>
+                    <div class="text-end">
+                        <p class="mid-font">Humidity <b>@(OpenWeather?.Main?.Humidity)</b> %</p>
+                        <p class="mid-font">Presure <b>@(OpenWeather?.Main?.Pressure)</b> hPa</p>
+                        <p class="mid-font">Wind Speed <b>@(OpenWeather?.Wind?.Speed)</b> m/s</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public string City { get; set; } = "Požega";
+
+    OpenWeatherModel? OpenWeather;
+    string BgImageUrl = string.Empty;
+    //string BgImageUrl = "https://images.pexels.com/photos/35039349/pexels-photo-35039349.jpeg";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        OpenWeather = await OpenWeatherClient.GetWeatherAsync(City);
+        GetBgImage();
+    }
+
+
+    void GetBgImage()
+    {
+        var icon = OpenWeather?.Weather?.FirstOrDefault()?.Icon;
+        if (!string.IsNullOrEmpty(icon) && WeatherImages.ContainsKey(icon)) BgImageUrl = WeatherImages[icon];
+        else
+        {
+            // Ako nema slike za tu ikonicu, odredi prema temperaturi
+            var temp = OpenWeather?.Main?.Temp ?? 0;
+            BgImageUrl = temp > 25
+                ? "https://images.pexels.com/photos/355465/pexels-photo-355465.jpeg" // vruće
+                : temp < 5
+                    ? "https://images.pexels.com/photos/1699030/pexels-photo-1699030.jpeg" // hladno
+                    : "https://images.pexels.com/photos/35039349/pexels-photo-35039349.jpeg"; // normalno
+        }
+    }
+
+
+
+    // Dictionary koji mapira OpenWeather ikonice na pozadinske slike
+    readonly Dictionary<string, string> WeatherImages = new()
+    {
+        // Vedro nebo
+        { "01d", "https://images.pexels.com/photos/355465/pexels-photo-355465.jpeg" }, // dan
+        { "01n", "https://images.pexels.com/photos/355465/pexels-photo-355465.jpeg" }, // noć
+
+        // Malo oblaka
+        { "02d", "https://images.pexels.com/photos/2114014/pexels-photo-2114014.jpeg" },
+        { "02n", "https://images.pexels.com/photos/2114014/pexels-photo-2114014.jpeg" },
+
+        // Raspršeni oblaci
+        { "03d", "https://images.pexels.com/photos/531767/pexels-photo-531767.jpeg" },
+        { "03n", "https://images.pexels.com/photos/531767/pexels-photo-531767.jpeg" },
+
+        // Oblačno
+        { "04d", "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg" },
+        { "04n", "https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg" },
+
+        // Pljusak/kiša
+        { "09d", "https://images.pexels.com/photos/459451/pexels-photo-459451.jpeg" },
+        { "09n", "https://images.pexels.com/photos/459451/pexels-photo-459451.jpeg" },
+
+        // Kiša
+        { "10d", "https://images.pexels.com/photos/1787234/pexels-photo-1787234.jpeg" },
+        { "10n", "https://images.pexels.com/photos/1787234/pexels-photo-1787234.jpeg" },
+
+        // Grmljavina
+        { "11d", "https://images.pexels.com/photos/1162251/pexels-photo-1162251.jpeg" },
+        { "11n", "https://images.pexels.com/photos/1162251/pexels-photo-1162251.jpeg" },
+
+        // Snijeg
+        { "13d", "https://images.pexels.com/photos/688660/pexels-photo-688660.jpeg" },
+        { "13n", "https://images.pexels.com/photos/688660/pexels-photo-688660.jpeg" },
+
+        // Magla
+        { "50d", "https://images.pexels.com/photos/1418271/pexels-photo-1418271.jpeg" },
+        { "50n", "https://images.pexels.com/photos/1418271/pexels-photo-1418271.jpeg" }
+    };
+}

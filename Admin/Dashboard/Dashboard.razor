@@ -14,7 +14,10 @@
 }
 else
 {
-    <div class="mt-5 @App?.GetContentClass()">
+    <div class="@App?.GetContentClass()">
+        
+        <_Weather City="Požega" />
+
         <div class="row">
             <div class="col-xl-3 col-md-6">
                 <a href="admin/roles"><_IconComponent Icon="R" Title="Roles" Value="@Entity.RolesCount" PredictedValue="5" /></a>

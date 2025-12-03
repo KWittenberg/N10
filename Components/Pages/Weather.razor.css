@@ -1,0 +1,18 @@
+﻿.chart-container {
+    position: relative;
+    height: 100px;
+    width: 100%;
+}
+
+    .chart-container canvas {
+        width: 100% !important;
+        height: 100px !important;
+        display: block;
+    }
+
+/* Spriječi Bootstrap da utječe na Chart.js */
+.card canvas {
+    max-width: 100% !important;
+    min-height: 100px !important;
+    flex: none !important;
+}

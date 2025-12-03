@@ -1,0 +1,33 @@
+﻿.card {
+    /*background-image: url("https://i.imgur.com/HrTZv7u.jpeg");*/
+    background-size: cover;
+    width: 450px;
+    /*height: 350px;*/
+    border-radius: 20px;
+    box-shadow: 1px 1px 6px 0px #9E9E9E;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    color: black;
+}
+
+    .card img {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        top: -5rem;
+        left: 40%;
+        z-index: 10000;
+    }
+
+.small-font {
+    font-size: 10px;
+}
+
+.mid-font {
+    font-size: 14px;
+    margin: 0;
+}
+
+.large-font {
+    font-size: 60px;
+}

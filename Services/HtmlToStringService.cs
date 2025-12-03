@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
+using IComponent = Microsoft.AspNetCore.Components.IComponent;
 
 namespace N10.Services;
 

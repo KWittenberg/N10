@@ -26,6 +26,9 @@ public static class ConfigureServices
         services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();
 
 
+        services.AddHttpClient<OpenWeatherClient>();
+
+
         // Alternative way to configure HttpClient with BaseAddress from configuration
         //services.AddHttpClient<ITmdbService, TmdbService>(client =>
         //{
