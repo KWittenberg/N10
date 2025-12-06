@@ -1,0 +1,37 @@
+﻿.card {
+    /*background-image: url("https://i.imgur.com/HrTZv7u.jpeg");*/
+    background-color: #282F36;
+    background-size: cover;
+    /*width: 450px;*/
+    /*height: 350px;*/
+    border-radius: 4px;
+    border: 0.3px solid rgba(var(--bs-light-rgb), 0.2);
+    box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.4);
+    margin-top: 50px;
+    margin-bottom: 50px;
+    color: black;
+}
+
+    .card img {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        top: -1rem;
+        right: 0;
+        z-index: 10000;
+    }
+
+.small-font {
+    color: whitesmoke;
+    margin: 0;
+    font-size: 10px;
+}
+
+.mid-font {
+    font-size: 14px;
+    margin: 0;
+}
+
+.large-font {
+    font-size: 60px;
+}

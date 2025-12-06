@@ -2,7 +2,7 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @inject ApplicationDbContext Context
-@inject IJSRuntime JsRuntime
+@* @inject IJSRuntime JsRuntime *@
 
 <PageTitle>@Title</PageTitle>
 
@@ -15,8 +15,26 @@
 else
 {
     <div class="@App?.GetContentClass()">
+
         
-        <_Weather City="Požega" />
+
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <a href="weather"><_AWeather City="Požega" /></a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="weather"><_AWeather City="Kingston" /></a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="weather"><_AWeather City="Paris" /></a>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <a href="weather"><_AWeather City="Melbourne" /></a>
+            </div>
+        </div>
+
+
+
 
         <div class="row">
             <div class="col-xl-3 col-md-6">
