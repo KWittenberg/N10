@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
+using N10.Services.Movies;
 
 namespace N10.Extensions;
 
@@ -21,6 +22,7 @@ public static class ConfigureServices
 
 
         services.AddScoped<IMovieService, MovieService>();
+        services.AddScoped<MovieScannerService>();
 
         services.AddTransient<TmdbAuthenticationHandler>();
         services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();

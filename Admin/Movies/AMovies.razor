@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IDbContextFactory<ApplicationDbContext> context
+@inject ApplicationDbContext db
 @inject IMovieRepository Repository
 @inject ITmdbService TmdbService
 
@@ -23,6 +24,7 @@ else
 {
     <div class="mb-5 @App?.GetContentClass()">
 
+        <!-- ScanNew - PopulateFromTmdb - Search Tmdb -->
         @if (SearchTmdb is not null)
         {
             <div class="mt-3 row align-items-center">
@@ -42,98 +44,12 @@ else
             </div>
         }
 
+        <!-- Table -->
         @if (TmdbSearch is null && TmdbDetails is null)
         {
-            <div class="quickgrid-wrapper table-responsive">
-                <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
-
-                    <div class="p-2 d-flex justify-content-between align-items-center">
-                        <h4 class="p-0 m-0 ms-2">@Title</h4>
-                        <div class="d-inline-flex align-items-center">
-                            <i class="bi bi-search"></i>
-                            <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
-                        </div>
-                        <div class="me-2 d-inline-flex align-items-center" stile="width: 5rem;">
-                            <label class="me-2 small text-muted">Items:</label>
-                            <select class="form-select form-select-sm" @bind="PaginationState.ItemsPerPage">
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                                <option value="200">200</option>
-                                @* @foreach (var value in Enum.GetValues<ItemsPerPage>())
-                                {
-                                    <option value="@((int)value)">@value</option>
-                                    <!-- Ili @(value.GetDisplayName()) ako koristite [Display] -->
-                                } *@
-                            </select>
-                        </div>
-                    </div>
-
-                    @*<PropertyColumn Property="@(x => x.Title)" Sortable="true" Class="">
-                        <ColumnOptions>
-                            <div class="search-box">
-                                <input type="search" autofocus @bind="Search" @bind:event="oninput" placeholder="name.." />
-                            </div>
-                        </ColumnOptions>
-                    </PropertyColumn> *@
-
-                    <TemplateColumn Title="Title" Align="Align.Start" SortBy="@titleSort">
-                        @*<a class="me-2" href="admin/movie/@Uri.EscapeDataString(context.Title)/@(context.Year)">@context.Title</a>*@
-                        <span class="ms-4" style="cursor: pointer;" @onclick="() => PlayInVlc(context.Title, context.FileName)">
-                            <i class="bi bi-play-circle-fill"></i>
-                        </span>
-                        <span class="ms-3 @((context.IsMetadataFetched) ? "text-primary" : "text-muted")" style="cursor: pointer;" @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">
-                            @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
-                        </span>
-                    </TemplateColumn>
-                    <PropertyColumn Property="x => x.Version" Title="Version" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
-                    <PropertyColumn Property="x => x.TmdbId" Title="TmdbId" Align="Align.Center" Sortable="true" />
-
-                    @if (App!.IsExpanded)
-                    {
-                        <PropertyColumn Property="x => x.Color" Title="Color" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.Resolution" Title="Resolution" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.Source" Title="Source" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.Audio" Title="Audio" Align="Align.Center" Sortable="true" />
-                        <PropertyColumn Property="x => x.Video" Title="Video" Align="Align.Center" Sortable="true" />
-                    }
-
-                    <PropertyColumn Property="x => x.Release" Title="Release" Align="Align.Center" Sortable="true" />
-                    <TemplateColumn Title="Meta" Align="Align.Center" SortBy="@metadataSort">
-                        <div class="d-flex justify-content-center" style="width: 2rem;">
-                            @if (context.IsMetadataFetched)
-                            {
-                                <i class="fas fa-check-circle fa-lg text-success" title="Metadata fetched"></i>
-                            }
-                            else
-                            {
-                                <i class="fas fa-times-circle fa-lg text-danger" title="Metadata missing"></i>
-                            }
-                        </div>
-                    </TemplateColumn>
-
-                    @if (App!.IsExpanded)
-                    {
-                        <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
-                    }
-
-                    <PropertyColumn Property="@(x => x.CreatedUtc.ToString("dd. MM. yyyy."))" Title="Created" Align="Align.Center" Sortable="true" />
-
-                    <TemplateColumn Title="Actions" Align="Align.Center">
-                        <ChildContent>
-                            <a class="text-white" href="admin/movie/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                            <span class="ms-1 text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></span>
-                            <span class="ms-2 text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></span>
-                        </ChildContent>
-                    </TemplateColumn>
-                </QuickGrid>
-                <div class="quickgrid-pagination">
-                    <Paginator State="PaginationState" />
-                </div>
-            </div>
+            <_Table Entities="Entities" EntityName="Title" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
         }
-
+        <!-- SearchCard -->
         @if (TmdbSearch is not null)
         {
             <div class="mt-5">
@@ -148,6 +64,7 @@ else
             </div>
         }
 
+        <!-- DetailsCard -->
         @if (TmdbDetails is not null)
         {
             <div class="mt-5">
@@ -163,7 +80,8 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<Movie>? Entities;
+    List<Movie>? Movies;
+    IQueryable<Movie>? Entities;
     string? Search;
 
     string SearchTmdb = string.Empty;
@@ -173,20 +91,15 @@ else
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
 
-    GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);
-    GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
-    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
-
-
 
     protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
 
     async Task RefreshEntitiesAsync()
     {
-        await using var db = await context.CreateDbContextAsync();
+        // await using var db = await context.CreateDbContextAsync();
 
-        Entities = await db.Movies.AsNoTracking().OrderBy(x => x.SortTitle).ToListAsync();
-        if (Entities.Count == 0)
+        Entities = db.Movies.AsNoTracking().OrderBy(x => x.SortTitle).AsQueryable();
+        if (!Entities.Any())
         {
             await App!.ShowToast($"{Title} Not Found!", "error");
             return;
@@ -194,15 +107,6 @@ else
 
         IsProcessing = false;
         // StateHasChanged();
-    }
-
-    IQueryable<Movie> FilteredEntities
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(Search)) return Entities.AsQueryable();
-            else return Entities.Where(x => x.Title.Contains(Search, StringComparison.OrdinalIgnoreCase)).AsQueryable();
-        }
     }
 
     async Task HandleValidSubmit()
@@ -215,46 +119,15 @@ else
         StateHasChanged();
     }
 
-    async Task HandleSearch(int? tmdbId, string search, int? year)
+    async Task AddEdit(Movie? input)
     {
-        if (tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId.Value);
-        else TmdbSearch = await TmdbService.SearchMoviesAsync(search, year.ToString());
-
-        SearchTmdb = string.Empty;
-        StateHasChanged();
+        // Look in the Users.razor for reference.
+        // Input = input;
+        // IsEditing = true;
+        // await Task.CompletedTask;
     }
 
-    async Task PlayInVlc(string? name, string? filename)
-    {
-        await App!.ShowToast($"Playing  {name} !", "success");
 
-        if (string.IsNullOrEmpty(filename)) return;
-
-        try
-        {
-            string mediaPath = Path.Combine(Globals.X265Path, filename);
-
-            if (!File.Exists(mediaPath))
-            {
-                await App!.ShowToast($"File not found: {mediaPath}", "error");
-                return;
-            }
-
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = Globals.VlcPath,
-                Arguments = $"\"{mediaPath}\"",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            Process.Start(processInfo);
-        }
-        catch (Exception ex)
-        {
-            await App!.ShowToast($"Error starting VLC with file: {filename}", "error");
-        }
-    }
 
     async Task ScanNew()
     {

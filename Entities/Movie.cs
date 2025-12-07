@@ -29,6 +29,10 @@ public class Movie : BaseAuditableEntity<Guid>
 
     public bool IsMetadataFetched { get; set; }
 
+    public DateTime? FileCreatedUtc { get; set; }
+    public DateTime? FileModifiedUtc { get; set; }
+
+
 
     public virtual ICollection<MovieGenre> Genres { get; set; } = [];
 }
