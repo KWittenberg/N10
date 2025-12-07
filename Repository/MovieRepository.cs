@@ -92,11 +92,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
         };
 
         var totalCount = await query.CountAsync();
-        var dtos = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(MovieMapping.ToDtoExpression)
-            .ToListAsync();
+        var dtos = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).Select(MovieMapping.ToDtoExpression).ToListAsync();
 
         if (dtos.Count == 0 && pageNumber == 1) return Result<PaginatedResult<MovieDto>>.Error("Nema pronađenih filmova sa zadanim filterima!");
 
@@ -109,25 +105,11 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
 
         var options = new FilterOptionsDto
         {
-            AvailableYears = await db.Movies
-                .Where(m => m.Year.HasValue)
-                .Select(m => m.Year.Value)
-                .Distinct()
-                .OrderBy(y => y)
-                .ToListAsync(),
+            AvailableYears = await db.Movies.Where(m => m.Year.HasValue).Select(m => m.Year.Value).Distinct().OrderBy(y => y).ToListAsync(),
 
-            AvailableGenres = await db.MovieGenres
-                .Select(mg => mg.TmdbName)
-                .Distinct()
-                .OrderBy(g => g)
-                .ToListAsync(),
+            AvailableGenres = await db.MovieGenres.Select(mg => mg.TmdbName).Distinct().OrderBy(g => g).ToListAsync(),
 
-            AvailableResolutions = await db.Movies
-                .Where(m => m.Resolution != null)
-                .Select(m => m.Resolution)
-                .Distinct()
-                .OrderBy(r => r)
-                .ToListAsync()
+            AvailableResolutions = await db.Movies.Where(m => m.Resolution != null).Select(m => m.Resolution).Distinct().OrderBy(r => r).ToListAsync()
         };
 
         return Result<FilterOptionsDto>.Ok(options);

@@ -32,5 +32,10 @@ public class MovieDto
     public bool IsMetadataFetched { get; set; }
 
 
+    public DateTime? CreatedUtc { get; set; }
+
+    public DateTime? LastModifiedUtc { get; set; }
+
+
     public virtual ICollection<MovieGenreDto> Genres { get; set; } = [];
 }

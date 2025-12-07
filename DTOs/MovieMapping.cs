@@ -22,7 +22,9 @@ public static class MovieMapping
         TmdbImageUrl = x.TmdbImageUrl,
         ImdbId = x.ImdbId,
         ImdbRating = x.ImdbRating,
-        IsMetadataFetched = x.IsMetadataFetched
+        IsMetadataFetched = x.IsMetadataFetched,
+        CreatedUtc = x.CreatedUtc,
+        LastModifiedUtc = x.LastModifiedUtc
     };
 
     // GetByIdAsync() - Map a single materialized entity to DTO (use when you already have an entity instance)
@@ -46,6 +48,8 @@ public static class MovieMapping
         ImdbId = entity.ImdbId,
         ImdbRating = entity.ImdbRating,
         IsMetadataFetched = entity.IsMetadataFetched,
+        CreatedUtc = entity.CreatedUtc,
+        LastModifiedUtc = entity.LastModifiedUtc
     };
 
     // AddAsync() - Convert Input to Entity

@@ -1,7 +1,6 @@
-﻿@page "/admin/movies"
+﻿@page "/admin/moviesDto"
 @attribute [Authorize(Roles = "Admin")]
 
-@inject IDbContextFactory<ApplicationDbContext> context
 @inject IMovieRepository Repository
 @inject ITmdbService TmdbService
 
@@ -118,7 +117,7 @@ else
                         <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
                     }
 
-                    <PropertyColumn Property="@(x => x.CreatedUtc.ToString("dd. MM. yyyy."))" Title="Created" Align="Align.Center" Sortable="true" />
+                    <PropertyColumn Property="@(x => x.CreatedUtc!.Value.ToString("dd. MM. yyyy."))" Title="Created" Align="Align.Center" Sortable="true" />
 
                     <TemplateColumn Title="Actions" Align="Align.Center">
                         <ChildContent>
@@ -163,7 +162,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<Movie>? Entities;
+    List<MovieDto>? Entities;
     string? Search;
 
     string SearchTmdb = string.Empty;
@@ -173,8 +172,8 @@ else
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
 
-    GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);
-    GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
+    GridSort<MovieDto> titleSort = GridSort<MovieDto>.ByAscending(x => x.SortTitle);
+    GridSort<MovieDto> metadataSort = GridSort<MovieDto>.ByAscending(x => x.IsMetadataFetched);
     readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
 
 
@@ -183,20 +182,15 @@ else
 
     async Task RefreshEntitiesAsync()
     {
-        await using var db = await context.CreateDbContextAsync();
+        var result = await Repository.GetAllAsync();
+        if (!result.Success || result.Data is null) return;
 
-        Entities = await db.Movies.AsNoTracking().OrderBy(x => x.SortTitle).ToListAsync();
-        if (Entities.Count == 0)
-        {
-            await App!.ShowToast($"{Title} Not Found!", "error");
-            return;
-        }
-
+        Entities = result.Data;
         IsProcessing = false;
-        // StateHasChanged();
+        StateHasChanged();
     }
 
-    IQueryable<Movie> FilteredEntities
+    IQueryable<MovieDto> FilteredEntities
     {
         get
         {
@@ -281,17 +275,17 @@ else
     }
 
     #region ---> DELETE
-    void ShowDelete(Movie input)
+    void ShowDelete(MovieDto input)
     {
         App?.ShowDeleteConfirmation(input.Title, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
     }
 
     async Task ConfirmDelete(Guid id)
     {
-        @* var result = await Repository.DeleteAsync(id);
+        var result = await Repository.DeleteAsync(id);
         if (result.Success) await RefreshEntitiesAsync();
 
-        await App!.ShowToast(result.Message, result.Success ? "success" : "error"); *@
+        await App!.ShowToast(result.Message, result.Success ? "success" : "error");
     }
     #endregion
 }
