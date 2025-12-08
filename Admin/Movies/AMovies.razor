@@ -3,6 +3,7 @@
 
 @inject IDbContextFactory<ApplicationDbContext> context
 @inject ApplicationDbContext db
+@inject MovieScannerService MovieScannerService
 @inject IMovieRepository Repository
 @inject ITmdbService TmdbService
 
@@ -10,72 +11,79 @@
 
 <_PageHeader Title="@Title" />
 
-@if (IsProcessing || Entities is null)
-{
-    @if (Entities is null)
-    {
-        <div class="@App?.GetContentClass() d-flex justify-content-center align-content-center">
-            <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
+
+<!-- Scan - Populate - Search -->
+<div class="mt-4 p-2 @App?.GetContentClass()">
+    <div class="row align-items-center">
+        <div class="col-12 col-md-6">
+            <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync">Scan</button>
+            @if (Entities is not null && Entities.Any())
+            {
+                <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
+            }
         </div>
-    }
-    <_Loading />
+
+        <div class="col-12 col-md-6">
+            <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
+                <div class="input-group">
+                    <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (IsProcessing)
+{
+    <_Loading Title="Please Scan to populate the database!"
+              Subtitle="@($"Scaning Folder: {ScanPath}")"
+              ButtonText="Scan" OnClick="ScanAsync" />
 }
 else
 {
-    <div class="mb-5 @App?.GetContentClass()">
+    @if (TmdbSearch is null && TmdbDetails is null)
+    {
+        <div class="mt-3 @App?.GetContentClass()">
+            @if (Movies is not null)
+            {
+                <_Table Entities="Movies.AsQueryable()" EntityName="Scan" OnTmdbSearch="HandleSearch" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
+            }
+            @if (Entities is not null)
+            {
+                <_Table Entities="Entities" EntityName="@Title" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
+            }
+        </div>
+    }
+}
 
-        <!-- ScanNew - PopulateFromTmdb - Search Tmdb -->
-        @if (SearchTmdb is not null)
+<!-- SearchCard -->
+@if (TmdbSearch is not null)
+{
+    <div class="mt-5 @App?.GetContentClass()">
+        <div class="m-3 d-flex justify-content-start align-items-center" style="cursor: pointer;" @onclick="() => TmdbSearch = null">
+            <button type="button" class="btn-close me-2"></button>Close Search
+        </div>
+
+        @foreach (var movie in TmdbSearch.Results)
         {
-            <div class="mt-3 row align-items-center">
-                <div class="col-12 col-md-6">
-                    <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanNew">Scan New</button>
-                    <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
-                        <div class="input-group">
-                            <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
-                            <button class="btn btn-primary" type="submit">Search</button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        }
-
-        <!-- Table -->
-        @if (TmdbSearch is null && TmdbDetails is null)
-        {
-            <_Table Entities="Entities" EntityName="Title" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
-        }
-        <!-- SearchCard -->
-        @if (TmdbSearch is not null)
-        {
-            <div class="mt-5">
-                <div class="m-3 d-flex justify-content-start align-items-center" style="cursor: pointer;" @onclick="() => TmdbSearch = null">
-                    <button type="button" class="btn-close me-2"></button>Close Search
-                </div>
-
-                @foreach (var movie in TmdbSearch.Results)
-                {
-                    <_SearchCard Entity="movie" />
-                }
-            </div>
-        }
-
-        <!-- DetailsCard -->
-        @if (TmdbDetails is not null)
-        {
-            <div class="mt-5">
-                <div class="m-3 d-flex justify-content-start align-items-center" style="cursor: pointer;" @onclick="() => TmdbDetails = null">
-                    <button type="button" class="btn-close me-2"></button>Close Details
-                </div>
-                <_DetailsCard Entity="TmdbDetails" />
-            </div>
+            <_SearchCard Entity="movie" />
         }
     </div>
 }
+
+<!-- DetailsCard -->
+@if (TmdbDetails is not null)
+{
+    <div class="mt-5 @App?.GetContentClass()">
+        <div class="m-3 d-flex justify-content-start align-items-center" style="cursor: pointer;" @onclick="() => TmdbDetails = null">
+            <button type="button" class="btn-close me-2"></button>Close Details
+        </div>
+        <_DetailsCard Entity="TmdbDetails" />
+    </div>
+}
+
+
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
@@ -91,6 +99,8 @@ else
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
 
+    string ScanPath => Globals.X265Path;
+
 
     protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
 
@@ -102,6 +112,7 @@ else
         if (!Entities.Any())
         {
             await App!.ShowToast($"{Title} Not Found!", "error");
+            Entities = null;
             return;
         }
 
@@ -119,6 +130,15 @@ else
         StateHasChanged();
     }
 
+    async Task HandleSearch((int? tmdbId, string search, int? year) data)
+    {
+        if (data.tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(data.tmdbId.Value);
+        else TmdbSearch = await TmdbService.SearchMoviesAsync(data.search, data.year.ToString());
+
+        SearchTmdb = string.Empty;
+        StateHasChanged();
+    }
+
     async Task AddEdit(Movie? input)
     {
         // Look in the Users.razor for reference.
@@ -129,12 +149,22 @@ else
 
 
 
-    async Task ScanNew()
+    async Task ScanAsync()
     {
-        await App!.ShowToast($"START - Scan For New Movies!", "success");
-        await Repository.SyncParsedMoviesAsync(Globals.X265Path);
-        await RefreshEntitiesAsync();
-        await App!.ShowToast($"END - Scan Finish and Add in Database!", "success");
+        await App!.ShowToast($"Scaning For New Movies!", "success");
+        var scannedMovies = await MovieScannerService.GetAllMoviesInFolderAsync(ScanPath);
+        if (scannedMovies.Count > 0)
+        {
+            if (Entities is not null && await Entities.AnyAsync())
+            {
+                var existingFileNames = await Entities.Select(m => m.FileName.ToLower()).ToHashSetAsync();
+                Movies = scannedMovies.Where(m => !existingFileNames.Contains(m.FileName.ToLowerInvariant())).ToList();
+            }
+            else Movies = scannedMovies;
+            await App!.ShowToast($"Found: {Movies.Count} movies!", "success");
+            IsProcessing = false;
+        }
+        else await App!.ShowToast($"{Title} Not Found!", "error");
     }
 
     async Task PopulateFromTmdb()

@@ -185,7 +185,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("MoviesId");
 
-                    b.ToTable("MovieMovieGenre", (string)null);
+                    b.ToTable("MovieMovieGenre");
                 });
 
             modelBuilder.Entity("N10.Entities.ApplicationUser", b =>
@@ -448,6 +448,12 @@ namespace N10.Data.Migrations
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FileCreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FileModifiedUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -524,7 +530,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("Year");
 
-                    b.ToTable("Movies", (string)null);
+                    b.ToTable("Movies");
                 });
 
             modelBuilder.Entity("N10.Entities.MovieGenre", b =>
@@ -546,7 +552,7 @@ namespace N10.Data.Migrations
                     b.HasIndex("TmdbName")
                         .IsUnique();
 
-                    b.ToTable("MovieGenres", (string)null);
+                    b.ToTable("MovieGenres");
                 });
 
             modelBuilder.Entity("N10.Entities.Note", b =>
@@ -608,7 +614,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("NoteFolderId");
 
-                    b.ToTable("Notes", (string)null);
+                    b.ToTable("Notes");
                 });
 
             modelBuilder.Entity("N10.Entities.NoteFolder", b =>
@@ -656,7 +662,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("ParentFolderId");
 
-                    b.ToTable("NoteFolders", (string)null);
+                    b.ToTable("NoteFolders");
                 });
 
             modelBuilder.Entity("N10.Entities.NoteShare", b =>
@@ -688,7 +694,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("SharedWithUserId");
 
-                    b.ToTable("NoteShares", (string)null);
+                    b.ToTable("NoteShares");
                 });
 
             modelBuilder.Entity("N10.Entities.NoteAttachment", b =>
@@ -705,7 +711,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("NoteId");
 
-                    b.ToTable("NoteAttachments", (string)null);
+                    b.ToTable("NoteAttachments");
                 });
 
             modelBuilder.Entity("N10.Entities.NoteImage", b =>
@@ -722,7 +728,7 @@ namespace N10.Data.Migrations
 
                     b.HasIndex("NoteId");
 
-                    b.ToTable("NoteImages", (string)null);
+                    b.ToTable("NoteImages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -789,7 +795,7 @@ namespace N10.Data.Migrations
 
                             b1.HasKey("IdentityUserPasskeyCredentialId");
 
-                            b1.ToTable("AspNetUserPasskeys", (string)null);
+                            b1.ToTable("AspNetUserPasskeys");
 
                             b1.ToJson("Data");
 

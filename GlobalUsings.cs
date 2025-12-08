@@ -34,6 +34,7 @@ global using N10.Repository;
 global using N10.Repository.Interfaces;
 global using N10.Services;
 global using N10.Services.Interfaces;
+global using N10.Services.Movies;
 global using N10.Shared;
 global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;

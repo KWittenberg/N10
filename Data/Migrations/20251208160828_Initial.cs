@@ -103,6 +103,8 @@ namespace N10.Data.Migrations
                     ImdbId = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     ImdbRating = table.Column<double>(type: "float", nullable: true),
                     IsMetadataFetched = table.Column<bool>(type: "bit", nullable: false),
+                    FileCreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FileModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),

@@ -12,7 +12,7 @@ using N10.Data;
 namespace N10.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251117153306_Initial")]
+    [Migration("20251208160828_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -449,6 +449,12 @@ namespace N10.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FileCreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FileModifiedUtc")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("FileName")

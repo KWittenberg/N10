@@ -8,7 +8,7 @@
             <h4 class="p-0 m-0 ms-2">@EntityName</h4>
             <div class="d-inline-flex align-items-center">
                 <i class="bi bi-search"></i>
-                <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search.." />
+                <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search .." />
             </div>
             <div class="me-2 d-inline-flex align-items-center" stile="width: 5rem;">
                 <label class="me-2 small text-muted">Items:</label>
@@ -39,7 +39,7 @@
             <span class="ms-4" style="cursor: pointer;" @onclick="() => PlayInVlc(context.Title, context.FileName)">
                 <i class="bi bi-play-circle-fill"></i>
             </span>
-            <span class="ms-3 @((context.IsMetadataFetched) ? "text-primary" : "text-muted")" style="cursor: pointer;" @onclick="() => HandleSearch(context.TmdbId, context.Title, context.Year)">
+            <span class="ms-3 @((context.IsMetadataFetched) ? "text-primary" : "text-muted")" style="cursor: pointer;" @onclick="() => OnTmdbSearch.InvokeAsync((context.TmdbId, context.Title, context.Year))">
                 @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
             </span>
         </TemplateColumn>
@@ -75,10 +75,14 @@
             <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
         }
 
-        <PropertyColumn Property="@(x => x.CreatedUtc.ToString("dd.MM.yyyy."))" Title="Created" Align="Align.Center" Sortable="true" />
+        <PropertyColumn Property="@(x => x.FileCreatedUtc)" Title="Created" Align="Align.Center" Sortable="true" />
 
         <TemplateColumn Title="Actions" Align="Align.Center">
             <ChildContent>
+                @if (EntityName == "Scan")
+                {
+                    <span class="ms-1 text-primary" @onclick="() => AddToDb(context)" title="Add To Database"><i class="bi bi-plus-circle"></i></span>
+                }
                 @* <a class="text-white" href="admin/movie/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
                 <span class="ms-1 text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></span>
                 <span class="ms-2 text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></span> *@
@@ -96,14 +100,11 @@
     [Parameter] public IQueryable<Movie>? Entities { get; set; }
     [Parameter] public string? EntityName { get; set; }
 
+    [Parameter] public EventCallback<(int?, string, int?)> OnTmdbSearch { get; set; }
     [Parameter] public EventCallback OnLoadEntities { get; set; }
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
 
-
-    string SearchTmdb = string.Empty;
-    TmdbSearchList? TmdbSearch;
-    TmdbDetails? TmdbDetails;
-
+    string? Search;
 
     IQueryable<Movie> FilteredEntities
     {
@@ -115,23 +116,32 @@
         }
     }
 
-
-    string? Search;
-
     GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);
     GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
-    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
+    PaginationState? _paginationState;
+    PaginationState PaginationState => _paginationState ??= new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 };
 
 
 
-    async Task HandleSearch(int? tmdbId, string search, int? year)
+
+    async Task AddToDb(Movie input)
     {
-        if (tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(tmdbId.Value);
-        else TmdbSearch = await TmdbService.SearchMoviesAsync(search, year.ToString());
+        try
+        {
+            Context.Movies.Add(input);
+            await Context.SaveChangesAsync();
 
-        SearchTmdb = string.Empty;
-        StateHasChanged();
+            await App!.ShowToast($"{input.Title} added to database!", "success");
+            await OnLoadEntities.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to add {input.Title} to database: {ex.Message}", "error");
+        }
     }
+
+
+
 
     async Task PlayInVlc(string? name, string? filename)
     {
