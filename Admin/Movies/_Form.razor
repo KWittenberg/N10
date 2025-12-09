@@ -1,0 +1,143 @@
+﻿@inject NavigationManager Navigation
+
+@if (Entity is not null)
+{
+    <div class="page @App?.GetContentClass()">
+        <EditForm Model=@Entity OnValidSubmit=@HandleValidSubmit>
+            <DataAnnotationsValidator />
+
+            <div class="d-flex justify-content-end align-items-end gap-2">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => OnBack.InvokeAsync()">back</button>
+                <button class="btn btn-lg btn-primary rounded-pill" type="submit">@Title</button>
+            </div>
+
+            <div class="mt-5 p-4 row rounded bg-transparent20">
+
+                <div class="d-flex justify-content-center align-items-center gap-4">
+                    <div class="w-100">
+                        <span class="ms-1 p-sm">FileName</span>
+                        <InputText @bind-Value="Entity.FileName" class="form-control form-control-sm" placeholder="required.." required />
+                        <ValidationMessage For="() => Entity.FileName" class="text-danger" />
+                    </div>
+                    <div class="">
+                        <span class="ms-1 p-sm">Metadata</span>
+                        <InputCheckbox @bind-Value="Entity.IsMetadataFetched" class="form-check form-check-input" />
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="mt-4">
+                        <span class="ms-1 p-sm">Title</span>
+                        <InputText @bind-Value="Entity.Title" class="form-control form-control-sm" placeholder="required.." required />
+                        <ValidationMessage For="() => Entity.Title" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Sort Title</span>
+                        <InputText @bind-Value="Entity.SortTitle" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.SortTitle" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Year</span>
+                        <InputNumber @bind-Value="Entity.Year" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Year" class="text-danger" />
+                    </div>
+                    <div class="mt-4">
+                        <span class="ms-1 p-sm">Version</span>
+                        <InputText @bind-Value="Entity.Version" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Version" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Resolution</span>
+                        <InputText @bind-Value="Entity.Resolution" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Resolution" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Color</span>
+                        <InputText @bind-Value="Entity.Color" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Color" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Source</span>
+                        <InputText @bind-Value="Entity.Source" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Source" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Audio</span>
+                        <InputText @bind-Value="Entity.Audio" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Audio" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Video</span>
+                        <InputText @bind-Value="Entity.Video" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Video" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Release</span>
+                        <InputText @bind-Value="Entity.Release" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.Release" class="text-danger" />
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="mt-4">
+                        <span class="ms-1 p-sm">Tmdb Id</span>
+                        <InputNumber @bind-Value="Entity.TmdbId" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.TmdbId" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Tmdb Title</span>
+                        <InputText @bind-Value="Entity.TmdbTitle" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.TmdbTitle" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Tmdb ImageUrl</span>
+                        <InputText @bind-Value="Entity.TmdbImageUrl" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.TmdbImageUrl" class="text-danger" />
+                    </div>
+                    <div class="mt-4">
+                        <span class="ms-1 p-sm">Imdb Id</span>
+                        <InputText @bind-Value="Entity.ImdbId" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.ImdbId" class="text-danger" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="ms-1 p-sm">Imdb Rating</span>
+                        <InputNumber @bind-Value="Entity.ImdbRating" class="form-control form-control-sm" />
+                        <ValidationMessage For="() => Entity.ImdbRating" class="text-danger" />
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public Movie? Entity { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    string Title => Entity?.Id == Guid.Empty ? "New" : "Update";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Entity is null) Entity = new Movie();
+        else
+        {
+            // var result = await Repository.GetByIdAsync((Guid)Id);
+            // if (!result.Success || result.Data is null) return;
+            // Input = result.Data.ToInput();
+        }
+    }
+
+    async Task HandleValidSubmit()
+    {
+        // var result = Id is null
+        //     ? await Repository.AddAsync(Input)
+        //     : await Repository.UpdateAsync(Id.Value, Input);
+
+        // if (result.Success) Navigation.NavigateTo("/admin/movies");
+        // await App!.ShowToast(result.Message, result.Success ? "success" : "error");
+        // StateHasChanged();
+    }
+}

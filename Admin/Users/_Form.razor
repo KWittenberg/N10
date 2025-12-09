@@ -140,7 +140,7 @@
     [Parameter] public UserDto? Input { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
 
-    string Title => Input!.Id.HasValue ? "Update" : $"New";
+    string Title => Input!.Id.HasValue ? "Update" : "New";
 
 
     protected override void OnParametersSet()

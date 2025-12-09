@@ -11,26 +11,34 @@
 
 
 <!-- Scan - Populate - Search -->
-<div class="mt-4 p-2 @App?.GetContentClass()">
-    <div class="row align-items-center">
-        <div class="col-12 col-md-6">
-            <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync">Scan</button>
-            @if (Entities is not null && Entities.Any())
-            {
-                <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
-            }
-        </div>
+@if (Entity is null)
+{
+    <div class="mt-4 p-2 @App?.GetContentClass()">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6">
+                <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync">Scan</button>
+                @if (Entities is not null && Entities.Any())
+                {
+                    <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
+                }
+            </div>
 
-        <div class="col-12 col-md-6">
-            <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
-                <div class="input-group">
-                    <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
-                    <button class="btn btn-primary" type="submit">Search</button>
-                </div>
-            </EditForm>
+            <div class="col-12 col-md-6">
+                <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleValidSubmit>
+                    <div class="input-group">
+                        <InputText class="form-control" @bind-Value="SearchTmdb" placeholder=" search tmdb.." required />
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </EditForm>
+            </div>
         </div>
     </div>
-</div>
+}
+
+@if(Entity is not null)
+{
+    <_Form Entity="Entity" OnBack="() => Entity = null"/>
+}
 
 @if (IsProcessing)
 {
@@ -40,7 +48,7 @@
 }
 else
 {
-    @if (TmdbSearch is null && TmdbDetails is null)
+    @if (TmdbSearch is null && TmdbDetails is null && Entity is null)
     {
         <div class="mt-3 @App?.GetContentClass()">
             @if (Movies is not null)
@@ -88,6 +96,7 @@ else
 
     List<ScanMovieModel>? Movies;
     IQueryable<Movie>? Entities;
+    Movie? Entity;
     string? Search;
 
     string SearchTmdb = string.Empty;
@@ -96,8 +105,10 @@ else
 
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
+    bool IsEditing { get; set; } = false;
 
     string ScanPath => Globals.X265Path;
+
 
 
     protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
@@ -139,10 +150,8 @@ else
 
     async Task AddEdit(Movie? input)
     {
-        // Look in the Users.razor for reference.
-        // Input = input;
-        // IsEditing = true;
-        // await Task.CompletedTask;
+        Entity = input;
+        await Task.CompletedTask;
     }
 
     async Task ScanAsync()

@@ -84,12 +84,13 @@
                 }
                 else
                 {
-                    <span class="text-primary" @onclick="() => OnPopulate.InvokeAsync(context.Id)" title="Populate From Tmdb"><i class="bi bi-cloud-download"></i></span>
+                    if (!context.IsMetadataFetched)
+                    {
+                        <span class="text-primary" @onclick="() => OnPopulate.InvokeAsync(context.Id)" title="Populate From Tmdb"><i class="bi bi-cloud-download"></i></span>
+                    }
+                    <span class="ms-2 text-white" @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
                     <span class="ms-2 text-danger" @onclick="() => Delete(context)" title="Remove"><i class="bi bi-trash"></i></span>
                 }
-                @* <a class="text-white" href="admin/movie/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                <span class="ms-1 text-primary" @onclick="() => PopulateFromTmdb(context.Id)" title="Populate"><i class="bi bi-cloud-download"></i></span>
-                <span class="ms-2 text-danger" @onclick="() => ShowDelete(context)" title="Remove"><i class="bi bi-trash"></i></span> *@
             </ChildContent>
         </TemplateColumn>
     </QuickGrid>
