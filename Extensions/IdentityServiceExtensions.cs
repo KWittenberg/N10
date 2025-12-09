@@ -31,6 +31,7 @@ public static class IdentityServiceExtensions
             options.UseSqlServer(cs);
         });
 
+        // ✅ Ovaj transient je ključan za Blazor Server!
         // Provide ApplicationDbContext via the factory as TRANSIENT so Identity gets a fresh context per injection
         services.AddTransient(sp => sp.GetRequiredService<IDbContextFactory<ApplicationDbContext>>().CreateDbContext());
 

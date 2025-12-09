@@ -2,7 +2,7 @@
 
 public static class MoviePatterns
 {
-    public static readonly Dictionary<string, Action<Movie, string>> KnownPatterns = new(StringComparer.OrdinalIgnoreCase)
+    public static readonly Dictionary<string, Action<ScanMovieModel, string>> KnownPatterns = new(StringComparer.OrdinalIgnoreCase)
     {
         // Versions
         ["4K"] = (m, _) => m.Version = AddVersion(m, "4K"),
@@ -85,7 +85,7 @@ public static class MoviePatterns
     };
 
     // --- HELPER METODA ---
-    static string AddVersion(Movie m, string value)
+    static string AddVersion(ScanMovieModel m, string value)
     {
         if (string.IsNullOrEmpty(m.Version)) return value;
         if (m.Version.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Version; // već postoji, preskoči
@@ -93,7 +93,7 @@ public static class MoviePatterns
         return $"{m.Version}.{value}";
     }
 
-    static string AddColor(Movie m, string value)
+    static string AddColor(ScanMovieModel m, string value)
     {
         if (string.IsNullOrEmpty(m.Color)) return value;
         if (m.Color.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Color; // već postoji, preskoči

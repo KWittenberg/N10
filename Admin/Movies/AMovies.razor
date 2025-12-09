@@ -1,10 +1,8 @@
 ﻿@page "/admin/movies"
 @attribute [Authorize(Roles = "Admin")]
 
-@inject IDbContextFactory<ApplicationDbContext> context
-@inject ApplicationDbContext db
-@inject MovieScannerService MovieScannerService
-@inject IMovieRepository Repository
+@inject ApplicationDbContext Context
+@inject MovieService MovieService
 @inject ITmdbService TmdbService
 
 <title>@Title</title>
@@ -47,11 +45,11 @@ else
         <div class="mt-3 @App?.GetContentClass()">
             @if (Movies is not null)
             {
-                <_Table Entities="Movies.AsQueryable()" EntityName="Scan" OnTmdbSearch="HandleSearch" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
+                <_Table Entities="Movies.Select(s => s.ToMovieEntity()).AsQueryable()" EntityName="Scan" OnTmdbSearch="HandleSearch" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
             }
             @if (Entities is not null)
             {
-                <_Table Entities="Entities" EntityName="@Title" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" />
+                <_Table Entities="Entities" EntityName="@Title" OnLoadEntities="RefreshEntitiesAsync" OnEdit="AddEdit" OnPopulate="PopulateFromTmdbById" />
             }
         </div>
     }
@@ -88,7 +86,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<Movie>? Movies;
+    List<ScanMovieModel>? Movies;
     IQueryable<Movie>? Entities;
     string? Search;
 
@@ -108,7 +106,7 @@ else
     {
         // await using var db = await context.CreateDbContextAsync();
 
-        Entities = db.Movies.AsNoTracking().OrderBy(x => x.SortTitle).AsQueryable();
+        Entities = Context.Movies.AsNoTracking().OrderBy(x => x.SortTitle).AsQueryable();
         if (!Entities.Any())
         {
             await App!.ShowToast($"{Title} Not Found!", "error");
@@ -147,12 +145,10 @@ else
         // await Task.CompletedTask;
     }
 
-
-
     async Task ScanAsync()
     {
         await App!.ShowToast($"Scaning For New Movies!", "success");
-        var scannedMovies = await MovieScannerService.GetAllMoviesInFolderAsync(ScanPath);
+        var scannedMovies = await MovieService.GetAllMoviesInFolderAsync(ScanPath);
         if (scannedMovies.Count > 0)
         {
             if (Entities is not null && await Entities.AnyAsync())
@@ -170,31 +166,19 @@ else
     async Task PopulateFromTmdb()
     {
         await App!.ShowToast($"Start Populate From Tmdb!", "success");
-        await Repository.PopulateFromTmdbAsync();
+        // await Repository.PopulateFromTmdbAsync();
         await RefreshEntitiesAsync();
         await App!.ShowToast($"Finish and Add Details in Database!", "success");
     }
 
-    async Task PopulateFromTmdb(Guid id)
+    async Task PopulateFromTmdbById(Guid id)
     {
-        await App!.ShowToast($"Start Populate From Tmdb!", "success");
-        await Repository.PopulateFromTmdbByIdAsync(id);
-        await RefreshEntitiesAsync();
-        await App!.ShowToast($"Finish and Add Details in Database!", "success");
+        var result = await MovieService.PopulateFromTmdbByIdAsync(id);
+        if (result.Success)
+        {
+            await App!.ShowToast($"{result.Message}", "success");
+            await RefreshEntitiesAsync();
+        }
+        else await App!.ShowToast($"{result.Message}", "error");
     }
-
-    #region ---> DELETE
-    void ShowDelete(Movie input)
-    {
-        App?.ShowDeleteConfirmation(input.Title, input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
-    }
-
-    async Task ConfirmDelete(Guid id)
-    {
-        @* var result = await Repository.DeleteAsync(id);
-        if (result.Success) await RefreshEntitiesAsync();
-
-        await App!.ShowToast(result.Message, result.Success ? "success" : "error"); *@
-    }
-    #endregion
 }

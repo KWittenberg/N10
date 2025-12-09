@@ -1,11 +1,17 @@
 ﻿namespace N10.Services.Movies;
 
-public class MovieScannerService
+public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdbService tmdbService)
 {
-    public async Task<List<Movie>> GetAllMoviesInFolderAsync(string path, CancellationToken cancellationToken = default)
+    readonly string entityName = "Movie";
+
+
+
+
+    #region MovieScannerService
+    public async Task<List<ScanMovieModel>> GetAllMoviesInFolderAsync(string path, CancellationToken cancellationToken = default)
     {
         var filePaths = await ReadFolderAsync(path, cancellationToken);
-        var movieInfos = new List<Movie>();
+        var movieInfos = new List<ScanMovieModel>();
 
         var tasks = filePaths.Select(async filePath =>
         {
@@ -16,7 +22,7 @@ public class MovieScannerService
             catch (Exception ex)
             {
                 Console.WriteLine($"Error parsing {filePath}: {ex.Message}");
-                return new Movie { Title = $"Error: {Path.GetFileName(filePath)}" };
+                return new ScanMovieModel { Title = $"Error: {Path.GetFileName(filePath)}" };
             }
         });
 
@@ -55,12 +61,12 @@ public class MovieScannerService
     }
 
     // 2. Parsiranje imena datoteke
-    async Task<Movie> ParseFilenameAsync(string filePath)
+    async Task<ScanMovieModel> ParseFilenameAsync(string filePath)
     {
         var filename = Path.GetFileName(filePath);
         var nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
 
-        var info = new Movie
+        var info = new ScanMovieModel
         {
             FileName = filename,
             FileCreatedUtc = File.GetCreationTimeUtc(filePath),
@@ -101,7 +107,95 @@ public class MovieScannerService
 
         // --- FORMATIRANJE NASLOVA ---
         info.Title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Title.ToLowerInvariant().Trim());
+        info.SortTitle = CreateSortTitle(info.Title);
 
         return await Task.FromResult(info);
+    }
+
+    // 3. Kreiranje sortirajućeg naslova
+    public string CreateSortTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return string.Empty;
+
+        title = title.Trim().ToLower();
+
+        foreach (var prefix in IgnorePrefixes)
+        {
+            if (title.StartsWith(prefix)) title = title[prefix.Length..];
+        }
+
+        // makni smeće
+        title = new string(title.Where(char.IsLetterOrDigit).ToArray());
+
+        // velika slova čisto radi lijepog spremanja
+        return char.ToUpper(title[0]) + title[1..];
+    }
+
+    static readonly string[] IgnorePrefixes = ["the ", "a ", "an "];
+    #endregion
+
+
+
+
+    public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
+    {
+        await using var db = await context.CreateDbContextAsync();
+
+        var movie = await db.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
+        if (movie is null) return Result.Error($"{entityName} Not Found!");
+
+        try
+        {
+            var details = await tmdbService.GetMovieByIdAsync(movie.TmdbId!.Value);
+            if (details is null) return Result.Error("Tmdb Details Not Found!");
+
+
+            // MAPIRANJE TMDB → MOVIE
+            movie.TmdbTitle = details.Title;
+            movie.ImdbId = details.ImdbId;
+
+            movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
+                ? string.Empty
+                : details.PosterPath;
+
+            // Genres
+            movie.Genres.Clear();
+
+            // Dohvati sve TmdbId-eve iz details
+            var tmdbIds = details.Genres.Select(g => g.Id).ToList();
+
+            // Pronađi sve postojeće žanrove odjednom
+            var existingGenres = await db.MovieGenres.Where(x => tmdbIds.Contains(x.TmdbId)).ToListAsync();
+
+            foreach (var g in details.Genres)
+            {
+                var genre = existingGenres.FirstOrDefault(x => x.TmdbId == g.Id);
+
+                if (genre is null)
+                {
+                    genre = new MovieGenre
+                    {
+                        TmdbId = g.Id,
+                        TmdbName = g.Name
+                    };
+                    db.MovieGenres.Add(genre);
+                    existingGenres.Add(genre); // dodaj u listu da ga možeš ponovno koristiti
+                }
+
+                movie.Genres.Add(genre);
+            }
+
+            movie.IsMetadataFetched = true;
+
+            // SAVE
+            db.Movies.Update(movie);
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            return Result.Error(ex.Message);
+        }
+
+        return Result.Ok($"{entityName} Succifuly Populated From Tmdb!");
     }
 }

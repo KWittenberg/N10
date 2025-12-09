@@ -1,5 +1,4 @@
 ﻿@inject ApplicationDbContext Context
-@inject ITmdbService TmdbService
 
 <div class="quickgrid-wrapper table-responsive">
     <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
@@ -85,6 +84,7 @@
                 }
                 else
                 {
+                    <span class="text-primary" @onclick="() => OnPopulate.InvokeAsync(context.Id)" title="Populate From Tmdb"><i class="bi bi-cloud-download"></i></span>
                     <span class="ms-2 text-danger" @onclick="() => Delete(context)" title="Remove"><i class="bi bi-trash"></i></span>
                 }
                 @* <a class="text-white" href="admin/movie/@context.Id" data-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
@@ -107,6 +107,7 @@
     [Parameter] public EventCallback<(int?, string, int?)> OnTmdbSearch { get; set; }
     [Parameter] public EventCallback OnLoadEntities { get; set; }
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
+    [Parameter] public EventCallback<Guid> OnPopulate { get; set; }
 
     string? Search;
 
