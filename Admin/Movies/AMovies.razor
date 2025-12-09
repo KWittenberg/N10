@@ -166,7 +166,7 @@ else
     async Task PopulateFromTmdb()
     {
         await App!.ShowToast($"Start Populate From Tmdb!", "success");
-        // await Repository.PopulateFromTmdbAsync();
+        await MovieService.PopulateFromTmdbAsync();
         await RefreshEntitiesAsync();
         await App!.ShowToast($"Finish and Add Details in Database!", "success");
     }

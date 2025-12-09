@@ -1,6 +1,6 @@
 ﻿namespace N10.Services.Movies;
 
-public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdbService tmdbService)
+public class MovieService(ApplicationDbContext context, ITmdbService tmdbService)
 {
     readonly string entityName = "Movie";
 
@@ -139,9 +139,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdb
 
     public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
     {
-        await using var db = await context.CreateDbContextAsync();
-
-        var movie = await db.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
+        var movie = await context.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
         if (movie is null) return Result.Error($"{entityName} Not Found!");
 
         try
@@ -165,7 +163,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdb
             var tmdbIds = details.Genres.Select(g => g.Id).ToList();
 
             // Pronađi sve postojeće žanrove odjednom
-            var existingGenres = await db.MovieGenres.Where(x => tmdbIds.Contains(x.TmdbId)).ToListAsync();
+            var existingGenres = await context.MovieGenres.Where(x => tmdbIds.Contains(x.TmdbId)).ToListAsync();
 
             foreach (var g in details.Genres)
             {
@@ -178,7 +176,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdb
                         TmdbId = g.Id,
                         TmdbName = g.Name
                     };
-                    db.MovieGenres.Add(genre);
+                    context.MovieGenres.Add(genre);
                     existingGenres.Add(genre); // dodaj u listu da ga možeš ponovno koristiti
                 }
 
@@ -188,8 +186,8 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdb
             movie.IsMetadataFetched = true;
 
             // SAVE
-            db.Movies.Update(movie);
-            await db.SaveChangesAsync();
+            context.Movies.Update(movie);
+            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -197,5 +195,84 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> context, ITmdb
         }
 
         return Result.Ok($"{entityName} Succifuly Populated From Tmdb!");
+    }
+
+    public async Task PopulateFromTmdbAsync()
+    {
+        var movies = await context.Movies.Include(x => x.Genres).Where(x => x.IsMetadataFetched == false).ToListAsync();
+        if (movies.Count == 0) return;
+
+        foreach (var movie in movies)
+        {
+            try
+            {
+                TmdbDetails? details = null;
+
+                // Pokušaj dohvatiti po TmdbId ako postoji
+                if (movie.TmdbId is not null) details = await tmdbService.GetMovieByIdAsync(movie.TmdbId.Value);
+
+                // Ako nema detalja, pretraži po naslovu i godini
+                if (details is null)
+                {
+                    var search = await tmdbService.SearchMoviesAsync(movie.Title, movie.Year?.ToString());
+                    if (search?.Results is null || search.Results.Count == 0) continue;
+
+                    var best = search.Results.First();
+                    if (best.Id == 0) continue;
+
+                    movie.TmdbId = best.Id;
+                    details = await tmdbService.GetMovieByIdAsync(best.Id);
+                    if (details is null) continue;
+                }
+
+                // MAPIRANJE TMDB → MOVIE
+                movie.TmdbTitle = details.Title;
+                movie.ImdbId = details.ImdbId;
+                movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
+                    ? null
+                    : details.PosterPath;
+
+                // Genres
+                movie.Genres.Clear();
+
+                // Dohvati sve TmdbId-eve iz details
+                var tmdbIds = details.Genres.Select(g => g.Id).ToList();
+
+                // Pronađi sve postojeće žanrove odjednom
+                var existingGenres = await context.MovieGenres.Where(x => tmdbIds.Contains(x.TmdbId)).ToListAsync();
+
+                foreach (var g in details.Genres)
+                {
+                    var genre = existingGenres.FirstOrDefault(x => x.TmdbId == g.Id);
+
+                    if (genre is null)
+                    {
+                        genre = new MovieGenre
+                        {
+                            TmdbId = g.Id,
+                            TmdbName = g.Name
+                        };
+                        context.MovieGenres.Add(genre);
+                        existingGenres.Add(genre); // dodaj u listu da ga možeš ponovno koristiti
+                    }
+
+                    movie.Genres.Add(genre);
+                }
+
+                movie.IsMetadataFetched = true;
+
+                // SAVE
+                context.Movies.Update(movie);
+                await context.SaveChangesAsync();
+
+                // Delay (anti-rate-limit)
+                await Task.Delay(300);
+            }
+            catch
+            {
+                // Ako pojedini film padne, preskači
+                continue;
+            }
+        }
     }
 }
