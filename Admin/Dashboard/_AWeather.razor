@@ -6,8 +6,8 @@
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <h3 class="">@($"{OpenWeather?.Main?.Temp}°C")</h3>
-                    <p class="text-muted">@OpenWeather?.Name</p>
+                    <h1 class="h4t">@($"{OpenWeather?.Main?.Temp}°C")</h1>
+                    <h4 class="text-muted">@OpenWeather?.Name</h4>
                     <p class="small-font">Humidity <b>@(OpenWeather?.Main?.Humidity)</b> %</p>
                     <p class="small-font">Presure <b>@(OpenWeather?.Main?.Pressure)</b> hPa</p>
                     <p class="small-font">Wind Speed <b>@(OpenWeather?.Wind?.Speed)</b> m/s</p>
@@ -19,7 +19,7 @@
                             @foreach (var weather in OpenWeather?.Weather!)
                             {
                                 <h2 class="m-0">@weather.Main</h2>
-                                <h4 class="m-0">@weather.Description</h4>
+                                <h6 class="m-0">@weather.Description</h6>
                             }
                         </div>
                     </div>

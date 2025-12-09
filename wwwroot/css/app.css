@@ -1,41 +1,200 @@
-/*-----------------------
-  START AIDA CSS Default
-------------------------*/
+/*
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Wix+Madefor+Text:ital,wght@0,400..800;1,400..800&display=swap");
+*/
+/* -----------------------------------------------------------
+   1. IMPORT FONTS
+   Title: Montserrat (Moæan)
+   Subtitle: Raleway (Elegantan)
+   Body: Open Sans (Èitljiv)
+----------------------------------------------------------- */
+/* 1. TITLE FONT (Za naslove h1t - h6t) */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+/* 2. SUBTITLE FONT (Za podnaslove h1s - h6s) */
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600&display=swap');
+
+/* 3. BODY FONT (Za glavni tekst) */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+/* -----------------------------------------------------------
+   2. CONFIGURATION (Postavke)
+----------------------------------------------------------- */
 :root {
-    --kw-title-font: 'Bebas Neue', sans-serif;
-    --kw-body-font: 'Montserrat', sans-serif;
-    --kw-body-font-size: 1rem;
+    /* Definiramo font familije */
+    --kw-font-title: 'Roboto', sans-serif;
+    --kw-font-subtitle: 'Raleway', sans-serif;
+    --kw-font-body: 'Open Sans', sans-serif;
+    /* Override Bootstrap body fonta (da cijela stranica koristi Open Sans) */
+    --bs-body-font-family: var(--kw-font-body);
+    
+    
+    /* Custom fontovi za AIDA */
+    /*--kw-title-font: "Wix Madefor Text", sans-serif;
+    --kw-subtitle-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --kw-body-font: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;*/
+    /*--kw-title-font: 'Bebas Neue', sans-serif;
+    --kw-body-font: 'Montserrat', sans-serif;*/
+    /*--kw-body-font-size: 1rem;
     --kw-body-font-size-sm: 0.8rem;
     --kw-body-bg-light: #fff;
     --kw-body-bg-dark: #212529;
     --kw-dark-color: #212121;
-    --kw-light-color: #deeefb;
+    --kw-light-color: #deeefb;*/
     --kw-z-navbar: 1100;
     --kw-z-toast: 2000;
 }
 
-html, body {
+#app {
+    height: 100%;
+}
+
+/* -----------------------------------------------------------
+   3. STANDARD BOOTSTRAP ELEMENTS (Ne diramo boje, samo font)
+----------------------------------------------------------- */
+/* Obièni h1-h6 ostaju Bootstrap default (velièina i boja),
+    samo im dajemo Body font da budu neutralni */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--kw-font-body);
+    /*font-weight: 600;
+    font-size: 1rem;*/
+    /* Ne diramo boju - Bootstrap æe sam prebaciti crno/bijelo ovisno o temi */
+}
+
+/* -----------------------------------------------------------
+   4. CUSTOM TITLE CLASSES (.h1t - .h6t)
+   Ovi naslovi vuku tvoju "--cf-theme-core" boju!
+----------------------------------------------------------- */
+.h1t, .h2t, .h3t, .h4t, .h5t, .h6t {
+    font-family: var(--kw-font-title);
+    /* OVDJE JE MAGIJA: Koristi varijablu iz tvog theme sustava */
+    color: var(--cf-theme-core);
+    font-weight: 800; /* Extra bold */
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Fiksne velièine za Title verzije (malo veæe i moænije) */
+.h1t {
+    font-size: 3.5rem;
+}
+
+.h2t {
+    font-size: 2.75rem;
+}
+
+.h3t {
+    font-size: 2.25rem;
+}
+
+.h4t {
+    font-size: 1.75rem;
+}
+
+.h5t {
+    font-size: 1.5rem;
+}
+
+.h6t {
+    font-size: 1.25rem;
+}
+
+/* -----------------------------------------------------------
+   5. CUSTOM SUBTITLE CLASSES (.h1s - .h6s)
+   Podnaslovi - koriste se uz Title
+----------------------------------------------------------- */
+.h1s, .h2s, .h3s, .h4s, .h5s, .h6s {
+    font-family: var(--kw-font-subtitle);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.2rem;
+    display: block;
+    /* Za boju koristimo Bootstrap 'text-muted' logiku ili tvoju 'gray' varijablu
+       kako ne bi 'tukli' po oèima kao glavni naslov */
+    color: var(--cf-gray-600);
+}
+
+/* Velièine za Subtitle */
+.h1s {
+    font-size: 1.25rem;
+}
+
+.h2s {
+    font-size: 1.1rem;
+}
+
+.h3s {
+    font-size: 1.0rem;
+}
+
+.h4s {
+    font-size: 0.9rem;
+}
+
+.h5s {
+    font-size: 0.85rem;
+}
+
+.h6s {
+    font-size: 0.75rem;
+}
+
+/* -----------------------------------------------------------
+   6. DARK MODE ADJUSTMENTS (Profesionalni fix)
+   Ako je aktivna tamna tema, moramo prilagoditi subtitle boju
+   da se vidi na tamnoj pozadini.
+----------------------------------------------------------- */
+[data-bs-theme="dark"] .h1s,
+[data-bs-theme="dark"] .h2s,
+[data-bs-theme="dark"] .h3s,
+[data-bs-theme="dark"] .h4s,
+[data-bs-theme="dark"] .h5s,
+[data-bs-theme="dark"] .h6s {
+    color: var(--cf-gray-300); /* Svjetlija siva za tamnu pozadinu */
+}
+
+/* Opcionalno: Ako je tvoja core boja pretamna za dark mode, 
+   ovdje možeš reæi naslovima da koriste svjetliju varijantu */
+/* 
+[data-bs-theme="dark"] .h1t {
+    color: var(--cf-theme-300); 
+} 
+*/
+
+/*html, body {
     font-family: var(--kw-body-font);
     font-size: var(--kw-body-font-size);
     height: 100%;
     min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1t, h2t, h3t, h4t, h5t, h6t {
     font-family: var(--kw-title-font);
+}
+
+.h1t, .h2t, .h3t, .h4t, .h5t, .h6t {
+    font-family: var(--kw-title-font);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--kw-body-font);
 }
 
 .h1, .h2, .h3, .h4, .h5, .h6 {
-    font-family: var(--kw-title-font);
-}
+    font-family: var(--kw-body-font);
+}*/
 
 p-sm, .p-sm {
-    font-size: var(--kw-body-font-size-sm) !important;
+    font-size: 0.8rem !important;
 }
 
-#app {
-    height: 100%;
-}
+
 /*-----------------------
   END AIDA CSS Default
 ------------------------*/

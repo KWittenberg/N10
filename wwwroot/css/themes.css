@@ -195,9 +195,9 @@
     /* #endregion gray */
 }
 
-h1, h2, h3, h4, h5, h6 {
+/*h1t, h2t, h3t, h4t, h5t, h6t {
     color: var(--cf-theme-core);
-}
+}*/
 
 a {
     color: var(--cf-theme-500);
