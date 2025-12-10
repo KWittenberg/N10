@@ -80,7 +80,8 @@
             <ChildContent>
                 @if (EntityName == "Scan")
                 {
-                    <span class="ms-1 text-primary" @onclick="() => AddToDb(context)" title="Add To Database"><i class="bi bi-plus-circle"></i></span>
+                    @* <span class="ms-1 text-primary" @onclick="() => AddToDb(context)" title="Add To Database"><i class="bi bi-plus-circle"></i></span> *@
+                    <span class="ms-1 text-primary" @onclick="() => OnAddToDb.InvokeAsync(context)" title="Add To Database"><i class="bi bi-plus-circle"></i></span>
                 }
                 else
                 {
@@ -107,6 +108,7 @@
 
     [Parameter] public EventCallback<(int?, string, int?)> OnTmdbSearch { get; set; }
     [Parameter] public EventCallback OnLoadEntities { get; set; }
+    [Parameter] public EventCallback<Movie> OnAddToDb { get; set; }
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Guid> OnPopulate { get; set; }
 
@@ -117,8 +119,8 @@
         get
         {
             if (Entities is null) return Enumerable.Empty<Movie>().AsQueryable();
-            if (string.IsNullOrWhiteSpace(Search)) return Entities.AsQueryable();
-            else return Entities.Where(x => x.Title.Contains(Search, StringComparison.OrdinalIgnoreCase)).AsQueryable();
+            if (string.IsNullOrWhiteSpace(Search)) return Entities;
+            else return Entities.Where(x => x.Title.Contains(Search, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -126,8 +128,6 @@
     GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
     PaginationState? _paginationState;
     PaginationState PaginationState => _paginationState ??= new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 };
-
-
 
 
     async Task AddToDb(Movie input)
@@ -145,9 +145,6 @@
             await App!.ShowToast($"Failed to add {input.Title} to database: {ex.Message}", "error");
         }
     }
-
-
-
 
     async Task PlayInVlc(string? name, string? filename)
     {
@@ -181,9 +178,6 @@
         }
     }
 
-
-
-
     #region ---> DELETE
     void Delete(Movie input)
     {
@@ -215,5 +209,4 @@
         }
     }
     #endregion
-
 }
