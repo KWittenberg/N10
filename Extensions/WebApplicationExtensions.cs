@@ -29,7 +29,7 @@ public static class WebApplicationExtensions
         app.UseHttpsRedirection();
 
         // 4. Localization (culture from query string)
-        app.AddLocalizationMiddleware();
+        // app.AddLocalizationMiddleware();
 
         // 5. Antiforgery
         app.UseAntiforgery();

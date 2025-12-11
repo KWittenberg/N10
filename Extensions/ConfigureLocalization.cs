@@ -32,19 +32,19 @@ public static class ConfigureLocalization
 
 
     // Middleware to handle culture parameter in query string
-    public static void AddLocalizationMiddleware(this WebApplication app)
-    {
-        app.Use(async (context, next) =>
-        {
-            var cultureQuery = context.Request.Query["culture"];
-            if (!string.IsNullOrEmpty(cultureQuery))
-            {
-                var culture = new CultureInfo(cultureQuery);
-                CultureInfo.CurrentCulture = culture;
-                CultureInfo.CurrentUICulture = culture;
-            }
+    //public static void AddLocalizationMiddleware(this WebApplication app)
+    //{
+    //    app.Use(async (context, next) =>
+    //    {
+    //        var cultureQuery = context.Request.Query["culture"];
+    //        if (!string.IsNullOrEmpty(cultureQuery))
+    //        {
+    //            var culture = new CultureInfo(cultureQuery);
+    //            CultureInfo.CurrentCulture = culture;
+    //            CultureInfo.CurrentUICulture = culture;
+    //        }
 
-            await next(context);
-        });
-    }
+    //        await next(context);
+    //    });
+    //}
 }

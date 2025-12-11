@@ -2,6 +2,7 @@
     <div class="px-3 d-flex justify-content-center align-items-center gap-3">
         <i class="@ToggleSidebarIconClass" @onclick="OnToggleSidebar" title="@ToggleSidebarTooltipText"></i>
         <a href=""><i class="bi bi-house-fill" title="Home"></i></a>
+        <p-sm>App Memory: @(GC.GetTotalMemory(false) / 1024 / 1024) MB</p-sm>
     </div>
     <div class="px-3 d-flex justify-content-center align-items-center gap-3">
         <i class="@ToggleContentIconClass" @onclick="OnChangeContent" title="@ToggleContentTooltipText"></i>

@@ -1,8 +1,8 @@
-﻿@page "/admin/movies"
+﻿@page "/admin/movies1"
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
-@inject ApplicationDbContext Context
+@* @inject ApplicationDbContext Context *@
 @inject MovieService MovieService
 @inject ITmdbService TmdbService
 
@@ -109,11 +109,11 @@ else
     [CascadingParameter] AppState? App { get; set; }
 
     List<ScanMovieModel>? Movies;
-    IQueryable<Movie>? Entities;
+    // IQueryable<Movie>? Entities;
     Movie? Entity;
     string? Search;
 
-    const string Title = "Movies";
+    const string Title = "MoviesOne";
     bool IsProcessing { get; set; } = true;
 
     string SearchTmdb = string.Empty;
@@ -124,20 +124,84 @@ else
 
 
 
-    protected override void OnInitialized() => RefreshEntities();
 
-    void RefreshEntities()
+    #region START
+    public record ServiceResponseQgPagination<T>(string Message, List<T>? Data, QgPaginationDto? Pagination);
+    public record QgPaginationDto(int TotalRecords, int Page, int PageSize, string? SortBy = null, bool SortDescending = false);
+    ServiceResponseQgPagination<Movie>? Entities;
+
+    PaginationState PaginationState = new() { ItemsPerPage = 15 };
+
+    
+
+
+    protected override async Task OnInitializedAsync() => await LoadEntitiesAsync();
+
+    async Task LoadEntitiesAsync()
     {
-        Entities = Context.Movies.AsNoTracking().OrderByDescending(x => x.FileCreatedUtc).AsQueryable();
-        if (!Entities.Any())
+        Entities = await GetPaginatedAsync(1, 15, null, false);
+        IsProcessing = false;
+        StateHasChanged();
+    }
+
+    async Task<ServiceResponseQgPagination<Movie>> GetPaginatedAsync(int page = 1, int pageSize = 15, string? sortBy = null, bool sortDescending = false)
+    {
+        await using var db = await ContextFactory.CreateDbContextAsync();
+
+        var query = db.Movies.AsQueryable();
+        var totalRecords = await query.CountAsync();
+
+        if (totalRecords == 0) return new ServiceResponseQgPagination<Movie>("Coupons Not Found!", null, new QgPaginationDto(0, page, pageSize, sortBy, sortDescending));
+
+        if (!string.IsNullOrWhiteSpace(sortBy))
         {
-            App!.ShowToast($"{Title} Not Found!", "error");
-            Entities = null;
-            return;
+            // Dinamičko sortiranje preko EF.Property
+            query = sortDescending ? query.OrderByDescending(x => EF.Property<object>(x, sortBy)) : query.OrderBy(x => EF.Property<object>(x, sortBy));
+        }
+        else
+        {
+            // Zadano sortiranje prema CreatedUtc
+            query = query.OrderByDescending(x => x.CreatedUtc);
         }
 
-        IsProcessing = false;
+        var entities = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+        return new ServiceResponseQgPagination<Movie>("OK", entities, new QgPaginationDto(totalRecords, page, pageSize, sortBy, sortDescending));
     }
+
+    async ValueTask<GridItemsProviderResult<Movie>> LoadCoupons(GridItemsProviderRequest<Movie> request)
+    {
+        int page = (request.StartIndex / PaginationState.ItemsPerPage) + 1;
+
+        // For Sort
+        var sortBy = request.GetSortByProperties().FirstOrDefault();
+        var response = await GetPaginatedAsync(page, PaginationState.ItemsPerPage, sortBy.PropertyName, sortBy.Direction == SortDirection.Descending);
+
+        // No Sort
+        // var response = await Repository.GetPaginatedAsync(page, PaginationState.ItemsPerPage);
+        if (response.Pagination == null || response.Data == null) return GridItemsProviderResult.From(new List<Movie>(), 0);
+
+        return GridItemsProviderResult.From(response.Data, response.Pagination.TotalRecords);
+    }
+    #endregion
+
+
+
+
+    // protected override void OnInitialized() => RefreshEntities();
+
+    // void RefreshEntities()
+    // {
+    //     Entities = Context.Movies.AsNoTracking().OrderByDescending(x => x.FileCreatedUtc).AsQueryable();
+    //     if (!Entities.Any())
+    //     {
+    //         App!.ShowToast($"{Title} Not Found!", "error");
+    //         Entities = null;
+    //         return;
+    //     }
+
+    //     IsProcessing = false;
+    // }
 
     async Task HandleValidSubmit()
     {
