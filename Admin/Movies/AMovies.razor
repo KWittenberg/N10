@@ -23,7 +23,7 @@
         <strong>RAM Items (New):</strong> @(Movies?.Count ?? 0)
         @if (Movies?.Count > 0)
         {
-            <span class="text-muted">(@EstimateSize(Movies.Count) KB)</span>
+            <span class="text-muted"> (@EstimateSize(Movies.Count) KB)</span>
         }
     </span>
     <span>
@@ -236,9 +236,11 @@ else
         var sw = System.Diagnostics.Stopwatch.StartNew();
         
         // 1. Dohvati postojeće nazive iz baze (samo stringovi, brzo)
-        // Koristimo _readContext jer je on ionako tu za čitanje
-        var existingFileNames = await ReadContext!.Movies.AsNoTracking().Select(m => m.FileName) // Pazi da je case-matching točan u bazi
-                                    .ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> existingFileNames;
+        await using (var context = await ContextFactory.CreateDbContextAsync())
+        {
+            existingFileNames = await context.Movies.AsNoTracking().Select(m => m.FileName).ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
+        }
 
         // 2. Pozovi optimizirani servis
         // Servis će parsirati SAMO one fajlove koji nisu u ovom HashSetu

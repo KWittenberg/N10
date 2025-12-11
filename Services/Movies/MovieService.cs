@@ -5,6 +5,8 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
     readonly string entityName = "Movie";
 
 
+
+    #region MovieScannerService
     public async Task<List<ScanMovieModel>> GetNewMoviesOnlyAsync(string path, HashSet<string> existingFileNames, CancellationToken cancellationToken = default)
     {
         // 1. Samo pročitaj imena fajlova (najbrža operacija)
@@ -40,7 +42,6 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
         return movieInfos;
     }
 
-    #region MovieScannerService
     public async Task<List<ScanMovieModel>> GetAllMoviesInFolderAsync(string path, CancellationToken cancellationToken = default)
     {
         var filePaths = await ReadFolderAsync(path, cancellationToken);
