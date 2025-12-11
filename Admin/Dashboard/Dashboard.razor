@@ -8,7 +8,7 @@
 
 <_PageHeader Title="@Title" />
 
-@if (IsProcessing || Entity is null)
+@if (IsProcessing || Data is null)
 {
     <_Loading />
 }
@@ -16,7 +16,7 @@ else
 {
     <div class="@App?.GetContentClass()">
 
-        
+
 
         <div class="row">
             <div class="col-xl-3 col-md-6">
@@ -38,10 +38,10 @@ else
 
         <div class="row">
             <div class="col-xl-3 col-md-6">
-                <a href="admin/roles"><_IconComponent Icon="R" Title="Roles" Value="@Entity.RolesCount" PredictedValue="5" /></a>
+                <a href="admin/roles"><_IconComponent Icon="R" Title="Roles" Value="@Data.Roles" PredictedValue="5" /></a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="admin/users"><_IconComponent Icon="U" Title="Users" Value="@Entity.UsersCount" PredictedValue="100" /></a>
+                <a href="admin/users"><_IconComponent Icon="U" Title="Users" Value="@Data.Users" PredictedValue="100" /></a>
             </div>
         </div>
 
@@ -49,21 +49,21 @@ else
 
         <div class="mt-5 row">
             <div class="col-xl-3 col-md-6">
-                <a href="admin/roles"><_IconComponent Icon="NF" Title="Note Folders" Value="@Entity.NoteFoldersCount" PredictedValue="10" /></a>
+                <a href="admin/roles"><_IconComponent Icon="NF" Title="Note Folders" Value="@Data.NoteFolders" PredictedValue="10" /></a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="admin/users"><_IconComponent Icon="N" Title="Notes" Value="@Entity.NotesCount" PredictedValue="100" /></a>
+                <a href="admin/users"><_IconComponent Icon="N" Title="Notes" Value="@Data.Notes" PredictedValue="100" /></a>
             </div>
         </div>
         <div class="mt-5 row">
             <div class="col-xl-3 col-md-6">
-                <a href="admin/movies"><_IconComponent Icon="M" Title="Movies" Value="@Entity.MoviesCount" PredictedValue="1000" /></a>
+                <a href="admin/movies"><_IconComponent Icon="M" Title="Movies" Value="@Data.Movies" PredictedValue="1000" /></a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="admin/movies"><_IconComponent Icon="MG" Title="Movies Genere" Value="@Entity.MovieGenereCount" PredictedValue="50" /></a>
+                <a href="admin/movies"><_IconComponent Icon="MG" Title="Movies Genere" Value="@Data.MovieGeners" PredictedValue="50" /></a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="admin/tvs"><_IconComponent Icon="TV" Title="TV Shows" Value="@Entity.MoviesCount" PredictedValue="100" /></a>
+                <a href="admin/tvs"><_IconComponent Icon="TV" Title="TV Shows" Value="@Data.Movies" PredictedValue="100" /></a>
             </div>
         </div>
     </div>
@@ -74,7 +74,17 @@ else
     #region ---> START PAGE
     [CascadingParameter] AppState? App { get; set; }
 
-    DashboardDto? Entity;
+    class DashboardData
+    {
+        public int Roles { get; set; }
+        public int Users { get; set; }
+        public int NoteFolders { get; set; }
+        public int Notes { get; set; }
+        public int Movies { get; set; }
+        public int MovieGeners { get; set; }
+    }
+
+    DashboardData Data = new();
 
     // List<OrderChartDto> OrderCharts = new();
 
@@ -84,23 +94,20 @@ else
 
 
 
-    protected override async Task OnInitializedAsync() => await LoadData();
+    protected override async Task OnInitializedAsync() => await LoadDataAsync();
 
-    async Task LoadData()
+    async Task LoadDataAsync()
     {
-        var roleCount = await Context.Roles.AsNoTracking().CountAsync();
-        var userCount = await Context.Users.AsNoTracking().CountAsync();
+        Data.Roles = await Context.Roles.AsNoTracking().CountAsync();
+        Data.Users = await Context.Users.AsNoTracking().CountAsync();
 
-        var noteFolderCount = await Context.NoteFolders.AsNoTracking().CountAsync();
-        var noteCount = await Context.Notes.AsNoTracking().CountAsync();
+        Data.NoteFolders = await Context.NoteFolders.AsNoTracking().CountAsync();
+        Data.Notes = await Context.Notes.AsNoTracking().CountAsync();
 
-        var movieCount = await Context.Movies.AsNoTracking().CountAsync();
-        var movieGenereCount = await Context.MovieGenres.AsNoTracking().CountAsync();
-
-        Entity = new DashboardDto(roleCount, userCount, noteFolderCount, noteCount, movieCount, movieGenereCount, movieCount);
+        Data.Movies = await Context.Movies.AsNoTracking().CountAsync();
+        Data.MovieGeners = await Context.MovieGenres.AsNoTracking().CountAsync();
 
         IsProcessing = false;
-        //StateHasChanged();
     }
     #endregion
 

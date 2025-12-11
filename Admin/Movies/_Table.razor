@@ -107,7 +107,7 @@
     [Parameter] public string? EntityName { get; set; }
 
     [Parameter] public EventCallback<(int?, string, int?)> OnTmdbSearch { get; set; }
-    [Parameter] public EventCallback OnLoadEntities { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public EventCallback<Movie> OnAddToDb { get; set; }
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Guid> OnPopulate { get; set; }
@@ -139,7 +139,7 @@
             await context.SaveChangesAsync();
 
             await App!.ShowToast($"{input.Title} added to database!", "success");
-            await OnLoadEntities.InvokeAsync();
+            await OnDelete.InvokeAsync();
         }
         catch (Exception ex)
         {
@@ -203,7 +203,7 @@
             context.Movies.Remove(entity);
             await context.SaveChangesAsync();
             await App!.ShowToast($"{EntityName} deleted successfully!", "success");
-            await OnLoadEntities.InvokeAsync();
+            await OnDelete.InvokeAsync();
         }
         catch (Exception ex)
         {

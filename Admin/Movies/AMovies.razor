@@ -1,8 +1,9 @@
 ﻿@page "/admin/movies"
 @attribute [Authorize(Roles = "Admin")]
-@implements IAsyncDisposable
+@* @implements IAsyncDisposable *@
 
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@inject ApplicationDbContext Context
 @inject MovieService MovieService
 @inject ITmdbService TmdbService
 
@@ -83,13 +84,13 @@ else
                 <_Table Entities="Movies.Select(s => s.ToMovieEntity()).AsQueryable()"
                         EntityName="Scan"
                         OnTmdbSearch="HandleSearch"
-                        OnLoadEntities="RefreshEntities"
+                        OnDelete="RefreshEntitiesAsync"
                         OnAddToDb="AddToDbAsync"
                         OnEdit="AddEdit" />
             }
             @if (Entities is not null)
             {
-                <_Table Entities="Entities" EntityName="@Title" OnLoadEntities="RefreshEntities" OnEdit="AddEdit" OnPopulate="PopulateFromTmdbById" />
+                <_Table Entities="Entities" EntityName="@Title" OnDelete="RefreshEntitiesAsync" OnEdit="AddEdit" OnPopulate="PopulateFromTmdbById" />
             }
         </div>
     }
@@ -125,9 +126,6 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    // Context koji živi dokle god je komponenta živa - služi SAMO za QuickGrid (Read)
-    ApplicationDbContext? ReadContext;
-
     List<ScanMovieModel>? Movies;
     IQueryable<Movie>? Entities;
     Movie? Entity;
@@ -139,70 +137,32 @@ else
 
     const string Title = "Movies";
     bool IsProcessing { get; set; } = true;
-    //bool IsEditing { get; set; } = false;
-
+    
     string ScanPath => Globals.X265Path;
 
     bool IsScanMode => Movies != null;
     long scanDuration = 0;
     int TotalDbItems = 0;
 
-    // Helper za procjenu veličine (cca 1KB po filmu s metadatom)
-    //string EstimateSize(int count) => (count * 1.5).ToString("N0");
-    // int EstimateSize(int itemCount)
-    // {
-    //     // Procjena veličine u KB (pretpostavka: svaki objekt zauzima oko 500 bytes)
-    //     return (itemCount * 500) / 1024;
-    // }
+    
+    
+    protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
 
-    protected override void OnInitialized()
+    async Task RefreshEntitiesAsync()
     {
-        // Kreiramo context specifično za ovu komponentu
-        ReadContext = ContextFactory.CreateDbContext();
-        RefreshEntities();
-    }
+        Entities = Context.Movies.AsNoTracking().OrderByDescending(x => x.FileCreatedUtc).AsQueryable();
 
-    // Ovu metodu više ne moraš zvati 'Async' jer je definiranje Query-a sinhrono
-    void RefreshEntities()
-    {
-        // Čišćenje Scan moda
-        Movies = null;
-
-        // 1. Koristimo ReadContext
-        // 2. AsNoTracking() je ključan za Read-Only gridove (brže je i manje problema)
-        Entities = ReadContext!.Movies.AsNoTracking().OrderByDescending(x => x.FileCreatedUtc).AsQueryable();
-
-        // Provjera da li ima podataka (oprez: Any() okinut će upit na bazu)
-        if (!ReadContext.Movies.Any())
+        if (!Entities.Any())
         {
-            App!.ShowToast($"{Title} Not Found!", "error");
-            // Nemoj postavljati Entities na null ako želiš da Grid ostane renderiran,
-            // ali ako je to tvoja logika, ok:
+            await App!.ShowToast($"{Title} Not Found!", "error");
             Entities = null;
+            return;
         }
 
-        // Okinemo Count samo JEDNOM kod osvježavanja, a ne u HTML-u
-        TotalDbItems = ReadContext.Movies.Count();
+        TotalDbItems = await Entities.CountAsync();
 
         IsProcessing = false;
     }
-
-    // protected override async Task OnInitializedAsync() => await RefreshEntitiesAsync();
-
-    // async Task RefreshEntitiesAsync()
-    // {
-    //     await using var context = ContextFactory.CreateDbContext();
-    //     Entities = context.Movies.AsNoTracking().OrderByDescending(x => x.FileCreatedUtc).AsQueryable();
-
-    //     if (!Entities.Any())
-    //     {
-    //         await App!.ShowToast($"{Title} Not Found!", "error");
-    //         Entities = null;
-    //         return;
-    //     }
-
-    //     IsProcessing = false;
-    // }
 
     async Task HandleValidSubmit()
     {
@@ -232,7 +192,6 @@ else
     async Task ScanAsync()
     {
         await App!.ShowToast($"Scanning for new movies...", "info");
-        // IsProcessing = true;
         var sw = System.Diagnostics.Stopwatch.StartNew();
         
         // 1. Dohvati postojeće nazive iz baze (samo stringovi, brzo)
@@ -307,7 +266,7 @@ else
 
         await App!.ShowToast($"{Movies.Count} {Title} added to database!", "success");
         Movies = null;
-        RefreshEntities();
+        await RefreshEntitiesAsync();
     }
 
 
@@ -315,7 +274,7 @@ else
     {
         await App!.ShowToast($"Start Populate From Tmdb!", "success");
         await MovieService.PopulateFromTmdbAsync();
-        RefreshEntities();
+        await RefreshEntitiesAsync();
         await App!.ShowToast($"Finish and Add Details in Database!", "success");
     }
 
@@ -325,7 +284,7 @@ else
         if (result.Success)
         {
             await App!.ShowToast($"{result.Message}", "success");
-            RefreshEntities();
+            await RefreshEntitiesAsync();
         }
         else await App!.ShowToast($"{result.Message}", "error");
     }
@@ -344,8 +303,8 @@ else
     }
 
     // Čišćenje ReadContext-a kada korisnik ode sa stranice
-    public async ValueTask DisposeAsync()
-    {
-        if (ReadContext is not null) await ReadContext.DisposeAsync();
-    }
+    // public async ValueTask DisposeAsync()
+    // {
+    //     if (ReadContext is not null) await ReadContext.DisposeAsync();
+    // }
 }
