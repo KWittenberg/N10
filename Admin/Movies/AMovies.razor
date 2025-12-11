@@ -23,11 +23,11 @@
         <strong>RAM Items (New):</strong> @(Movies?.Count ?? 0)
         @if (Movies?.Count > 0)
         {
-            <span class="text-muted"> (@EstimateSize(Movies.Count) KB)</span>
+            <span class="text-muted"> (@EstimateRamUsage(Movies.Count))</span>
         }
     </span>
     <span>
-        <strong>DB Items (Total):</strong> @TotalDbItems
+        <strong>DB Items:</strong> @TotalDbItems <span class="text-muted">(Lazy Loaded)</span>
     </span>
 </div>
 
@@ -148,7 +148,7 @@ else
     int TotalDbItems = 0;
 
     // Helper za procjenu veličine (cca 1KB po filmu s metadatom)
-    string EstimateSize(int count) => (count * 1.5).ToString("N0");
+    //string EstimateSize(int count) => (count * 1.5).ToString("N0");
     // int EstimateSize(int itemCount)
     // {
     //     // Procjena veličine u KB (pretpostavka: svaki objekt zauzima oko 500 bytes)
@@ -262,43 +262,6 @@ else
         IsProcessing = false;
     }
 
-    // async Task ScanAsync()
-    // {
-    //     IsProcessing = true;
-    //     var sw = System.Diagnostics.Stopwatch.StartNew();
-
-
-    //     await App!.ShowToast($"Scaning For New Movies!", "success");
-    //     var scannedMovies = await MovieService.GetAllMoviesInFolderAsync(ScanPath);
-    //     if (scannedMovies.Count > 0)
-    //     {
-    //         if (Entities is not null && await Entities.AnyAsync())
-    //         {
-    //             var existingFileNames = await Entities.Select(m => m.FileName.ToLower()).ToHashSetAsync();
-    //             Movies = scannedMovies.Where(m => !existingFileNames.Contains(m.FileName.ToLowerInvariant())).ToList();
-    //             if (Movies.Count == 0)
-    //             {
-    //                 await App!.ShowToast($"No New {Title}!", "info");
-    //                 return;
-    //             }
-    //             await App!.ShowToast($"Found: {Movies.Count} movies!", "success");
-    //         }
-    //         else
-    //         {
-    //             Movies = scannedMovies;
-    //             await App!.ShowToast($"Found: {scannedMovies.Count} movies!", "info");
-    //         }
-    //         IsProcessing = false;
-    //     }
-    //     else await App!.ShowToast($"{Title} Not Found!", "error");
-
-    //     sw.Stop();
-    //     scanDuration = sw.ElapsedMilliseconds;
-    // }
-
-
-    // ✅ PISANJE U BAZU - Koristimo kratkotrajni context
-
     async Task AddToDbAsync(Movie input)
     {
         try
@@ -367,6 +330,18 @@ else
         else await App!.ShowToast($"{result.Message}", "error");
     }
 
+
+
+    // Helper za procjenu RAM usage-a
+    string EstimateRamUsage(int count)
+    {
+        if (count == 0) return "0 KB";
+        // Gruba procjena: 1 KB po filmu (objekt + stringovi + pointeri) je realnije za x64 sustave
+        double kb = count * 1.0;
+
+        if (kb > 1024) return $"{(kb / 1024):F1} MB";
+        return $"{kb:F0} KB";
+    }
 
     // Čišćenje ReadContext-a kada korisnik ode sa stranice
     public async ValueTask DisposeAsync()
