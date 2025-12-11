@@ -6,6 +6,7 @@ public static class ServiceCollectionExtensions
     {
         // 1. Core framework services
         services.AddRazorComponents().AddInteractiveServerComponents();
+        // For Production, set DetailedErrors to false
         services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
         services.AddLocalizationExtensions();
 

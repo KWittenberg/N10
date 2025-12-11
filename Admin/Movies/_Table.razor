@@ -1,4 +1,4 @@
-﻿@inject ApplicationDbContext Context
+﻿@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
 <div class="quickgrid-wrapper table-responsive">
     <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
@@ -134,8 +134,9 @@
     {
         try
         {
-            Context.Movies.Add(input);
-            await Context.SaveChangesAsync();
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            context.Movies.Add(input);
+            await context.SaveChangesAsync();
 
             await App!.ShowToast($"{input.Title} added to database!", "success");
             await OnLoadEntities.InvokeAsync();
@@ -191,15 +192,16 @@
     {
         try
         {
-            var entity = Context.Movies.Find(input.Id);
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            var entity = context.Movies.Find(input.Id);
             if (entity is null)
             {
                 await App!.ShowToast($"{EntityName} not found!", "error");
                 return;
             }
 
-            Context.Movies.Remove(entity);
-            await Context.SaveChangesAsync();
+            context.Movies.Remove(entity);
+            await context.SaveChangesAsync();
             await App!.ShowToast($"{EntityName} deleted successfully!", "success");
             await OnLoadEntities.InvokeAsync();
         }

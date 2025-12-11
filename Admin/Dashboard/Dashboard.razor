@@ -60,6 +60,9 @@ else
                 <a href="admin/movies"><_IconComponent Icon="M" Title="Movies" Value="@Entity.MoviesCount" PredictedValue="1000" /></a>
             </div>
             <div class="col-xl-3 col-md-6">
+                <a href="admin/movies"><_IconComponent Icon="MG" Title="Movies Genere" Value="@Entity.MovieGenereCount" PredictedValue="50" /></a>
+            </div>
+            <div class="col-xl-3 col-md-6">
                 <a href="admin/tvs"><_IconComponent Icon="TV" Title="TV Shows" Value="@Entity.MoviesCount" PredictedValue="100" /></a>
             </div>
         </div>
@@ -92,8 +95,9 @@ else
         var noteCount = await Context.Notes.AsNoTracking().CountAsync();
 
         var movieCount = await Context.Movies.AsNoTracking().CountAsync();
+        var movieGenereCount = await Context.MovieGenres.AsNoTracking().CountAsync();
 
-        Entity = new DashboardDto(roleCount, userCount, noteFolderCount, noteCount, movieCount, movieCount);
+        Entity = new DashboardDto(roleCount, userCount, noteFolderCount, noteCount, movieCount, movieGenereCount, movieCount);
 
         IsProcessing = false;
         //StateHasChanged();

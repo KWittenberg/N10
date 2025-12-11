@@ -1,11 +1,44 @@
 ﻿namespace N10.Services.Movies;
 
-public class MovieService(ApplicationDbContext context, ITmdbService tmdbService)
+public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory, ITmdbService tmdbService)
 {
     readonly string entityName = "Movie";
 
 
+    public async Task<List<ScanMovieModel>> GetNewMoviesOnlyAsync(string path, HashSet<string> existingFileNames, CancellationToken cancellationToken = default)
+    {
+        // 1. Samo pročitaj imena fajlova (najbrža operacija)
+        var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi" };
 
+        // Ovo je ultra brzo jer čita samo File Allocation Table, ne otvara fajlove
+        var allFiles = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly).Where(f => extensions.Contains(Path.GetExtension(f)));
+
+        // 2. Filtriraj ODMAH (prije teškog parsiranja)
+        // Uzimamo samo one čiji FileName nije u bazi
+        var newFilesPaths = allFiles.Where(f => !existingFileNames.Contains(Path.GetFileName(f))).ToList();
+        if (newFilesPaths.Count == 0) return new List<ScanMovieModel>();
+
+        // 3. Parsiraj samo nove (Heavy lifting)
+        var movieInfos = new List<ScanMovieModel>();
+        var tasks = newFilesPaths.Select(async filePath =>
+        {
+            try
+            {
+                // OVDJE se događa File.GetCreationTimeUtc i Regex - to je ono što košta
+                return await ParseFilenameAsync(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing {filePath}: {ex.Message}");
+                return null;
+            }
+        });
+
+        var results = await Task.WhenAll(tasks);
+        movieInfos.AddRange(results.Where(info => info != null)!);
+
+        return movieInfos;
+    }
 
     #region MovieScannerService
     public async Task<List<ScanMovieModel>> GetAllMoviesInFolderAsync(string path, CancellationToken cancellationToken = default)
@@ -139,6 +172,7 @@ public class MovieService(ApplicationDbContext context, ITmdbService tmdbService
 
     public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
     {
+        await using var context = await ContextFactory.CreateDbContextAsync();
         var movie = await context.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
         if (movie is null) return Result.Error($"{entityName} Not Found!");
 
@@ -199,6 +233,7 @@ public class MovieService(ApplicationDbContext context, ITmdbService tmdbService
 
     public async Task PopulateFromTmdbAsync()
     {
+        await using var context = await ContextFactory.CreateDbContextAsync();
         var movies = await context.Movies.Include(x => x.Genres).Where(x => x.IsMetadataFetched == false).ToListAsync();
         if (movies.Count == 0) return;
 

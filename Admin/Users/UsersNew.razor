@@ -1,0 +1,273 @@
+﻿@page "/admin/usersnew"
+@attribute [Authorize(Roles = "Admin")]
+@implements IAsyncDisposable
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject UserManager<ApplicationUser> UserManager
+@inject IWebHostEnvironment Environment
+
+<PageTitle>Users</PageTitle>
+
+<_PageHeader Title="Users Management" />
+
+@if (usersQuery is null)
+{
+    <_Loading />
+}
+else
+{
+    <div class="mt-3 @App?.GetContentClass()">
+        @* --- FORMA ZA EDIT/CREATE --- *@
+        <div class="row mb-3">
+            <div class="col-12 col-md-6">
+                @* Tu možeš staviti Search input kao u Roles *@
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search" class="form-control" @bind="SearchTerm" @bind:event="oninput" placeholder="Search users..." />
+                </div>
+            </div>
+            <div class="col-12 col-md-6 text-end">
+                <button class="btn btn-primary" @onclick="CreateNewUser">
+                    <i class="bi bi-person-plus"></i> New User
+                </button>
+            </div>
+        </div>
+
+        @if (isEditing)
+        {
+            <div class="card mb-4 p-3 border-primary">
+                <h5>@(currentUser.Id == Guid.Empty ? "New User" : "Edit User")</h5>
+                <EditForm Model="@currentUser" OnValidSubmit="@HandleSave">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label>Email</label>
+                            <InputText class="form-control" @bind-Value="currentUser.Email" />
+                        </div>
+                        <div class="col-md-6">
+                            <label>Username</label>
+                            <InputText class="form-control" @bind-Value="currentUser.UserName" />
+                        </div>
+
+                        @* Password polje prikazujemo samo kod kreiranja novog *@
+                        @if (currentUser.Id == Guid.Empty)
+                        {
+                            <div class="col-md-6">
+                                <label>Password</label>
+                                <input type="password" class="form-control" @bind="passwordInput" required />
+                            </div>
+                        }
+
+                        <div class="col-12 text-end mt-3">
+                            <button type="button" class="btn btn-secondary me-2" @onclick="CancelEdit">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        }
+
+        @* --- QUICK GRID --- *@
+        <div class="quickgrid-wrapper table-responsive">
+            <QuickGrid Class="table table-hover align-middle" Items="FilteredUsers" Pagination="pagination">
+
+                @* Avatar Column *@
+                <TemplateColumn Title="" Class="width-min">
+                    @if (!string.IsNullOrEmpty(context.AvatarUrl))
+                    {
+                        <img src="@context.AvatarUrl" class="rounded-circle" width="32" height="32" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:32px; height:32px;">
+                            @context.UserName?.FirstOrDefault().ToString().ToUpper()
+                        </div>
+                    }
+                </TemplateColumn>
+
+                <PropertyColumn Property="x => x.Email" Sortable="true" />
+                <PropertyColumn Property="x => x.UserName" Title="Username" Sortable="true" />
+                <PropertyColumn Property="x => x.EmailConfirmed" Title="Confirmed" Align="Align.Center" />
+
+                @* Actions *@
+                <TemplateColumn Title="Actions" Align="Align.End">
+                    <button class="btn btn-link p-0 text-primary me-3" @onclick="() => EditUser(context)">
+                        <i class="bi bi-pencil-square h5"></i>
+                    </button>
+                    <button class="btn btn-link p-0 text-danger" @onclick="() => DeleteUser(context)">
+                        <i class="bi bi-trash h5"></i>
+                    </button>
+                </TemplateColumn>
+            </QuickGrid>
+            <Paginator State="pagination" />
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    // Read context za Grid
+    private ApplicationDbContext? _readContext;
+
+    // IQueryable izvor za Grid
+    private IQueryable<ApplicationUser>? usersQuery;
+
+    // Paginacija i Search
+    PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+    string SearchTerm = "";
+
+    // Edit state
+    bool isEditing = false;
+    ApplicationUser currentUser = new();
+    string passwordInput = ""; // Privremeno polje za password
+
+    // Filtriranje (QuickGrid magija)
+    IQueryable<ApplicationUser> FilteredUsers
+    {
+        get
+        {
+            var query = usersQuery;
+            if (!string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                query = query?.Where(u => u.Email!.Contains(SearchTerm) || u.UserName!.Contains(SearchTerm));
+            }
+            return query ?? Enumerable.Empty<ApplicationUser>().AsQueryable();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        // 1. Inicijaliziraj Read Context (dugotrajni)
+        _readContext = DbFactory.CreateDbContext();
+
+        // 2. Postavi Query (AsNoTracking za performanse!)
+        usersQuery = _readContext.Users.AsNoTracking().OrderBy(u => u.Email);
+    }
+
+    // --- CRUD OPERACIJE PREKO USER MANAGERA ---
+
+    void CreateNewUser()
+    {
+        currentUser = new ApplicationUser();
+        passwordInput = ""; // Reset passworda
+        isEditing = true;
+    }
+
+    void EditUser(ApplicationUser user)
+    {
+        // Važno: Radimo kopiju podataka ili attachamo novi context ako treba
+        // Ali za jednostavan edit forme, dovoljno je prekopirati vrijednosti
+        // ILI (bolja opcija za UserManager): Dohvatimo ga svježeg iz baze
+        // Ali ovdje ćemo pojednostaviti i koristiti podatke iz grida za prikaz u formi
+
+        // PAZI: UserManager.UpdateAsync traži tracking entity.
+        // Zato ćemo ga dohvatiti kad stisnemo SAVE. Ovdje samo punimo formu.
+        currentUser = new ApplicationUser
+        {
+            Id = user.Id,
+            Email = user.Email,
+            UserName = user.UserName,
+            AvatarUrl = user.AvatarUrl
+        };
+        isEditing = true;
+    }
+
+    void CancelEdit()
+    {
+        isEditing = false;
+        currentUser = new();
+    }
+
+    async Task HandleSave()
+    {
+        try
+        {
+            IdentityResult result;
+
+            if (currentUser.Id == Guid.Empty)
+            {
+                // --- CREATE ---
+                // Koristimo UserManager direktno (on koristi svoj Transient context)
+                result = await UserManager.CreateAsync(currentUser, passwordInput);
+            }
+            else
+            {
+                // --- UPDATE ---
+                // 1. Moramo dohvatiti "pravog" usera iz baze da ga UserManager može pratiti
+                var userToUpdate = await UserManager.FindByIdAsync(currentUser.Id.ToString());
+                if (userToUpdate == null)
+                {
+                    await App!.ShowToast("User not found!", "error");
+                    return;
+                }
+
+                // 2. Mapiramo promjene
+                userToUpdate.Email = currentUser.Email;
+                userToUpdate.UserName = currentUser.UserName;
+                // ... ostala polja ...
+
+                // 3. Spasimo
+                result = await UserManager.UpdateAsync(userToUpdate);
+            }
+
+            if (result.Succeeded)
+            {
+                await App!.ShowToast($"User {(currentUser.Id == Guid.Empty ? "created" : "updated")}!", "success");
+                CancelEdit();
+
+                // Osvježi grid (hack: promijeni state da grid skuži refresh, ili samo StateHasChanged ponekad radi ako je IQueryable dinamičan)
+                // Najsigurnije za QuickGrid s EF-om: ponovno "touch" queryja nije uvijek nužan ako je AsNoTracking,
+                // ali ako želimo vidjeti promjenu ODMAH, ponekad treba re-evaluirati.
+                // U QuickGridu je najlakše samo pozvati StateHasChanged jer će on ponovno povući podatke kod renderiranja.
+                // Ali ako želimo biti 100% sigurni:
+                _readContext = DbFactory.CreateDbContext(); // Novi read context da vidimo promjene
+                usersQuery = _readContext.Users.AsNoTracking().OrderBy(u => u.Email);
+            }
+            else
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                await App!.ShowToast($"Error: {errors}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Error: {ex.Message}", "error");
+        }
+    }
+
+    async Task DeleteUser(ApplicationUser user)
+    {
+        // Prikazi confirmation dialog (tvoja logika)
+        App?.ShowDeleteConfirmation(user.UserName, user.Id.ToString(),
+            EventCallback.Factory.Create(this, async () =>
+            {
+                var userToDelete = await UserManager.FindByIdAsync(user.Id.ToString());
+                if (userToDelete != null)
+                {
+                    var result = await UserManager.DeleteAsync(userToDelete);
+                    if (result.Succeeded)
+                    {
+                        await App!.ShowToast("User deleted.", "success");
+                        // Refresh grid
+                        _readContext = DbFactory.CreateDbContext();
+                        usersQuery = _readContext.Users.AsNoTracking().OrderBy(u => u.Email);
+                    }
+                    else
+                    {
+                        await App!.ShowToast("Failed to delete.", "error");
+                    }
+                }
+            }));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_readContext is not null)
+        {
+            await _readContext.DisposeAsync();
+        }
+    }
+}
