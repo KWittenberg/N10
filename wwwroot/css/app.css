@@ -194,6 +194,9 @@ p-sm, .p-sm {
     font-size: 0.8rem !important;
 }
 
+.text-core{
+    color: var(--cf-theme-core) !important;
+}
 
 /*-----------------------
   END AIDA CSS Default

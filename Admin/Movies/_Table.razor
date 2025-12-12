@@ -24,7 +24,7 @@
 
         <TemplateColumn Title="Title" Align="Align.Start" SortBy="@titleSort">
             <span class="ms-4" style="cursor: pointer;" @onclick="() => PlayInVlc(context.Title, context.FileName)">
-                <i class="bi bi-play-circle-fill"></i>
+                <i class="@((context.Release == "PSA" && context.Source == "BluRay") ? "text-core" : "text-muted") bi bi-play-circle-fill"></i>
             </span>
             <span class="ms-3 @((context.IsMetadataFetched) ? "text-primary" : "text-muted")" style="cursor: pointer;" @onclick="() => OnTmdbSearch.InvokeAsync((context.TmdbId, context.Title, context.Year))">
                 @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
@@ -43,9 +43,16 @@
             <PropertyColumn Property="x => x.Video" Title="Video" Align="Align.Center" Sortable="true" />
         }
 
-        <PropertyColumn Property="x => x.Release" Title="Release" Align="Align.Center" Sortable="true" />
+        @* <PropertyColumn Property="x => x.Release" Title="Release" Class="@((x => x.Release == "PSA" && x => x.Source == "BluRay") ? "text-core" : "text-muted")" Align="Align.Center" Sortable="true" /> *@
+
+        <TemplateColumn Title="Release" Align="Align.Center" SortBy="@releaseSort">
+            <div class="d-flex justify-content-center">
+                <div class="@((context.Release == "PSA" && context.Source == "BluRay") ? "text-core" : "")">@context.Release</div>
+            </div>
+        </TemplateColumn>
+
         <TemplateColumn Title="Meta" Align="Align.Center" SortBy="@metadataSort">
-            <div class="d-flex justify-content-center" style="width: 2rem;">
+            <div class="d-flex justify-content-center">
                 @if (context.IsMetadataFetched)
                 {
                     <i class="fas fa-check-circle fa-lg text-success" title="Metadata fetched"></i>
@@ -99,11 +106,10 @@
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Movie> OnAddToDb { get; set; }
     [Parameter] public EventCallback<Guid> OnPopulate { get; set; }
-    
 
     QuickGrid<Movie>? grid;
-
     GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);
+    GridSort<Movie> releaseSort = GridSort<Movie>.ByAscending(x => x.Release);
     GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
     PaginationState? paginationState;
     PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 };
