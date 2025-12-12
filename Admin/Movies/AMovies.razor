@@ -15,21 +15,17 @@
     <div class="mt-4 p-2 @App?.GetContentClass()">
         <div class="row align-items-center">
             <div class="col-12 col-md-6">
-                <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync" disabled="@IsWorking">
-                    @if (IsWorking)
+                <div class="d-inline-flex align-items-center gap-2">
+                    <_Button OnClick="ScanAsync" IsWorking="IsScanWorking" Name="Scan" />
+                    @if (Movies is not null && Movies.Any())
                     {
-                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        <_Button OnClick="AddAllToDbAsync" IsWorking="IsAddToDbWorking" Name="Add To db" />
                     }
-                    Scan
-                </button>
-                @if (Movies is not null && Movies.Any())
-                {
-                    <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="AddAllToDbAsync">Add To db</button>
-                }
-                @if (HasData)
-                {
-                    <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
-                }
+                    @if (HasData)
+                    {
+                        <_Button OnClick="PopulateFromTmdb" IsWorking="IsPopulateWorking" Name="Populate From Tmdb" />
+                    }
+                </div>
             </div>
 
             <div class="col-12 col-md-6">
@@ -64,7 +60,7 @@ else
         <div class="mt-3 @App?.GetContentClass()">
             @if (Movies is not null && Movies.Any())
             {
-                <_Table @ref="scanTable"
+                <_Table @ref="ScanTable"
                         DataProvider="ScanProvider"
                         EntityName="Scan"
                         OnTmdbSearch="HandleSearchTmdbFromTable"
@@ -72,7 +68,7 @@ else
             }
             @if (HasData)
             {
-                <_Table @ref="dbTable"
+                <_Table @ref="DbTable"
                         DataProvider="DbProvider"
                         EntityName="@Title"
                         OnTmdbSearch="HandleSearchTmdbFromTable"
@@ -115,15 +111,14 @@ else
     [CascadingParameter] AppState? App { get; set; }
 
     // References to tables
-    _Table? scanTable;
-    _Table? dbTable;
+    _Table? ScanTable;
+    _Table? DbTable;
 
     List<ScanMovieModel>? Movies;
     Movie? Entity;
-    //string? Search;
 
     const string Title = "Movies";
-    bool HasData, IsWorking = false;
+    bool HasData, IsScanWorking, IsAddToDbWorking, IsPopulateWorking = false;
     bool IsProcessing = true;
 
     string SearchTmdb = string.Empty;
@@ -148,7 +143,7 @@ else
         var query = db.Movies.AsNoTracking();
 
         // 2. Search (čitamo iz same tablice)
-        var search = dbTable?.SearchTerm;
+        var search = DbTable?.SearchTerm;
         if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Title.Contains(search));
 
         // 3. Sort (Dynamic LINQ ili switch)
@@ -174,7 +169,7 @@ else
         var query = Movies.Select(m => m.ToMovieEntity()).AsQueryable();
 
         // Search
-        var search = scanTable?.SearchTerm;
+        var search = ScanTable?.SearchTerm;
         if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Title.Contains(search, StringComparison.OrdinalIgnoreCase));
 
         // Sort (In-Memory)
@@ -226,10 +221,10 @@ else
 
     async Task ScanAsync()
     {
-        IsWorking = true;
-        await App!.ShowToast($"Scanning for new movies...", "info");
+        IsScanWorking = true;
+        // await App!.ShowToast($"Scanning for new movies...", "info");
         long scanDuration = 0;
-        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
 
         // 1. Dohvati postojeće nazive iz baze (samo stringovi, brzo)
         HashSet<string> existingFileNames;
@@ -247,11 +242,12 @@ else
         if (Movies.Count > 0) await App!.ShowToast($"Found: {Movies.Count} new movies in {scanDuration}ms!", "success");
         else await App!.ShowToast($"No new movies found. (Check took {scanDuration}ms)", "info");
 
-        IsWorking = false;
+        IsScanWorking = false;
     }
 
     async Task AddAllToDbAsync()
     {
+        IsAddToDbWorking = true;
         if (Movies is null || Movies.Count == 0)
         {
             await App!.ShowToast($"No New {Title}!", "info");
@@ -269,6 +265,7 @@ else
         await App!.ShowToast($"{Movies.Count} {Title} added to database!", "success");
         Movies = null;
         // await LoadEntitiesAsync();
+        IsAddToDbWorking = false;
     }
 
     async Task AddToDbAsync(Movie input)
@@ -295,10 +292,12 @@ else
 
     async Task PopulateFromTmdb()
     {
-        await App!.ShowToast($"Start Populate From Tmdb!", "info");
+        IsPopulateWorking = true;
+        // await App!.ShowToast($"Start Populate From Tmdb!", "info");
         await MovieService.PopulateFromTmdbAsync();
         // await LoadEntitiesAsync();
         await App!.ShowToast($"Finish and Add Details in Database!", "success");
+        IsPopulateWorking = false;
     }
 
     async Task PopulateFromTmdbById(Guid id)
