@@ -1,13 +1,15 @@
-﻿@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+﻿@using Microsoft.AspNetCore.Components.QuickGrid
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
 <div class="quickgrid-wrapper table-responsive">
-    <QuickGrid Items="FilteredEntities" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
+    <QuickGrid @ref="grid" ItemsProvider="DataProvider" Class="p-sm table table-hover align-middle" Pagination="PaginationState">
 
         <div class="p-2 d-flex justify-content-between align-items-center">
             <h4 class="p-0 m-0 ms-2">@EntityName</h4>
             <div class="d-inline-flex align-items-center">
                 <i class="bi bi-search"></i>
-                <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search .." />
+                @* <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="Search" @bind:event="oninput" placeholder=" search .."/> *@
+                <input type="search" class="ms-2 form-control form-control-sm" autofocus @bind="SearchTerm" @bind:after="RefreshGrid" placeholder=" search .." />
             </div>
             <div class="me-2 d-inline-flex align-items-center" stile="width: 5rem;">
                 <label class="me-2 small text-muted">Items:</label>
@@ -75,6 +77,7 @@
                     {
                         <span class="text-primary" @onclick="() => OnPopulate.InvokeAsync(context.Id)" title="Populate From Tmdb"><i class="bi bi-cloud-download"></i></span>
                     }
+
                     <span class="ms-2 text-white" @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
                     <span class="ms-2 text-danger" @onclick="() => Delete(context)" title="Remove"><i class="bi bi-trash"></i></span>
                 }
@@ -89,18 +92,25 @@
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    [Parameter] public IQueryable<Movie>? Entities { get; set; }
-    [Parameter] public string? EntityName { get; set; }
+    [Parameter, EditorRequired] public GridItemsProvider<Movie> DataProvider { get; set; } = default!;
+    public string SearchTerm { get; set; } = string.Empty;
 
+    [Parameter] public string? EntityName { get; set; }
     [Parameter] public EventCallback<(int?, string, int?)> OnTmdbSearch { get; set; }
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Movie> OnAddToDb { get; set; }
     [Parameter] public EventCallback<Guid> OnPopulate { get; set; }
-    [Parameter] public EventCallback OnDelete { get; set; }
+    // [Parameter] public EventCallback OnDelete { get; set; }
 
-    string? Search;
+    QuickGrid<Movie>? grid;
+    PaginationState PaginationState => new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 };
 
-    IQueryable<Movie> FilteredEntities
+    async Task RefreshGrid()
+    {
+        if (grid is not null) await grid.RefreshDataAsync();
+    }
+
+    @* IQueryable<Movie> FilteredEntities
     {
         get
         {
@@ -108,12 +118,12 @@
             if (string.IsNullOrWhiteSpace(Search)) return Entities;
             else return Entities.Where(x => x.Title.ToLower().Contains(Search.ToLower()));
         }
-    }
+    } *@
 
     GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);
     GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
-    PaginationState? _paginationState;
-    PaginationState PaginationState => _paginationState ??= new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 };
+    @* PaginationState? _paginationState;
+    PaginationState PaginationState => _paginationState ??= new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 }; *@
 
 
     async Task PlayInVlc(string? name, string? filename)
@@ -172,7 +182,8 @@
             context.Movies.Remove(entity);
             await context.SaveChangesAsync();
             await App!.ShowToast($"{EntityName} deleted successfully!", "success");
-            await OnDelete.InvokeAsync();
+            // wait OnDelete.InvokeAsync();
+            await RefreshGrid();
         }
         catch (Exception ex)
         {

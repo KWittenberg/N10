@@ -1,8 +1,8 @@
-﻿@page "/admin/movies"
+﻿@using Microsoft.EntityFrameworkCore
+@page "/admin/movies"
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
-@inject ApplicationDbContext Context
 @inject MovieService MovieService
 @inject ITmdbService TmdbService
 
@@ -16,15 +16,22 @@
     <div class="mt-4 p-2 @App?.GetContentClass()">
         <div class="row align-items-center">
             <div class="col-12 col-md-6">
-                <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync">Scan</button>
+                @* <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync">Scan</button> *@
+                <button type="button" class="btn btn-primary rounded-pill btn-sm" @onclick="ScanAsync" disabled="@IsWorking">
+                    @if (IsWorking)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    Scan
+                </button>
                 @if (Movies is not null && Movies.Any())
                 {
                     <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="AddAllToDbAsync">Add To db</button>
                 }
-                @if (Entities is not null && Entities.Any())
-                {
-                    <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
-                }
+                @* @if (Entities is not null && Entities.Any()) *@
+
+                <button type="button" class="ms-2 btn btn-primary rounded-pill btn-sm" @onclick="PopulateFromTmdb">Populate From Tmdb</button>
+
             </div>
 
             <div class="col-12 col-md-6">
@@ -49,7 +56,7 @@
 @if (IsProcessing)
 {
     <_Loading Title="Please Scan to populate the database!"
-              Subtitle="@($"Scaning Folder: {ScanPath}")"
+              Subtitle="@($"Scanning Folder: {ScanPath}")"
               ButtonText="Scan" OnClick="ScanAsync" />
 }
 else
@@ -59,20 +66,32 @@ else
         <div class="mt-3 @App?.GetContentClass()">
             @if (Movies is not null && Movies.Any())
             {
-                <_Table Entities="Movies.Select(s => s.ToMovieEntity()).AsQueryable()"
+                @* <_Table Entities="Movies.Select(s => s.ToMovieEntity()).AsQueryable()"
                         EntityName="Scan"
                         OnTmdbSearch="HandleSearch"
-                        OnAddToDb="AddToDbAsync" />
+                        OnAddToDb="AddToDbAsync" /> *@
+                <_Table @ref="scanTable"
+                           DataProvider="ScanProvider"
+                           EntityName="Scan"
+                           OnAddToDb="AddToDbAsync" />
             }
-            @if (Entities is not null)
+            @if (HasData)
             {
-                <_Table Entities="Entities"
+                <_Table @ref="dbTable"
+                           DataProvider="DbProvider"
+                           EntityName="@Title"
+                           OnEdit="AddEdit"
+                           OnPopulate="PopulateFromTmdbById" />
+            }
+            @*@if (Entities is not null)
+            {
+                 <_Table Entities="Entities"
                         EntityName="@Title"
                         OnTmdbSearch="HandleSearch"
                         OnEdit="AddEdit"
                         OnPopulate="PopulateFromTmdbById"
-                        OnDelete="RefreshEntities" />
-            }
+                        OnDelete="RefreshEntities" /> 
+            }*@
         </div>
     }
 }
@@ -108,12 +127,20 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
+    // Reference na tablice da možemo čitati njihov SearchTerm
+    _Table? scanTable;
+    _Table? dbTable;
+
+
+
     List<ScanMovieModel>? Movies;
-    IQueryable<Movie>? Entities;
+    // IQueryable<Movie>? Entities;
     Movie? Entity;
     string? Search;
 
     const string Title = "Movies";
+    bool HasData = false;
+    bool IsWorking = false;
     bool IsProcessing { get; set; } = true;
 
     string SearchTmdb = string.Empty;
@@ -123,22 +150,73 @@ else
     string ScanPath => Globals.X265Path;
 
 
-
-    protected override void OnInitialized() => RefreshEntities();
-
-    void RefreshEntities()
+    protected override async Task OnInitializedAsync()
     {
-        Entities = Context.Movies.AsNoTracking().OrderByDescending(x => x.FileCreatedUtc).AsQueryable();
-        if (!Entities.Any())
-        {
-            App!.ShowToast($"{Title} Not Found!", "error");
-            Entities = null;
-            return;
-        }
-
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        HasData = await db.Movies.AnyAsync();
         IsProcessing = false;
     }
+    
+    #region Scan and Db Provider
+    GridItemsProvider<Movie> DbProvider => async req =>
+    {
+        // 1. Otvori svježi context
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        var query = db.Movies.AsNoTracking();
 
+        // 2. Search (čitamo iz same tablice)
+        var search = dbTable?.SearchTerm;
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Title.Contains(search));
+
+        // 3. Sort (Dynamic LINQ ili switch)
+        var sortSpecs = req.GetSortByProperties();
+        if (sortSpecs.Any())
+        {
+            var sortBy = sortSpecs.First();
+            if (sortBy.Direction == SortDirection.Ascending) query = query.OrderBy(x => EF.Property<object>(x, sortBy.PropertyName));
+            else query = query.OrderByDescending(x => EF.Property<object>(x, sortBy.PropertyName));
+        }
+        else query = query.OrderByDescending(x => x.FileCreatedUtc);// Default sort ako nitko nije kliknuo na stupac
+
+        // 4. Paginacija
+        var total = await query.CountAsync();
+        var items = await query.Skip(req.StartIndex).Take(req.Count ?? 20).ToListAsync();
+
+        return GridItemsProviderResult.From(items, total);
+    };
+
+    GridItemsProvider<Movie> ScanProvider => async req =>
+    {
+        if (Movies == null) return GridItemsProviderResult.From(new List<Movie>(), 0);
+        var query = Movies.Select(m => m.ToMovieEntity()).AsQueryable();
+
+        // Search
+        var search = scanTable?.SearchTerm;
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Title.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+        // Sort (In-Memory)
+        var sortSpecs = req.GetSortByProperties();
+        if (sortSpecs.Any())
+        {
+            var sortBy = sortSpecs.First();
+
+            // Reflection za in-memory sort (ili tvoj switch)
+            var propInfo = typeof(Movie).GetProperty(sortBy.PropertyName);
+            if (propInfo != null)
+            {
+                query = sortBy.Direction == SortDirection.Ascending
+                    ? query.OrderBy(x => propInfo.GetValue(x, null))
+                    : query.OrderByDescending(x => propInfo.GetValue(x, null));
+            }
+        }
+
+        var total = query.Count();
+        var items = query.Skip(req.StartIndex).Take(req.Count ?? 10).ToList();
+
+        return await Task.FromResult(GridItemsProviderResult.From(items, total));
+    };
+    #endregion
+    
     async Task HandleValidSubmit()
     {
         ArgumentNullException.ThrowIfNull(SearchTmdb);
@@ -165,6 +243,7 @@ else
 
     async Task ScanAsync()
     {
+        IsWorking = true;
         await App!.ShowToast($"Scanning for new movies...", "info");
         long scanDuration = 0;
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -185,7 +264,7 @@ else
         if (Movies.Count > 0) await App!.ShowToast($"Found: {Movies.Count} new movies in {scanDuration}ms!", "success");
         else await App!.ShowToast($"No new movies found. (Check took {scanDuration}ms)", "info");
 
-        IsProcessing = false;
+        IsWorking = false;
     }
 
     async Task AddAllToDbAsync()
@@ -206,7 +285,7 @@ else
         await context.SaveChangesAsync();
         await App!.ShowToast($"{Movies.Count} {Title} added to database!", "success");
         Movies = null;
-        RefreshEntities();
+        // await LoadEntitiesAsync();
     }
 
     async Task AddToDbAsync(Movie input)
@@ -223,7 +302,7 @@ else
 
             // StateHasChanged();
             // Ako želiš baš forsirati reset query-a (nije nužno ako je samo refresh):
-            RefreshEntities();
+            // await LoadEntitiesAsync();
         }
         catch (Exception ex)
         {
@@ -235,7 +314,7 @@ else
     {
         await App!.ShowToast($"Start Populate From Tmdb!", "info");
         await MovieService.PopulateFromTmdbAsync();
-        RefreshEntities();
+        // await LoadEntitiesAsync();
         await App!.ShowToast($"Finish and Add Details in Database!", "success");
     }
 
@@ -245,7 +324,7 @@ else
         if (result.Success)
         {
             await App!.ShowToast($"{result.Message}", "success");
-            RefreshEntities();
+            // await LoadEntitiesAsync();
         }
         else await App!.ShowToast($"{result.Message}", "error");
     }
