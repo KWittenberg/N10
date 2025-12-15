@@ -1,0 +1,93 @@
+﻿@inject AppState App
+@implements IDisposable
+
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        @foreach (var notify in Notifications)
+        {
+            <div class="toast show bg-transparent10" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header @notify.BgColor">
+                    <strong class="me-auto">
+                        <i class="@notify.Icon me-2"></i>
+                        @notify.Title
+                    </strong>
+                    <small class="">@notify.Details</small>
+                    <button type="button" class="btn-close" @onclick="() => RemoveToast(notify.Id)"></button>
+                </div>
+                <div class="toast-body">
+                    @notify.Message
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+@code {
+    List<NotifyModel> Notifications = new();
+    int notifyCounter = 0;
+
+
+    protected override void OnInitialized()
+    {
+        if (App != null) App.OnShowNotify += ShowNotify;
+    }
+
+    async Task ShowNotify(string message, string type, string details)
+    {
+        var icon = type switch
+        {
+            "success" => "fs-6 bi bi-check-circle",
+            "error" => "fs-6 bi bi-x-circle",
+            "info" => "fs-6 bi bi-info-circle",
+            "warning" => "fs-6 bi bi-exclamation-circle",
+            _ => "fs-6 bi bi-check-circle"
+        };
+
+        var bgColor = type switch
+        {
+            "success" => "text-bg-success",
+            "error" => "text-bg-danger",
+            "info" => "text-bg-info",
+            "warning" => "text-bg-warning",
+            _ => "text-bg-success"
+        };
+
+        var toast = new NotifyModel
+        {
+            Id = notifyCounter++,
+            Title = type.ToUpperInvariant(),
+            Message = message,
+            Details = details,
+            Type = type,
+            Icon = icon,
+            BgColor = bgColor
+        };
+
+        Notifications.Add(toast);
+        StateHasChanged();
+
+        // Automatski ukloni toast nakon 5 sekundi
+        await Task.Delay(5000);
+        RemoveToast(toast.Id);
+    }
+    
+    void RemoveToast(int id)
+    {
+        Notifications.RemoveAll(t => t.Id == id);
+        StateHasChanged();
+    }
+
+    class NotifyModel
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Details { get; set; } = string.Empty;
+        public string Type { get; set; } = "success";
+        public string Icon { get; set; } = string.Empty;
+        public string BgColor { get; set; } = string.Empty;
+    }
+
+    public void Dispose() => App.OnShowNotify -= ShowNotify;
+}

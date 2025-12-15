@@ -6,7 +6,65 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
 
 
 
-    #region MovieScannerService
+    public ValueTask<GridItemsProviderResult<Movie>> GetScannedMoviesForGrid(List<ScanMovieModel> sourceList, GridItemsProviderRequest<Movie> req, string searchTerm)
+    {
+        // 1. Pretvorba ScanMovieModel -> Movie
+        var query = sourceList.Select(m => m.ToMovieEntity()).AsQueryable();
+
+        // 2. Search (In-Memory)
+        if (!string.IsNullOrWhiteSpace(searchTerm)) query = query.Where(x => x.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+        // 3. Sort (In-Memory Reflection - kopirano iz tvog koda)
+        var sortSpecs = req.GetSortByProperties();
+        if (sortSpecs.Any())
+        {
+            var sortBy = sortSpecs.First();
+            var propInfo = typeof(Movie).GetProperty(sortBy.PropertyName);
+
+            if (propInfo != null)
+            {
+                query = sortBy.Direction == SortDirection.Ascending
+                    ? query.OrderBy(x => propInfo.GetValue(x, null))
+                    : query.OrderByDescending(x => propInfo.GetValue(x, null));
+            }
+        }
+
+        // 4. Paginacija
+        var count = query.Count();
+        var items = query.Skip(req.StartIndex).Take(req.Count ?? 10).ToList();
+
+        return ValueTask.FromResult(GridItemsProviderResult.From(items, count));
+    }
+
+    public async ValueTask<GridItemsProviderResult<Movie>> GetMoviesForGridAsync(GridItemsProviderRequest<Movie> req, string searchTerm)
+    {
+        // 1. Tvornica (Factory) - čisto i sigurno
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        var query = db.Movies.AsNoTracking();
+
+        // 2. Search
+        if (!string.IsNullOrWhiteSpace(searchTerm)) query = query.Where(x => x.Title.Contains(searchTerm));
+
+        // 3. Sort (Tvoj EF.Property trik)
+        var sort = req.GetSortByProperties().FirstOrDefault();
+        if (sort.PropertyName != null)
+        {
+            query = sort.Direction == SortDirection.Ascending
+                ? query.OrderBy(x => EF.Property<object>(x, sort.PropertyName))
+                : query.OrderByDescending(x => EF.Property<object>(x, sort.PropertyName));
+        }
+        else query = query.OrderByDescending(x => x.FileCreatedUtc);
+
+        // 4. Paginacija & Rezultat
+        var count = await query.CountAsync();
+        var items = await query.Skip(req.StartIndex).Take(req.Count ?? 20).ToListAsync();
+
+        return GridItemsProviderResult.From(items, count);
+    }
+
+
+
+    #region SCAN
     public async Task<List<ScanMovieModel>> GetNewMoviesOnlyAsync(string path, HashSet<string> existingFileNames, CancellationToken cancellationToken = default)
     {
         // 1. Samo pročitaj imena fajlova (najbrža operacija)
@@ -168,9 +226,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
     static readonly string[] IgnorePrefixes = ["the ", "a ", "an "];
     #endregion
 
-
-
-
+    #region POPULATE
     public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
@@ -311,4 +367,5 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
             }
         }
     }
+    #endregion
 }

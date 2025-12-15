@@ -27,7 +27,6 @@
                     }
                 </div>
             </div>
-
             <div class="col-12 col-md-6">
                 <EditForm Enhance Model=@SearchTmdb OnValidSubmit=@HandleSearchTmdb>
                     <div class="input-group">
@@ -109,6 +108,7 @@ else
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
+    readonly Stopwatch Stopwatch = new();
 
     // References to tables
     _Table? ScanTable;
@@ -126,7 +126,7 @@ else
     TmdbDetails? TmdbDetails;
 
     string ScanPath => Globals.X265Path;
-
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,69 +136,19 @@ else
     }
 
     #region Scan and Db Provider
-    GridItemsProvider<Movie> DbProvider => async req =>
-    {
-        // 1. Otvori svježi context
-        await using var db = await ContextFactory.CreateDbContextAsync();
-        var query = db.Movies.AsNoTracking();
-
-        // 2. Search (čitamo iz same tablice)
-        var search = DbTable?.SearchTerm;
-        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Title.Contains(search));
-
-        // 3. Sort (Dynamic LINQ ili switch)
-        var sortSpecs = req.GetSortByProperties();
-        if (sortSpecs.Any())
-        {
-            var sortBy = sortSpecs.First();
-            if (sortBy.Direction == SortDirection.Ascending) query = query.OrderBy(x => EF.Property<object>(x, sortBy.PropertyName));
-            else query = query.OrderByDescending(x => EF.Property<object>(x, sortBy.PropertyName));
-        }
-        else query = query.OrderByDescending(x => x.FileCreatedUtc);// Default sort ako nitko nije kliknuo na stupac
-
-        // 4. Paginacija
-        var total = await query.CountAsync();
-        var items = await query.Skip(req.StartIndex).Take(req.Count ?? 20).ToListAsync();
-
-        return GridItemsProviderResult.From(items, total);
-    };
-
     GridItemsProvider<Movie> ScanProvider => async req =>
     {
         if (Movies == null) return GridItemsProviderResult.From(new List<Movie>(), 0);
-        var query = Movies.Select(m => m.ToMovieEntity()).AsQueryable();
 
-        // Search
-        var search = ScanTable?.SearchTerm;
-        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Title.Contains(search, StringComparison.OrdinalIgnoreCase));
-
-        // Sort (In-Memory)
-        var sortSpecs = req.GetSortByProperties();
-        if (sortSpecs.Any())
-        {
-            var sortBy = sortSpecs.First();
-
-            // Reflection za in-memory sort (ili tvoj switch)
-            var propInfo = typeof(Movie).GetProperty(sortBy.PropertyName);
-            if (propInfo != null)
-            {
-                query = sortBy.Direction == SortDirection.Ascending
-                    ? query.OrderBy(x => propInfo.GetValue(x, null))
-                    : query.OrderByDescending(x => propInfo.GetValue(x, null));
-            }
-        }
-
-        var total = query.Count();
-        var items = query.Skip(req.StartIndex).Take(req.Count ?? 10).ToList();
-
-        return await Task.FromResult(GridItemsProviderResult.From(items, total));
+        return await MovieService.GetScannedMoviesForGrid(Movies, req, ScanTable?.SearchTerm ?? string.Empty);
     };
+
+    GridItemsProvider<Movie> DbProvider => async req => await MovieService.GetMoviesForGridAsync(req, DbTable?.SearchTerm ?? string.Empty);
     #endregion
 
     async Task HandleSearchTmdb()
     {
         ArgumentNullException.ThrowIfNull(SearchTmdb);
-
         TmdbSearch = await TmdbService.SearchMoviesAsync(SearchTmdb);
         SearchTmdb = string.Empty;
         StateHasChanged();
@@ -208,7 +158,6 @@ else
     {
         if (data.tmdbId.HasValue) TmdbDetails = await TmdbService.GetMovieByIdAsync(data.tmdbId.Value);
         else TmdbSearch = await TmdbService.SearchMoviesAsync(data.search, data.year.ToString());
-
         SearchTmdb = string.Empty;
         StateHasChanged();
     }
@@ -221,28 +170,19 @@ else
 
     async Task ScanAsync()
     {
-        IsScanWorking = true;
-        // await App!.ShowToast($"Scanning for new movies...", "info");
-        long scanDuration = 0;
-        var sw = Stopwatch.StartNew();
+        StartTimer(ref IsScanWorking);
 
-        // 1. Dohvati postojeće nazive iz baze (samo stringovi, brzo)
         HashSet<string> existingFileNames;
         await using (var context = await ContextFactory.CreateDbContextAsync())
         {
             existingFileNames = await context.Movies.AsNoTracking().Select(m => m.FileName).ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
         }
 
-        // 2. Pozovi optimizirani Servis -> parsirati će SAMO one fajlove koji nisu u ovom HashSetu
         Movies = await MovieService.GetNewMoviesOnlyAsync(ScanPath, existingFileNames);
+        var duration = StopTimer(ref IsScanWorking);
 
-        sw.Stop();
-        scanDuration = sw.ElapsedMilliseconds;
-
-        if (Movies.Count > 0) await App!.ShowToast($"Found: {Movies.Count} new movies in {scanDuration}ms!", "success");
-        else await App!.ShowToast($"No new movies found. (Check took {scanDuration}ms)", "info");
-
-        IsScanWorking = false;
+        if (Movies.Count > 0) await App!.ShowNotify($"Found: {Movies.Count} new movies!", "success", $"Check took {duration}");
+        else await App!.ShowNotify($"No new movies found!", "info", $"Check took {duration}");
     }
 
     async Task AddAllToDbAsync()
@@ -264,7 +204,6 @@ else
         await context.SaveChangesAsync();
         await App!.ShowToast($"{Movies.Count} {Title} added to database!", "success");
         Movies = null;
-        // await LoadEntitiesAsync();
         IsAddToDbWorking = false;
     }
 
@@ -279,10 +218,6 @@ else
 
             var movieToRemove = Movies?.FirstOrDefault(m => m.FileName == input.FileName);
             if (movieToRemove is not null) Movies?.Remove(movieToRemove);
-
-            // StateHasChanged();
-            // Ako želiš baš forsirati reset query-a (nije nužno ako je samo refresh):
-            // await LoadEntitiesAsync();
         }
         catch (Exception ex)
         {
@@ -293,9 +228,7 @@ else
     async Task PopulateFromTmdb()
     {
         IsPopulateWorking = true;
-        // await App!.ShowToast($"Start Populate From Tmdb!", "info");
         await MovieService.PopulateFromTmdbAsync();
-        // await LoadEntitiesAsync();
         await App!.ShowToast($"Finish and Add Details in Database!", "success");
         IsPopulateWorking = false;
     }
@@ -303,11 +236,24 @@ else
     async Task PopulateFromTmdbById(Guid id)
     {
         var result = await MovieService.PopulateFromTmdbByIdAsync(id);
-        if (result.Success)
-        {
-            await App!.ShowToast($"{result.Message}", "success");
-            // await LoadEntitiesAsync();
-        }
+        if (result.Success) await App!.ShowToast($"{result.Message}", "success");
         else await App!.ShowToast($"{result.Message}", "error");
+    }
+
+
+    void StartTimer(ref bool workingFlag)
+    {
+        workingFlag = true;
+        Stopwatch.Restart();
+        // StateHasChanged(); // Nije nužno ako je event loop brz, ali nekad dobro dođe
+    }
+
+    string StopTimer(ref bool workingFlag)
+    {
+        Stopwatch.Stop();
+        workingFlag = false;
+
+        var ms = Stopwatch.ElapsedMilliseconds;
+        return ms > 1000 ? $"{ms / 1000.0:F2} s" : $"{ms} ms";
     }
 }

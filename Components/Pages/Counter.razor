@@ -18,12 +18,19 @@
     <h1>Toast</h1>
 
     <button class="btn btn-info" @onclick="ShowToastInfo">Info</button>
-    
     <button class="btn btn-success" @onclick="ShowToastSuccess">Success</button>
-
     <button class="btn btn-warning" @onclick="ShowToastWarning">Warning</button>
-    
     <button class="btn btn-danger" @onclick="ShowToastDanger">Danger</button>
+</div>
+
+
+<div class="mt-5 @App?.GetContentClass()">
+    <h1>Notification</h1>
+
+    <button class="btn btn-info" @onclick="ShowNotifyInfo">Info</button>
+    <button class="btn btn-success" @onclick="ShowNotifySuccess">Success</button>
+    <button class="btn btn-warning" @onclick="ShowNotifyWarning">Warning</button>
+    <button class="btn btn-danger" @onclick="ShowNotifyDanger">Danger</button>
 </div>
 
 
@@ -33,8 +40,6 @@
     int currentCount = 0;
     int zero = 0;
 
-
-
     void IncrementCount() => currentCount++;
 
     void DivideByZero()
@@ -43,10 +48,13 @@
     }
 
 
-
     void ShowToastInfo() => App?.ShowToast("This is a Info message!", "info");
     void ShowToastSuccess() => App?.ShowToast("This is a Success message!", "success");
     void ShowToastWarning() => App?.ShowToast("This is a Warning message!", "warning");
     void ShowToastDanger() => App?.ShowToast("This is a Danger message!", "error");
-    
+
+    void ShowNotifyInfo() => App?.ShowNotify("This is a Info message!", "info", "33 ms");
+    void ShowNotifySuccess() => App?.ShowNotify("This is a Success message!", "success", "33ms");
+    void ShowNotifyWarning() => App?.ShowNotify("This is a Warning message!", "warning", "33 ms");
+    void ShowNotifyDanger() => App?.ShowNotify("This is a Danger message!", "error", "33 ms");
 }

@@ -115,9 +115,16 @@ public class AppState(AuthenticationStateProvider authStateProvider,
 
 
 
+    #region Notification
+    public event Func<string, string, string?, Task>? OnShowNotify;
 
+    public Task ShowNotify(string message, string type, string details)
+    {
+        if (OnShowNotify is not null) _ = OnShowNotify.Invoke(message, type, details);
 
-
+        return Task.CompletedTask;
+    }
+    #endregion
 
     #region Toast
     public event Func<string, string, Task>? OnShowToast;
@@ -128,7 +135,6 @@ public class AppState(AuthenticationStateProvider authStateProvider,
 
         return Task.CompletedTask;
     }
-
 
     // public event Action<string, string>? OnShowToast;  //Sinhrona koristi Func, Timer ne radi na sinhronoj!!!
 
