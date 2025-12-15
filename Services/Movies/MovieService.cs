@@ -229,147 +229,107 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> contextFactory
     #region POPULATE
     public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
     {
+        // 1. Otvaramo kratki context
         await using var context = await contextFactory.CreateDbContextAsync();
+
+        // Dohvati film
         var movie = await context.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
         if (movie is null) return Result.Error($"{entityName} Not Found!");
 
         try
         {
-            var details = await tmdbService.GetMovieByIdAsync(movie.TmdbId!.Value);
-            if (details is null) return Result.Error("Tmdb Details Not Found!");
+            TmdbDetails? details = null;
 
+            // 2. FIX: Prvo probaj po ID-u, ALI SAMO AKO POSTOJI
+            if (movie.TmdbId.HasValue && movie.TmdbId.Value > 0) details = await tmdbService.GetMovieByIdAsync(movie.TmdbId.Value);
 
-            // MAPIRANJE TMDB → MOVIE
+            // 3. FALLBACK: Ako nema ID-a ili ga API nije našao, traži po naslovu
+            if (details is null)
+            {
+                // Ako fali ID, probaj search
+                var search = await tmdbService.SearchMoviesAsync(movie.Title, movie.Year?.ToString());
+
+                // Ako nema rezultata, odustani (ovo je onih tvojih 6 problematičnih)
+                if (search?.Results is null || search.Results.Count == 0) return Result.Error($"TMDB Search failed for '{movie.Title}'");
+
+                var best = search.Results.First();
+                movie.TmdbId = best.Id; // Zapamti ID za ubuduće!
+                details = await tmdbService.GetMovieByIdAsync(best.Id);
+            }
+
+            if (details is null) return Result.Error("Tmdb Details Not Found (even after search)!");
+
+            // --- MAPIRANJE (Tvoj kod) ---
             movie.TmdbTitle = details.Title;
             movie.ImdbId = details.ImdbId;
+            movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath) ? null : details.PosterPath;
 
-            movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
-                ? string.Empty
-                : details.PosterPath;
-
-            // Genres
+            // Genres logic
             movie.Genres.Clear();
-
-            // Dohvati sve TmdbId-eve iz details
             var tmdbIds = details.Genres.Select(g => g.Id).ToList();
-
-            // Pronađi sve postojeće žanrove odjednom
             var existingGenres = await context.MovieGenres.Where(x => tmdbIds.Contains(x.TmdbId)).ToListAsync();
 
             foreach (var g in details.Genres)
             {
                 var genre = existingGenres.FirstOrDefault(x => x.TmdbId == g.Id);
-
                 if (genre is null)
                 {
-                    genre = new MovieGenre
-                    {
-                        TmdbId = g.Id,
-                        TmdbName = g.Name
-                    };
+                    genre = new MovieGenre { TmdbId = g.Id, TmdbName = g.Name };
                     context.MovieGenres.Add(genre);
-                    existingGenres.Add(genre); // dodaj u listu da ga možeš ponovno koristiti
+                    existingGenres.Add(genre);
                 }
-
                 movie.Genres.Add(genre);
             }
 
             movie.IsMetadataFetched = true;
+            //movie.FileModifiedUtc = DateTime.UtcNow; // Dobro je zabilježiti kad je ažurirano
+            movie.LastModifiedUtc = DateTime.UtcNow; // Dobro je zabilježiti kad je ažurirano
 
             // SAVE
-            context.Movies.Update(movie);
+            // context.Movies.Update(movie); // Nije nužno jer je tracking upaljen, ali ne škodi
             await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
-            return Result.Error(ex.Message);
+            return Result.Error($"Error processing '{movie.Title}': {ex.Message}");
         }
 
-        return Result.Ok($"{entityName} Succifuly Populated From Tmdb!");
+        return Result.Ok($"'{movie.Title}' updated successfully!");
     }
 
     public async Task<Result> PopulateFromTmdbAsync()
     {
-        var okPopulate = 0;
-        var badPopulate = 0;
+        List<Guid> idsToProcess;
 
-        await using var context = await contextFactory.CreateDbContextAsync();
-        var movies = await context.Movies.Include(x => x.Genres).Where(x => x.IsMetadataFetched == false).ToListAsync();
-        if (movies.Count == 0) return Result.Error($"{entityName} Not Found!");
-
-        foreach (var movie in movies)
+        await using (var context = await contextFactory.CreateDbContextAsync())
         {
-            try
-            {
-                TmdbDetails? details = null;
-
-                // Pokušaj dohvatiti po TmdbId ako postoji
-                if (movie.TmdbId is not null) details = await tmdbService.GetMovieByIdAsync(movie.TmdbId.Value);
-
-                // Ako nema detalja, pretraži po naslovu i godini
-                if (details is null)
-                {
-                    var search = await tmdbService.SearchMoviesAsync(movie.Title, movie.Year?.ToString());
-                    if (search?.Results is null || search.Results.Count == 0) continue;
-
-                    var best = search.Results.First();
-                    if (best.Id == 0) continue;
-
-                    movie.TmdbId = best.Id;
-                    details = await tmdbService.GetMovieByIdAsync(best.Id);
-                    if (details is null) continue;
-                }
-
-                // MAPIRANJE TMDB → MOVIE
-                movie.TmdbTitle = details.Title;
-                movie.ImdbId = details.ImdbId;
-                movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath) ? null : details.PosterPath;
-
-                // Genres
-                movie.Genres.Clear();
-
-                // Dohvati sve TmdbId-eve iz details
-                var tmdbIds = details.Genres.Select(g => g.Id).ToList();
-
-                // Pronađi sve postojeće žanrove odjednom
-                var existingGenres = await context.MovieGenres.Where(x => tmdbIds.Contains(x.TmdbId)).ToListAsync();
-
-                foreach (var g in details.Genres)
-                {
-                    var genre = existingGenres.FirstOrDefault(x => x.TmdbId == g.Id);
-
-                    if (genre is null)
-                    {
-                        genre = new MovieGenre
-                        {
-                            TmdbId = g.Id,
-                            TmdbName = g.Name
-                        };
-                        context.MovieGenres.Add(genre);
-                        existingGenres.Add(genre); // dodaj u listu da ga možeš ponovno koristiti
-                    }
-
-                    movie.Genres.Add(genre);
-                }
-
-                movie.IsMetadataFetched = true;
-
-                // SAVE
-                context.Movies.Update(movie);
-                await context.SaveChangesAsync();
-                okPopulate++;
-                // Delay (anti-rate-limit)
-                await Task.Delay(300);
-            }
-            catch
-            {
-                // Ako pojedini film padne, preskači
-                badPopulate++;
-                continue;
-            }
+            idsToProcess = await context.Movies.AsNoTracking().Where(x => !x.IsMetadataFetched).Select(x => x.Id).ToListAsync();
         }
-        if (badPopulate > 0) return Result.Error($"{badPopulate} {entityName} Fail To Populated From Tmdb!");
-        else return Result.Ok($"{okPopulate} {entityName} Successfully Populated From Tmdb!");
+
+        if (idsToProcess.Count == 0) return Result.Error("No movies need updating.");
+
+        int success = 0;
+        int failed = 0;
+
+        foreach (var id in idsToProcess)
+        {
+            var result = await PopulateFromTmdbByIdAsync(id);
+
+            if (result.Success) success++;
+            else
+            {
+                failed++;
+                // Opcionalno: Logiraj grešku negdje
+                Console.WriteLine(result.Message);
+            }
+
+            // Mali odmor za API
+            await Task.Delay(200);
+        }
+
+        if (success == 0 && failed > 0) return Result.Error($"All {failed} failed. Check logs.");
+
+        return Result.Ok($"Finished: {success} updated, {failed} failed.");
     }
     #endregion
 }
