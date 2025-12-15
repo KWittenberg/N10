@@ -1,4 +1,5 @@
-﻿@inject NavigationManager Navigation
+﻿@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@inject NavigationManager Navigation
 
 @if (Entity is not null)
 {
@@ -154,12 +155,20 @@
 
     async Task HandleValidSubmit()
     {
-        // var result = Id is null
-        //     ? await Repository.AddAsync(Input)
-        //     : await Repository.UpdateAsync(Id.Value, Input);
+        await using var context = await ContextFactory.CreateDbContextAsync();
 
-        // if (result.Success) Navigation.NavigateTo("/admin/movies");
-        // await App!.ShowToast(result.Message, result.Success ? "success" : "error");
-        // StateHasChanged();
+        try
+        {
+            if (Entity?.Id == Guid.Empty) context.Movies.Add(Entity);
+            else context.Movies.Update(Entity!);
+            await context.SaveChangesAsync();
+            await App!.ShowToast($"{Entity?.Title} {(Title == "New" ? "Add" : "Update")} to database!", "success");
+            StateHasChanged();
+            await OnBack.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to {(Title == "New" ? "Add" : "Update")} {Entity?.Title} to database: {ex.Message}", "error");
+        }
     }
 }

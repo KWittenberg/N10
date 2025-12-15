@@ -21,7 +21,7 @@
                     {
                         <_Button OnClick="AddAllToDbAsync" IsWorking="IsAddToDbWorking" Name="Add To db" />
                     }
-                    @if (HasData)
+                    @if (MoviesNeedPopulate)
                     {
                         <_Button OnClick="PopulateFromTmdb" IsWorking="IsPopulateWorking" Name="Populate From Tmdb" />
                     }
@@ -65,7 +65,7 @@ else
                         OnTmdbSearch="HandleSearchTmdbFromTable"
                         OnAddToDb="AddToDbAsync" />
             }
-            @if (HasData)
+            @if (MoviesHaveData)
             {
                 <_Table @ref="DbTable"
                         DataProvider="DbProvider"
@@ -118,7 +118,7 @@ else
     Movie? Entity;
 
     const string Title = "Movies";
-    bool HasData, IsScanWorking, IsAddToDbWorking, IsPopulateWorking = false;
+    bool MoviesHaveData, MoviesNeedPopulate, IsScanWorking, IsAddToDbWorking, IsPopulateWorking = false;
     bool IsProcessing = true;
 
     string SearchTmdb = string.Empty;
@@ -131,7 +131,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         await using var db = await ContextFactory.CreateDbContextAsync();
-        HasData = await db.Movies.AnyAsync();
+        MoviesHaveData = await db.Movies.AsNoTracking().AnyAsync();
+        MoviesNeedPopulate = await db.Movies.AsNoTracking().Where(x => !x.IsMetadataFetched).AnyAsync();
         IsProcessing = false;
     }
 

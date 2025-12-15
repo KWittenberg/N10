@@ -69,8 +69,13 @@
             <PropertyColumn Property="x => x.ImdbId" Title="ImdbId" Align="Align.Center" Sortable="true" />
         }
 
-        <PropertyColumn Property="@(x => x.FileCreatedUtc)" Title="Created" Align="Align.Center" Sortable="true" />
-
+        @* <PropertyColumn Property="@(x => x.FileCreatedUtc)" Title="Created" Align="Align.Center" Sortable="true" /> *@
+        <TemplateColumn Title="Created" Align="Align.Center" SortBy="@createdSort">
+            <div class="d-flex justify-content-center">
+                @context.FileCreatedUtc!.Value.ToString("dd.MM.yyyy.")
+            </div>
+        </TemplateColumn>
+        
         <TemplateColumn Title="Actions" Align="Align.Center">
             <ChildContent>
                 @if (EntityName == "Scan")
@@ -111,6 +116,7 @@
     GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);
     GridSort<Movie> releaseSort = GridSort<Movie>.ByAscending(x => x.Release);
     GridSort<Movie> metadataSort = GridSort<Movie>.ByAscending(x => x.IsMetadataFetched);
+    GridSort<Movie> createdSort = GridSort<Movie>.ByAscending(x => x.FileCreatedUtc);
     PaginationState? paginationState;
     PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = EntityName == "Scan" ? 10 : 25 };
 

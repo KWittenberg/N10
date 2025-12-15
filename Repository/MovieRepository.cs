@@ -72,7 +72,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
     {
         await using var db = await context.CreateDbContextAsync();
 
-        var query = db.Movies.Include(x => x.Genres).AsNoTracking().AsQueryable();
+        var query = db.Movies.Include(x => x.Genres).AsNoTracking().OrderBy(x => x.FileCreatedUtc).AsQueryable();
 
 
         if (!string.IsNullOrEmpty(filter?.SearchTerm)) query = query.Where(m => m.Title.Contains(filter.SearchTerm));

@@ -1,4 +1,4 @@
-﻿namespace N10.Entities;
+﻿namespace N10.DTOs;
 
 public class MovieDto
 {
@@ -35,6 +35,10 @@ public class MovieDto
     public DateTime? CreatedUtc { get; set; }
 
     public DateTime? LastModifiedUtc { get; set; }
+
+
+    public DateTime? FileCreatedUtc { get; set; }
+    public DateTime? FileModifiedUtc { get; set; }
 
 
     public virtual ICollection<MovieGenreDto> Genres { get; set; } = [];
