@@ -126,7 +126,7 @@ else
     TmdbDetails? TmdbDetails;
 
     string ScanPath => Globals.X265Path;
-    
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -171,7 +171,6 @@ else
     async Task ScanAsync()
     {
         StartTimer(ref IsScanWorking);
-
         HashSet<string> existingFileNames;
         await using (var context = await ContextFactory.CreateDbContextAsync())
         {
@@ -180,31 +179,27 @@ else
 
         Movies = await MovieService.GetNewMoviesOnlyAsync(ScanPath, existingFileNames);
         var duration = StopTimer(ref IsScanWorking);
-
         if (Movies.Count > 0) await App!.ShowNotify($"Found: {Movies.Count} new movies!", "success", $"Check took {duration}");
         else await App!.ShowNotify($"No new movies found!", "info", $"Check took {duration}");
     }
 
     async Task AddAllToDbAsync()
     {
-        IsAddToDbWorking = true;
-        if (Movies is null || Movies.Count == 0)
+        if (Movies is not null || Movies?.Count > 0)
         {
-            await App!.ShowToast($"No New {Title}!", "info");
-            return;
-        }
+            StartTimer(ref IsAddToDbWorking);
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            foreach (var movie in Movies.Select(newMovie => newMovie.ToMovieEntity()))
+            {
+                await context.Movies.AddAsync(movie);
+            }
 
-        await using var context = await ContextFactory.CreateDbContextAsync();
-        foreach (var newMovie in Movies)
-        {
-            var movie = newMovie.ToMovieEntity();
-            await context.Movies.AddAsync(movie);
+            await context.SaveChangesAsync();
+            var duration = StopTimer(ref IsAddToDbWorking);
+            await App!.ShowNotify($"{Movies.Count} {Title} added to database!", "success", $"Adding took {duration}");
+            Movies = null;
         }
-
-        await context.SaveChangesAsync();
-        await App!.ShowToast($"{Movies.Count} {Title} added to database!", "success");
-        Movies = null;
-        IsAddToDbWorking = false;
+        else await App!.ShowToast($"No New {Title}!", "info");
     }
 
     async Task AddToDbAsync(Movie input)
@@ -227,10 +222,11 @@ else
 
     async Task PopulateFromTmdb()
     {
-        IsPopulateWorking = true;
-        await MovieService.PopulateFromTmdbAsync();
-        await App!.ShowToast($"Finish and Add Details in Database!", "success");
-        IsPopulateWorking = false;
+        StartTimer(ref IsPopulateWorking);
+        var result = await MovieService.PopulateFromTmdbAsync();
+        var duration = StopTimer(ref IsPopulateWorking);
+        if (result.Success) await App!.ShowNotify($"{result.Message}", "success", $"Populate took {duration}");
+        else await App!.ShowNotify($"{result.Message}", "error", $"Populate took {duration}");
     }
 
     async Task PopulateFromTmdbById(Guid id)
@@ -239,20 +235,17 @@ else
         if (result.Success) await App!.ShowToast($"{result.Message}", "success");
         else await App!.ShowToast($"{result.Message}", "error");
     }
-
-
+    
     void StartTimer(ref bool workingFlag)
     {
         workingFlag = true;
         Stopwatch.Restart();
-        // StateHasChanged(); // Nije nužno ako je event loop brz, ali nekad dobro dođe
     }
 
     string StopTimer(ref bool workingFlag)
     {
         Stopwatch.Stop();
         workingFlag = false;
-
         var ms = Stopwatch.ElapsedMilliseconds;
         return ms > 1000 ? $"{ms / 1000.0:F2} s" : $"{ms} ms";
     }

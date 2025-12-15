@@ -1,6 +1,6 @@
 ﻿namespace N10.Services.Movies;
 
-public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory, ITmdbService tmdbService)
+public class MovieService(IDbContextFactory<ApplicationDbContext> contextFactory, ITmdbService tmdbService)
 {
     readonly string entityName = "Movie";
 
@@ -39,7 +39,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
     public async ValueTask<GridItemsProviderResult<Movie>> GetMoviesForGridAsync(GridItemsProviderRequest<Movie> req, string searchTerm)
     {
         // 1. Tvornica (Factory) - čisto i sigurno
-        await using var db = await ContextFactory.CreateDbContextAsync();
+        await using var db = await contextFactory.CreateDbContextAsync();
         var query = db.Movies.AsNoTracking();
 
         // 2. Search
@@ -229,7 +229,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
     #region POPULATE
     public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
     {
-        await using var context = await ContextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync();
         var movie = await context.Movies.Include(x => x.Genres).FirstOrDefaultAsync(x => x.Id == id);
         if (movie is null) return Result.Error($"{entityName} Not Found!");
 
@@ -288,11 +288,14 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
         return Result.Ok($"{entityName} Succifuly Populated From Tmdb!");
     }
 
-    public async Task PopulateFromTmdbAsync()
+    public async Task<Result> PopulateFromTmdbAsync()
     {
-        await using var context = await ContextFactory.CreateDbContextAsync();
+        var okPopulate = 0;
+        var badPopulate = 0;
+
+        await using var context = await contextFactory.CreateDbContextAsync();
         var movies = await context.Movies.Include(x => x.Genres).Where(x => x.IsMetadataFetched == false).ToListAsync();
-        if (movies.Count == 0) return;
+        if (movies.Count == 0) return Result.Error($"{entityName} Not Found!");
 
         foreach (var movie in movies)
         {
@@ -320,9 +323,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
                 // MAPIRANJE TMDB → MOVIE
                 movie.TmdbTitle = details.Title;
                 movie.ImdbId = details.ImdbId;
-                movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath)
-                    ? null
-                    : details.PosterPath;
+                movie.TmdbImageUrl = string.IsNullOrEmpty(details.PosterPath) ? null : details.PosterPath;
 
                 // Genres
                 movie.Genres.Clear();
@@ -356,16 +357,19 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> ContextFactory
                 // SAVE
                 context.Movies.Update(movie);
                 await context.SaveChangesAsync();
-
+                okPopulate++;
                 // Delay (anti-rate-limit)
                 await Task.Delay(300);
             }
             catch
             {
                 // Ako pojedini film padne, preskači
+                badPopulate++;
                 continue;
             }
         }
+        if (badPopulate > 0) return Result.Error($"{badPopulate} {entityName} Fail To Populated From Tmdb!");
+        else return Result.Ok($"{okPopulate} {entityName} Successfully Populated From Tmdb!");
     }
     #endregion
 }
