@@ -1,7 +1,8 @@
 ﻿@page "/admin/roles"
 @attribute [Authorize(Roles = "Admin")]
 
-@inject ApplicationDbContext Context
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@inject RoleManager<IdentityRole<Guid>> RoleManager
 
 <PageTitle>@Title</PageTitle>
 
@@ -30,13 +31,12 @@ else
                         {
                             <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
                         }
-
                     </div>
                 </EditForm>
             </div>
         </div>
         <div class="quickgrid-wrapper table-responsive">
-            <QuickGrid Class="table align-middle" Items="roles">
+            <QuickGrid Class="table align-middle" Items="roles.AsQueryable()">
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
@@ -56,7 +56,7 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    IQueryable<IdentityRole<Guid>>? roles;
+    List<IdentityRole<Guid>>? roles;
     IdentityRole<Guid> Role = new();
 
     bool IsEditing = false;
@@ -64,13 +64,11 @@ else
 
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
-
-
-    //async Task LoadRoles() => roles = await Context.Roles.OrderBy(r => r.Name).ToListAsync();
+    
     async Task LoadAsync()
     {
-        roles = Context.Roles.OrderBy(r => r.Name).AsQueryable();
-        await Task.CompletedTask; // Nije potreban await, ali ostavljamo zbog signature
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        roles = await context.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
     }
 
     void EditRole(IdentityRole<Guid> role)
@@ -97,20 +95,16 @@ else
         {
             if (IsEditing)
             {
-                // Update postojeće role
-                var existingRole = await Context.Roles.FindAsync(Role.Id);
+                var existingRole = await RoleManager.FindByIdAsync(Role.Id.ToString());
                 if (existingRole != null)
                 {
                     existingRole.Name = Role.Name;
-                    Context.Roles.Update(existingRole);
+                    await RoleManager.UpdateAsync(existingRole);
                 }
             }
-            else Context.Roles.Add(Role);// Kreiraj novu role
-
-            await Context.SaveChangesAsync();
+            else await RoleManager.CreateAsync(Role);// Kreiraj novu role
+            
             await App!.ShowToast($"Role {(IsEditing ? "updated" : "created")} successfully!", "success");
-
-            // Reset form and reload
             CancelEdit();
             await LoadAsync();
         }
@@ -128,7 +122,8 @@ else
 
     async Task ConfirmDelete(IdentityRole<Guid> role)
     {
-        var hasUsers = await Context.UserRoles.AnyAsync(ur => ur.RoleId == role.Id);
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        var hasUsers = await context.UserRoles.AnyAsync(ur => ur.RoleId == role.Id);
 
         if (hasUsers)
         {
@@ -138,8 +133,8 @@ else
 
         try
         {
-            Context.Roles.Remove(role);
-            await Context.SaveChangesAsync();
+            context.Roles.Remove(role);
+            await context.SaveChangesAsync();
             await App!.ShowToast("Role deleted successfully!", "success");
             await LoadAsync();
         }
@@ -149,5 +144,4 @@ else
         }
     }
     #endregion
-
 }
