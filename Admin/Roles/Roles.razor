@@ -18,15 +18,15 @@ else
             <div class="col-12 col-md-6">
             </div>
             <div class="p-1 col-12 col-md-6">
-                <EditForm Enhance Model="@currentRole" OnValidSubmit="@HandleSave">
+                <EditForm Enhance Model="@Role" OnValidSubmit="@HandleSave">
                     <DataAnnotationsValidator />
                     <div class="d-flex align-items-end">
                         <div class="input-group">
-                            <InputText class="form-control" @bind-Value="currentRole.Name" placeholder=" name.." required />
-                            <ValidationMessage For="@(() => currentRole.Name)" />
-                            <button type="submit" class="btn btn-primary me-2">@(isEditing ? "Update" : "New")</button>
+                            <InputText class="form-control" @bind-Value="Role.Name" placeholder=" name.." required />
+                            <ValidationMessage For="@(() => Role.Name)" />
+                            <button type="submit" class="btn btn-primary me-2">@(IsEditing ? "Update" : "New")</button>
                         </div>
-                        @if (isEditing)
+                        @if (IsEditing)
                         {
                             <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
                         }
@@ -39,6 +39,7 @@ else
             <QuickGrid Class="table align-middle" Items="roles">
                 <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
                 <PropertyColumn Property="x => x.Name" Title="Name" Align="Align.Center" Sortable="true" />
+                <PropertyColumn Property="x => x.NormalizedName" Title="NormalizedName" Align="Align.Center" Sortable="true" />
 
                 <TemplateColumn Title="Actions" Align="Align.Center">
                     <ChildContent>
@@ -56,18 +57,17 @@ else
     [CascadingParameter] AppState? App { get; set; }
 
     IQueryable<IdentityRole<Guid>>? roles;
-    // List<IdentityRole<Guid>>? roles;
-    IdentityRole<Guid> currentRole = new();
+    IdentityRole<Guid> Role = new();
 
-    bool isEditing = false;
+    bool IsEditing = false;
     string Title = "Roles";
 
 
-    protected override async Task OnInitializedAsync() => await LoadRoles();
+    protected override async Task OnInitializedAsync() => await LoadAsync();
 
 
     //async Task LoadRoles() => roles = await Context.Roles.OrderBy(r => r.Name).ToListAsync();
-    async Task LoadRoles()
+    async Task LoadAsync()
     {
         roles = Context.Roles.OrderBy(r => r.Name).AsQueryable();
         await Task.CompletedTask; // Nije potreban await, ali ostavljamo zbog signature
@@ -75,44 +75,44 @@ else
 
     void EditRole(IdentityRole<Guid> role)
     {
-        currentRole = new IdentityRole<Guid>
+        Role = new IdentityRole<Guid>
         {
             Id = role.Id,
             Name = role.Name ?? string.Empty
         };
-        isEditing = true;
+        IsEditing = true;
     }
 
     void CancelEdit()
     {
-        currentRole = new IdentityRole<Guid>();
-        isEditing = false;
+        Role = new IdentityRole<Guid>();
+        IsEditing = false;
     }
 
     async Task HandleSave()
     {
-        if (string.IsNullOrWhiteSpace(currentRole.Name)) return;
+        if (string.IsNullOrWhiteSpace(Role.Name)) return;
 
         try
         {
-            if (isEditing)
+            if (IsEditing)
             {
                 // Update postojeće role
-                var existingRole = await Context.Roles.FindAsync(currentRole.Id);
+                var existingRole = await Context.Roles.FindAsync(Role.Id);
                 if (existingRole != null)
                 {
-                    existingRole.Name = currentRole.Name;
+                    existingRole.Name = Role.Name;
                     Context.Roles.Update(existingRole);
                 }
             }
-            else Context.Roles.Add(currentRole);// Kreiraj novu role
+            else Context.Roles.Add(Role);// Kreiraj novu role
 
             await Context.SaveChangesAsync();
-            await App!.ShowToast($"Role {(isEditing ? "updated" : "created")} successfully!", "success");
+            await App!.ShowToast($"Role {(IsEditing ? "updated" : "created")} successfully!", "success");
 
             // Reset form and reload
             CancelEdit();
-            await LoadRoles();
+            await LoadAsync();
         }
         catch (Exception ex)
         {
@@ -141,7 +141,7 @@ else
             Context.Roles.Remove(role);
             await Context.SaveChangesAsync();
             await App!.ShowToast("Role deleted successfully!", "success");
-            await LoadRoles();
+            await LoadAsync();
         }
         catch (Exception ex)
         {
