@@ -11,11 +11,18 @@ namespace N10.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateSequence(
+                name: "BaseAttachmentEntitySequence");
+
+            migrationBuilder.CreateSequence(
+                name: "BaseImageEntitySequence");
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -29,7 +36,8 @@ namespace N10.Data.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     AvatarUrl = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
@@ -44,9 +52,9 @@ namespace N10.Data.Migrations
                     PlaceId = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedId = table.Column<int>(type: "int", nullable: true),
                     CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LastModifiedId = table.Column<int>(type: "int", nullable: true),
                     LastModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -72,7 +80,8 @@ namespace N10.Data.Migrations
                 name: "MovieGenres",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     TmdbId = table.Column<int>(type: "int", nullable: false),
                     TmdbName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false)
                 },
@@ -85,7 +94,8 @@ namespace N10.Data.Migrations
                 name: "Movies",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     FileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     SortTitle = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
@@ -107,9 +117,9 @@ namespace N10.Data.Migrations
                     FileModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedId = table.Column<int>(type: "int", nullable: true),
                     CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LastModifiedId = table.Column<int>(type: "int", nullable: true),
                     LastModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -123,7 +133,7 @@ namespace N10.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -144,7 +154,7 @@ namespace N10.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -166,7 +176,7 @@ namespace N10.Data.Migrations
                     LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     ProviderKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -184,7 +194,7 @@ namespace N10.Data.Migrations
                 columns: table => new
                 {
                     CredentialId = table.Column<byte[]>(type: "varbinary(1024)", maxLength: 1024, nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     Data = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -202,8 +212,8 @@ namespace N10.Data.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -226,7 +236,7 @@ namespace N10.Data.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -246,16 +256,17 @@ namespace N10.Data.Migrations
                 name: "NoteFolders",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ParentFolderId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApplicationUserId = table.Column<int>(type: "int", nullable: true),
+                    ParentFolderId = table.Column<int>(type: "int", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedId = table.Column<int>(type: "int", nullable: true),
                     CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LastModifiedId = table.Column<int>(type: "int", nullable: true),
                     LastModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -278,8 +289,8 @@ namespace N10.Data.Migrations
                 name: "MovieMovieGenre",
                 columns: table => new
                 {
-                    GenresId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MoviesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    GenresId = table.Column<int>(type: "int", nullable: false),
+                    MoviesId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -302,9 +313,10 @@ namespace N10.Data.Migrations
                 name: "Notes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    NoteFolderId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApplicationUserId = table.Column<int>(type: "int", nullable: true),
+                    NoteFolderId = table.Column<int>(type: "int", nullable: true),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", maxLength: 2147483647, nullable: true),
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: true),
@@ -313,9 +325,9 @@ namespace N10.Data.Migrations
                     EncryptionMetadata = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedId = table.Column<int>(type: "int", nullable: true),
                     CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LastModifiedId = table.Column<int>(type: "int", nullable: true),
                     LastModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -339,19 +351,19 @@ namespace N10.Data.Migrations
                 name: "NoteAttachments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR [BaseAttachmentEntitySequence]"),
                     FileName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     FileUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
                     MimeType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     FileSize = table.Column<long>(type: "bigint", nullable: true),
                     IsEncrypted = table.Column<bool>(type: "bit", nullable: false),
-                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    NoteId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ApplicationUserId = table.Column<int>(type: "int", nullable: true),
+                    NoteId = table.Column<int>(type: "int", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedId = table.Column<int>(type: "int", nullable: true),
                     CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LastModifiedId = table.Column<int>(type: "int", nullable: true),
                     LastModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -375,7 +387,7 @@ namespace N10.Data.Migrations
                 name: "NoteImages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR [BaseImageEntitySequence]"),
                     FileName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     FileUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
@@ -383,13 +395,13 @@ namespace N10.Data.Migrations
                     Height = table.Column<int>(type: "int", nullable: true),
                     FileSize = table.Column<long>(type: "bigint", nullable: true),
                     MimeType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    NoteId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ApplicationUserId = table.Column<int>(type: "int", nullable: true),
+                    NoteId = table.Column<int>(type: "int", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedId = table.Column<int>(type: "int", nullable: true),
                     CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LastModifiedId = table.Column<int>(type: "int", nullable: true),
                     LastModifiedUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -413,10 +425,11 @@ namespace N10.Data.Migrations
                 name: "NoteShares",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SharedWithUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    NoteId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApplicationUserId = table.Column<int>(type: "int", nullable: false),
+                    SharedWithUserId = table.Column<int>(type: "int", nullable: false),
+                    NoteId = table.Column<int>(type: "int", nullable: false),
                     Permissions = table.Column<int>(type: "int", nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -614,6 +627,12 @@ namespace N10.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropSequence(
+                name: "BaseAttachmentEntitySequence");
+
+            migrationBuilder.DropSequence(
+                name: "BaseImageEntitySequence");
         }
     }
 }

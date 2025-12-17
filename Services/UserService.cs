@@ -17,10 +17,10 @@ public class UserService(ApplicationDbContext context, UserManager<ApplicationUs
         return await query.ToListAsync();
     }
 
-    public async Task<ApplicationUser?> GetUserAsync(Guid id) => await userManager.FindByIdAsync(id.ToString());
+    public async Task<ApplicationUser?> GetUserAsync(int id) => await userManager.FindByIdAsync(id.ToString());
 
     // Avatar operacije
-    public async Task UpdateAvatarAsync(Guid userId, string avatarPath)
+    public async Task UpdateAvatarAsync(int userId, string avatarPath)
     {
         var user = await context.Users.FindAsync(userId);
         if (user != null)

@@ -56,7 +56,7 @@ public static class IdentityServiceExtensions
                 //options.Lockout.MaxFailedAccessAttempts = 3;
                 //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes((10));
             })
-            .AddRoles<IdentityRole<Guid>>() // Add for Seed with Guid
+            .AddRoles<IdentityRole<int>>() // Add for Seed with Guid
             .AddEntityFrameworkStores<ApplicationDbContext>() // Ovdje Identity traži context, i dobije onaj Transient iz točke 4
             .AddSignInManager()
             .AddDefaultTokenProviders();

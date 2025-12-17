@@ -12,7 +12,7 @@ using N10.Data;
 namespace N10.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251208160828_Initial")]
+    [Migration("20251217232054_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,16 +20,22 @@ namespace N10.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
+            modelBuilder.HasSequence("BaseAttachmentEntitySequence");
+
+            modelBuilder.HasSequence("BaseImageEntitySequence");
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -53,7 +59,7 @@ namespace N10.Data.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -67,8 +73,8 @@ namespace N10.Data.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -77,7 +83,7 @@ namespace N10.Data.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -91,8 +97,8 @@ namespace N10.Data.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -101,7 +107,7 @@ namespace N10.Data.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
@@ -114,8 +120,8 @@ namespace N10.Data.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -124,14 +130,14 @@ namespace N10.Data.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<int>", b =>
                 {
                     b.Property<byte[]>("CredentialId")
                         .HasMaxLength(1024)
                         .HasColumnType("varbinary(1024)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("CredentialId");
 
@@ -140,13 +146,13 @@ namespace N10.Data.Migrations
                     b.ToTable("AspNetUserPasskeys", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -155,10 +161,10 @@ namespace N10.Data.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
@@ -178,11 +184,11 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("MovieMovieGenre", b =>
                 {
-                    b.Property<Guid>("GenresId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("GenresId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("MoviesId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("MoviesId")
+                        .HasColumnType("int");
 
                     b.HasKey("GenresId", "MoviesId");
 
@@ -193,9 +199,11 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.ApplicationUser", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -220,8 +228,8 @@ namespace N10.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<Guid?>("CreatedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CreatedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
@@ -246,8 +254,8 @@ namespace N10.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("LastModifiedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("LastModifiedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("LastModifiedUtc")
                         .HasColumnType("datetime2");
@@ -323,12 +331,15 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.BaseAttachmentEntity", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("NEXT VALUE FOR [BaseAttachmentEntitySequence]");
 
-                    b.Property<Guid>("CreatedId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseSequence(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
@@ -355,8 +366,8 @@ namespace N10.Data.Migrations
                     b.Property<bool>("IsEncrypted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("LastModifiedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("LastModifiedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("LastModifiedUtc")
                         .HasColumnType("datetime2");
@@ -374,12 +385,15 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.BaseImageEntity", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("NEXT VALUE FOR [BaseImageEntitySequence]");
 
-                    b.Property<Guid>("CreatedId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseSequence(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
@@ -406,8 +420,8 @@ namespace N10.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("LastModifiedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("LastModifiedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("LastModifiedUtc")
                         .HasColumnType("datetime2");
@@ -433,9 +447,11 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.Movie", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Audio")
                         .HasMaxLength(20)
@@ -445,8 +461,8 @@ namespace N10.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid>("CreatedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CreatedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
@@ -478,8 +494,8 @@ namespace N10.Data.Migrations
                     b.Property<bool>("IsMetadataFetched")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("LastModifiedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("LastModifiedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("LastModifiedUtc")
                         .HasColumnType("datetime2");
@@ -538,9 +554,11 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.MovieGenre", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("TmdbId")
                         .HasColumnType("int");
@@ -560,12 +578,14 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.Note", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid?>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ApplicationUserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Color")
                         .HasMaxLength(7)
@@ -575,8 +595,8 @@ namespace N10.Data.Migrations
                         .HasMaxLength(2147483647)
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CreatedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CreatedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
@@ -594,14 +614,14 @@ namespace N10.Data.Migrations
                     b.Property<bool>("IsEncrypted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("LastModifiedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("LastModifiedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("LastModifiedUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("NoteFolderId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("NoteFolderId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ReminderAt")
                         .HasColumnType("datetime2");
@@ -622,19 +642,21 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.NoteFolder", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid?>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ApplicationUserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Color")
                         .HasMaxLength(7)
                         .HasColumnType("nvarchar(7)");
 
-                    b.Property<Guid>("CreatedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CreatedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime2");
@@ -645,8 +667,8 @@ namespace N10.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("LastModifiedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("LastModifiedId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("LastModifiedUtc")
                         .HasColumnType("datetime2");
@@ -656,8 +678,8 @@ namespace N10.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid?>("ParentFolderId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("ParentFolderId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -670,24 +692,26 @@ namespace N10.Data.Migrations
 
             modelBuilder.Entity("N10.Entities.NoteShare", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApplicationUserId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("NoteId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("NoteId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Permissions")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("SharedWithUserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SharedWithUserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -704,11 +728,11 @@ namespace N10.Data.Migrations
                 {
                     b.HasBaseType("N10.Entities.BaseAttachmentEntity");
 
-                    b.Property<Guid?>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("ApplicationUserId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid?>("NoteId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("NoteId")
+                        .HasColumnType("int");
 
                     b.HasIndex("ApplicationUserId");
 
@@ -721,11 +745,11 @@ namespace N10.Data.Migrations
                 {
                     b.HasBaseType("N10.Entities.BaseImageEntity");
 
-                    b.Property<Guid?>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("ApplicationUserId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid?>("NoteId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("NoteId")
+                        .HasColumnType("int");
 
                     b.HasIndex("ApplicationUserId");
 
@@ -734,16 +758,16 @@ namespace N10.Data.Migrations
                     b.ToTable("NoteImages");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.HasOne("N10.Entities.ApplicationUser", null)
                         .WithMany()
@@ -752,7 +776,7 @@ namespace N10.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.HasOne("N10.Entities.ApplicationUser", null)
                         .WithMany()
@@ -761,7 +785,7 @@ namespace N10.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<int>", b =>
                 {
                     b.HasOne("N10.Entities.ApplicationUser", null)
                         .WithMany()
@@ -810,9 +834,9 @@ namespace N10.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -825,7 +849,7 @@ namespace N10.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.HasOne("N10.Entities.ApplicationUser", null)
                         .WithMany()

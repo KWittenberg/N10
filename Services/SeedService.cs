@@ -4,7 +4,7 @@ public class SeedService(ApplicationDbContext db,
                             IOptions<AdminOptions> adminOptions,
                             IUserStore<ApplicationUser> userStore,
                             UserManager<ApplicationUser> userManager,
-                            RoleManager<IdentityRole<Guid>> roleManager) : ISeedService
+                            RoleManager<IdentityRole<int>> roleManager) : ISeedService
 {
 
 
@@ -29,7 +29,7 @@ public class SeedService(ApplicationDbContext db,
     {
         if (await roleManager.FindByNameAsync(ApplicationRole.Admin) is null)
         {
-            var adminRole = new IdentityRole<Guid>(ApplicationRole.Admin);
+            var adminRole = new IdentityRole<int>(ApplicationRole.Admin);
             var result = await roleManager.CreateAsync(adminRole);
             if (!result.Succeeded) throw new Exception($"Error in creating Role {Environment.NewLine}{string.Join(Environment.NewLine, result.Errors.Select(e => e.Description))}");
 
@@ -41,7 +41,7 @@ public class SeedService(ApplicationDbContext db,
 
         if (await roleManager.FindByNameAsync(ApplicationRole.Customer) is null)
         {
-            var userRole = new IdentityRole<Guid>(ApplicationRole.Customer);
+            var userRole = new IdentityRole<int>(ApplicationRole.Customer);
             var result = await roleManager.CreateAsync(userRole);
             if (!result.Succeeded) throw new Exception($"Error in creating Role {Environment.NewLine}{string.Join(Environment.NewLine, result.Errors.Select(e => e.Description))}");
 
@@ -53,7 +53,7 @@ public class SeedService(ApplicationDbContext db,
 
         if (await roleManager.FindByNameAsync(ApplicationRole.User) is null)
         {
-            var userRole = new IdentityRole<Guid>(ApplicationRole.User);
+            var userRole = new IdentityRole<int>(ApplicationRole.User);
             var result = await roleManager.CreateAsync(userRole);
             if (!result.Succeeded) throw new Exception($"Error in creating Role {Environment.NewLine}{string.Join(Environment.NewLine, result.Errors.Select(e => e.Description))}");
 

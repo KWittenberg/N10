@@ -8,7 +8,7 @@ public class RoleInput
 
 public class RoleInputValidator : AbstractValidator<RoleInput>
 {
-    public RoleInputValidator(RoleManager<IdentityRole<Guid>> roleManager)
+    public RoleInputValidator(RoleManager<IdentityRole<int>> roleManager)
     {
         RuleFor(x => x.Name)
             //.Cascade(CascadeMode.Stop)  // Opcionalno: Zaustavi validaciju na prvoj grešci
