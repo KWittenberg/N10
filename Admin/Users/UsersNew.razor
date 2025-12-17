@@ -36,7 +36,7 @@ else
         @if (isEditing)
         {
             <div class="card mb-4 p-3 border-primary">
-                <h5>@(currentUser.Id == Guid.Empty ? "New User" : "Edit User")</h5>
+                <h5>@(currentUser.Id == null ? "New User" : "Edit User")</h5>
                 <EditForm Model="@currentUser" OnValidSubmit="@HandleSave">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
@@ -52,7 +52,7 @@ else
                         </div>
 
                         @* Password polje prikazujemo samo kod kreiranja novog *@
-                        @if (currentUser.Id == Guid.Empty)
+                        @if (currentUser.Id == null)
                         {
                             <div class="col-md-6">
                                 <label>Password</label>
@@ -187,7 +187,7 @@ else
         {
             IdentityResult result;
 
-            if (currentUser.Id == Guid.Empty)
+            if (currentUser.Id == null)
             {
                 // --- CREATE ---
                 // Koristimo UserManager direktno (on koristi svoj Transient context)
@@ -215,7 +215,7 @@ else
 
             if (result.Succeeded)
             {
-                await App!.ShowToast($"User {(currentUser.Id == Guid.Empty ? "created" : "updated")}!", "success");
+                await App!.ShowToast($"User {(currentUser.Id == null ? "created" : "updated")}!", "success");
                 CancelEdit();
 
                 // Osvježi grid (hack: promijeni state da grid skuži refresh, ili samo StateHasChanged ponekad radi ako je IQueryable dinamičan)

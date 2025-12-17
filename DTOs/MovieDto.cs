@@ -2,7 +2,7 @@
 
 public class MovieDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     public string FileName { get; set; } = string.Empty;
 

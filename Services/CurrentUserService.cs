@@ -2,7 +2,7 @@
 
 public class CurrentUserService(AuthenticationStateProvider authStateProvider,
                                 UserManager<ApplicationUser> userManager,
-                                RoleManager<IdentityRole<Guid>> roleManager) : ICurrentUserService
+                                RoleManager<IdentityRole<int>> roleManager) : ICurrentUserService
 {
     private UserDto? _cachedUser;
     private bool _isLoaded;

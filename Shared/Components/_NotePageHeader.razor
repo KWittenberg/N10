@@ -39,9 +39,9 @@
     [CascadingParameter] AppState? App { get; set; }
 
     [Parameter] public List<NoteFolderDto> CurrentPath { get; set; } = [];
-    [Parameter] public EventCallback<Guid?> OnSelectFolderId { get; set; }
+    [Parameter] public EventCallback<int?> OnSelectFolderId { get; set; }
 
-    [Parameter] public Guid? CurrentFolderId { get; set; }
+    [Parameter] public int? CurrentFolderId { get; set; }
 
     [Parameter] public string? Title { get; set; } = string.Empty;
 

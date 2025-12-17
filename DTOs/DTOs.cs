@@ -29,14 +29,14 @@ public record ResultQPagination<T>(bool Success, string Message, List<T>? Data, 
 }
 
 // CATEGORY
-public record CategoryDto(Guid Id, string Name, string? Description, string? IconHtml);
+public record CategoryDto(int Id, string Name, string? Description, string? IconHtml);
 
 // MAP
-public record MapDto(Guid Id, string Name, string? IconHtml);
+public record MapDto(int Id, string Name, string? IconHtml);
 
 // DASHBOARD
 public record DashboardDto(int? RolesCount, int? UsersCount, int? NoteFoldersCount, int? NotesCount, int? MoviesCount, int? MovieGenereCount, int? TvShowsCount);
 
 
 // MovieGenre
-public record MovieGenreDto(Guid Id, int TmdbId, string TmdbName, ICollection<MovieDto>? Movies);
+public record MovieGenreDto(int Id, int TmdbId, string TmdbName, ICollection<MovieDto>? Movies);

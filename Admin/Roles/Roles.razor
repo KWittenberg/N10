@@ -2,7 +2,7 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
-@inject RoleManager<IdentityRole<Guid>> RoleManager
+@inject RoleManager<IdentityRole<int>> RoleManager
 
 <PageTitle>@Title</PageTitle>
 
@@ -56,8 +56,8 @@ else
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    List<IdentityRole<Guid>>? roles;
-    IdentityRole<Guid> Role = new();
+    List<IdentityRole<int>>? roles;
+    IdentityRole<int> Role = new();
 
     bool IsEditing = false;
     string Title = "Roles";
@@ -71,9 +71,9 @@ else
         roles = await context.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
     }
 
-    void EditRole(IdentityRole<Guid> role)
+    void EditRole(IdentityRole<int> role)
     {
-        Role = new IdentityRole<Guid>
+        Role = new IdentityRole<int>
         {
             Id = role.Id,
             Name = role.Name ?? string.Empty
@@ -83,7 +83,7 @@ else
 
     void CancelEdit()
     {
-        Role = new IdentityRole<Guid>();
+        Role = new IdentityRole<int>();
         IsEditing = false;
     }
 
@@ -115,12 +115,12 @@ else
     }
 
     #region ---> DELETE
-    void DeleteRole(IdentityRole<Guid> role)
+    void DeleteRole(IdentityRole<int> role)
     {
         App?.ShowDeleteConfirmation(role.Name, role.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(role)));
     }
 
-    async Task ConfirmDelete(IdentityRole<Guid> role)
+    async Task ConfirmDelete(IdentityRole<int> role)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
         var hasUsers = await context.UserRoles.AnyAsync(ur => ur.RoleId == role.Id);

@@ -1,12 +1,12 @@
-﻿namespace N10.Entities;
+﻿namespace N10.DTOs;
 
 public class NoteFolderDto
 {
-    public Guid? Id { get; set; }
+    public int? Id { get; set; }
 
-    public Guid? ApplicationUserId { get; set; }
+    public int? ApplicationUserId { get; set; }
 
-    public Guid? ParentFolderId { get; set; }
+    public int? ParentFolderId { get; set; }
 
 
     public string Name { get; set; } = string.Empty;

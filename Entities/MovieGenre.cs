@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class MovieGenre : BaseEntity<Guid>
+public class MovieGenre : BaseEntity
 {
     public int TmdbId { get; set; }
 

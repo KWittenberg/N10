@@ -1,6 +1,6 @@
 namespace N10.Entities;
 
-public class ApplicationUser : IdentityUser<Guid>
+public class ApplicationUser : IdentityUser<int>
 {
     public string? AvatarUrl { get; set; }
 
@@ -36,11 +36,11 @@ public class ApplicationUser : IdentityUser<Guid>
 
     public bool IsDeleted { get; set; }
 
-    public Guid? CreatedId { get; set; }
+    public int? CreatedId { get; set; }
 
     public DateTime CreatedUtc { get; set; }
 
-    public Guid? LastModifiedId { get; set; }
+    public int? LastModifiedId { get; set; }
 
     public DateTime LastModifiedUtc { get; set; }
 }

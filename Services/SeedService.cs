@@ -97,9 +97,9 @@ public class SeedService(ApplicationDbContext db,
                 IsActive = true,
                 IsDeleted = false,
                 CreatedUtc = DateTime.UtcNow,
-                LastModifiedUtc = DateTime.UtcNow,
-                CreatedId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
-                LastModifiedId = Guid.Parse("00000000-0000-0000-0000-000000000001")
+                LastModifiedUtc = DateTime.UtcNow
+                //CreatedId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                //LastModifiedId = Guid.Parse("00000000-0000-0000-0000-000000000001")
             };
 
             await userStore.SetUserNameAsync(adminUser, adminOptions.Value.Email, CancellationToken.None);
@@ -171,9 +171,9 @@ public class SeedService(ApplicationDbContext db,
 
                 user.IsActive = true;
                 user.IsDeleted = false;
-                user.CreatedId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                //user.CreatedId = Guid.Parse("00000000-0000-0000-0000-000000000001");
                 user.CreatedUtc = DateTime.UtcNow;
-                user.LastModifiedId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+                //user.LastModifiedId = Guid.Parse("00000000-0000-0000-0000-000000000001");
                 user.LastModifiedUtc = DateTime.UtcNow;
 
                 var result = await userManager.CreateAsync(user, adminOptions.Value.Password);

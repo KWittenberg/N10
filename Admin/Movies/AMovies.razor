@@ -230,7 +230,7 @@ else
         else await App!.ShowNotify($"{result.Message}", "error", $"Populate took {duration}");
     }
 
-    async Task PopulateFromTmdbById(Guid id)
+    async Task PopulateFromTmdbById(int id)
     {
         var result = await MovieService.PopulateFromTmdbByIdAsync(id);
         if (result.Success) await App!.ShowToast($"{result.Message}", "success");

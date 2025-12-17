@@ -1,8 +1,8 @@
 ﻿namespace N10.Repository;
 
-public class RoleRepository(RoleManager<IdentityRole<Guid>> roleManager, IValidator<RoleInput> validator) : IRoleRepository
+public class RoleRepository(RoleManager<IdentityRole<int>> roleManager, IValidator<RoleInput> validator) : IRoleRepository
 {
-    private readonly RoleManager<IdentityRole<Guid>> _roleManager = roleManager;
+    private readonly RoleManager<IdentityRole<int>> _roleManager = roleManager;
     private readonly IValidator<RoleInput> _validator = validator;
 
     public async Task<Result<List<RoleDto>>> GetAllAsync()
@@ -17,7 +17,7 @@ public class RoleRepository(RoleManager<IdentityRole<Guid>> roleManager, IValida
         return Result<List<RoleDto>>.Ok(dtos);
     }
 
-    public async Task<Result<RoleDto>> GetByIdAsync(Guid id)
+    public async Task<Result<RoleDto>> GetByIdAsync(int id)
     {
         var role = await _roleManager.FindByIdAsync(id.ToString());
         if (role is null) return Result<RoleDto>.Error("Role not found!");
@@ -37,7 +37,7 @@ public class RoleRepository(RoleManager<IdentityRole<Guid>> roleManager, IValida
         return Result.Ok("Role added!");
     }
 
-    public async Task<Result> UpdateAsync(Guid id, RoleInput input)
+    public async Task<Result> UpdateAsync(int id, RoleInput input)
     {
         var validation = await _validator.ValidateAsync(input);
         if (!validation.IsValid) return Result.Error(string.Join(Environment.NewLine, validation.Errors.Select(e => e.ErrorMessage)));
@@ -55,7 +55,7 @@ public class RoleRepository(RoleManager<IdentityRole<Guid>> roleManager, IValida
         return Result.Ok("Role updated!");
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(int id)
     {
         var role = await _roleManager.FindByIdAsync(id.ToString());
         if (role is null) return Result.Error("Role not found!");

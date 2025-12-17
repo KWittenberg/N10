@@ -227,7 +227,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> contextFactory
     #endregion
 
     #region POPULATE
-    public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
+    public async Task<Result> PopulateFromTmdbByIdAsync(int id)
     {
         // 1. Otvaramo kratki context
         await using var context = await contextFactory.CreateDbContextAsync();
@@ -299,7 +299,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> contextFactory
 
     public async Task<Result> PopulateFromTmdbAsync()
     {
-        List<Guid> idsToProcess;
+        List<int> idsToProcess;
 
         await using (var context = await contextFactory.CreateDbContextAsync())
         {

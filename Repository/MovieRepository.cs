@@ -15,7 +15,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
         return Result<List<MovieDto>>.Ok(dtos);
     }
 
-    public async Task<Result<MovieDto>> GetByIdAsync(Guid id)
+    public async Task<Result<MovieDto>> GetByIdAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -37,7 +37,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
         return Result.Ok($"{entityName} Added!");
     }
 
-    public async Task<Result> UpdateAsync(Guid id, MovieInput input)
+    public async Task<Result> UpdateAsync(int id, MovieInput input)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -52,7 +52,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
         return Result.Ok($"{entityName} Updated!");
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -240,7 +240,7 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
         return char.ToUpper(title[0]) + title[1..];
     }
 
-    public async Task<Result> PopulateFromTmdbByIdAsync(Guid id)
+    public async Task<Result> PopulateFromTmdbByIdAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -382,14 +382,4 @@ public class MovieRepository(IDbContextFactory<ApplicationDbContext> context, IT
             }
         }
     }
-
-
-
-
-
-
-    #region GetAllMoviesInFolder
-    // START HERE
-
-    #endregion
 }

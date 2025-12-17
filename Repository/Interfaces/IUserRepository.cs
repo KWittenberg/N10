@@ -2,7 +2,7 @@
 
 public interface IUserRepository
 {
-    Guid GetCurrentUserId();
+    int? GetCurrentUserId();
     //Task<UserDto> GetCurrentUser();
     Task<Result<UserDto>> GetCurrentUserAsync();
 
@@ -13,24 +13,24 @@ public interface IUserRepository
 
 
     Task<ResultQPagination<UserDto>> GetPagedAsync(int page, int pageSize, string? search = null, string? sortBy = null, bool sortDescending = false, CancellationToken cancellationToken = default);
-    Task<Result<UserDto>> GetByIdAsync(Guid id);
+    Task<Result<UserDto>> GetByIdAsync(int id);
 
     Task<Result> AddAsync(UserInput input);
-    Task<Result> UpdateAsync(Guid id, UserInput input);
-    Task<Result> DeleteAsync(Guid id);
+    Task<Result> UpdateAsync(int id, UserInput input);
+    Task<Result> DeleteAsync(int id);
 
 
 
-    Task<Result> UpdateAvatarAsync(Guid id, AvatarInput input, bool isOriginal);
-    Task<Result> DeleteAvatarAsync(Guid id);
+    Task<Result> UpdateAvatarAsync(int id, AvatarInput input, bool isOriginal);
+    Task<Result> DeleteAvatarAsync(int id);
 
 
 
-    Task<Result<List<RoleDto>>> GetRolesByUserIdAsync(Guid userId);
-    Task<Result<List<RoleDto>>> GetRolesNotAssignedToUserAsync(Guid userId);
-    Task<Result<RoleDto>> GetRoleByIdAsync(Guid userId, Guid roleId);
-    Task<Result> AddRoleAsync(Guid userId, Guid roleId);
-    Task<Result> DeleteRoleAsync(Guid userId, Guid roleId);
+    Task<Result<List<RoleDto>>> GetRolesByUserIdAsync(int userId);
+    Task<Result<List<RoleDto>>> GetRolesNotAssignedToUserAsync(int userId);
+    Task<Result<RoleDto>> GetRoleByIdAsync(int userId, int roleId);
+    Task<Result> AddRoleAsync(int userId, int roleId);
+    Task<Result> DeleteRoleAsync(int userId, int roleId);
 
 
 

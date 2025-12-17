@@ -28,7 +28,7 @@ public class NoteRepository(IDbContextFactory<ApplicationDbContext> context) : I
     //    return Result<List<NoteDto>>.Ok(dtos);
     //}
 
-    public async Task<Result<List<NoteDto>>> GetNotesInCurrentFolderAsync(Guid? userId, Guid? currentFolderId, bool ascending = true)
+    public async Task<Result<List<NoteDto>>> GetNotesInCurrentFolderAsync(int? userId, int? currentFolderId, bool ascending = true)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -50,7 +50,7 @@ public class NoteRepository(IDbContextFactory<ApplicationDbContext> context) : I
     }
 
 
-    public async Task<Result<NoteDto>> GetByIdAsync(Guid id)
+    public async Task<Result<NoteDto>> GetByIdAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -74,7 +74,7 @@ public class NoteRepository(IDbContextFactory<ApplicationDbContext> context) : I
         return Result.Ok($"{entityName} Added!");
     }
 
-    public async Task<Result> UpdateAsync(Guid id, NoteInput input)
+    public async Task<Result> UpdateAsync(int id, NoteInput input)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -89,7 +89,7 @@ public class NoteRepository(IDbContextFactory<ApplicationDbContext> context) : I
         return Result.Ok($"{entityName} Updated!");
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 

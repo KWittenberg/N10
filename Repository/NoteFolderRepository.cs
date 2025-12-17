@@ -14,7 +14,7 @@ public class NoteFolderRepository(IDbContextFactory<ApplicationDbContext> contex
         return Result<List<NoteFolderDto>>.Ok(dtos);
     }
 
-    public async Task<Result<List<NoteFolderDto>>> GetSubFoldersInCurrentFolderAsync(Guid? userId, Guid? currentFolderId)
+    public async Task<Result<List<NoteFolderDto>>> GetSubFoldersInCurrentFolderAsync(int? userId, int? currentFolderId)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -35,7 +35,7 @@ public class NoteFolderRepository(IDbContextFactory<ApplicationDbContext> contex
 
 
 
-    public async Task<Result<NoteFolderDto>> GetByIdAsync(Guid id)
+    public async Task<Result<NoteFolderDto>> GetByIdAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -59,7 +59,7 @@ public class NoteFolderRepository(IDbContextFactory<ApplicationDbContext> contex
         return Result.Ok($"{entityName} Added!");
     }
 
-    public async Task<Result> UpdateAsync(Guid id, NoteFolderInput input)
+    public async Task<Result> UpdateAsync(int id, NoteFolderInput input)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -74,7 +74,7 @@ public class NoteFolderRepository(IDbContextFactory<ApplicationDbContext> contex
         return Result.Ok($"{entityName} Updated!");
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(int id)
     {
         await using var db = await context.CreateDbContextAsync();
 
@@ -98,14 +98,14 @@ public class NoteFolderRepository(IDbContextFactory<ApplicationDbContext> contex
 
 
 
-    public async Task<Result<List<NoteFolderDto>>> GetPathToFolderAsync(Guid? userId, Guid? folderId)
+    public async Task<Result<List<NoteFolderDto>>> GetPathToFolderAsync(int? userId, int? folderId)
     {
         await using var db = await context.CreateDbContextAsync();
 
         var path = new List<NoteFolderDto>();
         var currentId = folderId;
 
-        while (currentId != null && currentId != Guid.Empty)
+        while (currentId != null && currentId != null)
         {
             var current = await db.NoteFolders.AsNoTracking()
                 .Where(x => x.Id == currentId)
@@ -136,7 +136,7 @@ public class NoteFolderRepository(IDbContextFactory<ApplicationDbContext> contex
             .ToListAsync();
     }
 
-    public async Task<List<NoteFolderDto>> GetPathToFolderAsync(Guid folderId)
+    public async Task<List<NoteFolderDto>> GetPathToFolderAsync(int folderId)
     {
         // Rekurzivno build path od foldera do root-a (implementirajte sa loop-om ili query-em)
         var path = new List<NoteFolderDto>();

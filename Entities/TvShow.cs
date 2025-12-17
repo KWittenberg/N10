@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class TvShow : BaseAuditableEntity<Guid>
+public class TvShow : BaseAuditableEntity
 {
     public string FolderName { get; set; } = string.Empty;
 

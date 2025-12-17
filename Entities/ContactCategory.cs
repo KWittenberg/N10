@@ -1,8 +1,8 @@
 ﻿namespace N10.Entities;
 
-public class ContactCategory : BaseEntity<Guid>
+public class ContactCategory : BaseEntity
 {
-    public Guid? ApplicationUserId { get; set; }
+    public int? ApplicationUserId { get; set; }
     public virtual ApplicationUser? ApplicationUser { get; set; }
 
 

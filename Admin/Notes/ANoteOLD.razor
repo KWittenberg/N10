@@ -1,4 +1,5 @@
-﻿@page "/admin/noteold/{id:guid?}"
+﻿@page "/admin/noteold/{id:int?}"
+@using N10.DTOs
 
 @inject INoteRepository Repository
 @inject NavigationManager Navigation
@@ -52,7 +53,7 @@
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    [Parameter] public Guid? Id { get; set; } = Guid.Empty;
+    [Parameter] public int? Id { get; set; }
 
     NoteInput? Input { get; set; }
 
@@ -67,7 +68,7 @@
         if (!Id.HasValue) Input = new NoteInput();
         else
         {
-            var result = await Repository.GetByIdAsync((Guid)Id);
+            var result = await Repository.GetByIdAsync(Id.Value);
             if (!result.Success || result.Data is null) return;
             Input = result.Data.ToInput();
         }
@@ -77,7 +78,7 @@
     {
         ArgumentNullException.ThrowIfNull(Input);
 
-        Input.UserId = App?.CurrentUser?.Id ?? Guid.Empty;
+        Input.UserId = App?.CurrentUser?.Id ?? null;
 
         var result = Id is null
             ? await Repository.AddAsync(Input)

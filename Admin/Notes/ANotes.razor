@@ -1,4 +1,5 @@
 ﻿@page "/admin/notes"
+@using N10.DTOs
 @attribute [Authorize(Roles = "Admin")]
 @inject INoteRepository Repository
 
@@ -115,7 +116,7 @@ else
         App?.ShowDeleteConfirmation(input.Title.ToString(), input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
     }
 
-    async Task ConfirmDelete(Guid id)
+    async Task ConfirmDelete(int id)
     {
         var result = await Repository.DeleteAsync(id);
         if (result.Success) await LoadEntities();

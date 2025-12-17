@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class TvShowGenre : BaseEntity<Guid>
+public class TvShowGenre : BaseEntity
 {
     public int TmdbId { get; set; }
 

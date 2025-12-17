@@ -1,8 +1,8 @@
 ﻿namespace N10.Entities;
 
-public class Contact : BaseAuditableEntity<Guid>
+public class Contact : BaseAuditableEntity
 {
-    public Guid? ApplicationUserId { get; set; }
+    public int? ApplicationUserId { get; set; }
     public virtual ApplicationUser? ApplicationUser { get; set; }
 
 
@@ -24,7 +24,7 @@ public class Contact : BaseAuditableEntity<Guid>
     public string? PhoneNumber { get; set; }
 
 
-    public Guid? AddressId { get; set; }
+    public int? AddressId { get; set; }
     public virtual Address? Address { get; set; }
 
 

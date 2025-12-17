@@ -1,14 +1,14 @@
 ﻿namespace N10.Entities;
 
-public class NoteShare : BaseEntity<Guid>
+public class NoteShare : BaseEntity
 {
-    public Guid ApplicationUserId { get; set; }
+    public int ApplicationUserId { get; set; }
     public virtual ApplicationUser ApplicationUser { get; set; } = null!;
 
-    public Guid SharedWithUserId { get; set; }
+    public int SharedWithUserId { get; set; }
     public virtual ApplicationUser SharedWithUser { get; set; } = null!;
 
-    public Guid NoteId { get; set; }
+    public int NoteId { get; set; }
     public virtual Note Note { get; set; } = null!;
 
     public NoteSharePermission Permissions { get; set; } = NoteSharePermission.Read;

@@ -110,7 +110,7 @@
     [Parameter] public EventCallback<(int?, string, int?)> OnTmdbSearch { get; set; }
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Movie> OnAddToDb { get; set; }
-    [Parameter] public EventCallback<Guid> OnPopulate { get; set; }
+    [Parameter] public EventCallback<int> OnPopulate { get; set; }
 
     QuickGrid<Movie>? grid;
     GridSort<Movie> titleSort = GridSort<Movie>.ByAscending(x => x.SortTitle);

@@ -1,8 +1,8 @@
 ﻿namespace N10.Entities;
 
-public class TaskerItem : BaseAuditableEntity<Guid>
+public class TaskerItem : BaseAuditableEntity
 {
-    public Guid? UserId { get; set; }
+    public int? UserId { get; set; }
 
 
     [Required(ErrorMessage = "Every task must have a name")]

@@ -4,14 +4,14 @@ public interface INoteRepository
 {
     Task<Result<List<NoteDto>>> GetAllAsync();
 
-    Task<Result<List<NoteDto>>> GetNotesInCurrentFolderAsync(Guid? userId, Guid? currentFolderId, bool ascending = true);
+    Task<Result<List<NoteDto>>> GetNotesInCurrentFolderAsync(int? userId, int? currentFolderId, bool ascending = true);
 
 
-    Task<Result<NoteDto>> GetByIdAsync(Guid id);
+    Task<Result<NoteDto>> GetByIdAsync(int id);
 
     Task<Result> AddAsync(NoteInput input);
 
-    Task<Result> UpdateAsync(Guid id, NoteInput input);
+    Task<Result> UpdateAsync(int id, NoteInput input);
 
-    Task<Result> DeleteAsync(Guid id);
+    Task<Result> DeleteAsync(int id);
 }

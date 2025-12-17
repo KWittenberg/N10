@@ -1,4 +1,4 @@
-﻿@page "/note/{id:guid?}"
+﻿@page "/note/{id:int?}"
 @layout FrontLayout
 
 @inject INoteRepository Repository
@@ -57,9 +57,9 @@
 @code {
     [CascadingParameter] AppState? App { get; set; }
 
-    [SupplyParameterFromQuery(Name = "folderId")] public Guid? CurrentFolderId { get; set; }
+    [SupplyParameterFromQuery(Name = "folderId")] public int? CurrentFolderId { get; set; }
     
-    [Parameter] public Guid? Id { get; set; } = Guid.Empty;
+    [Parameter] public int? Id { get; set; } 
 
     List<Color> Colors = Color.GetAll();
         
@@ -74,7 +74,7 @@
         if (!Id.HasValue) Input = new NoteInput();
         else
         {
-            var result = await Repository.GetByIdAsync((Guid)Id);
+            var result = await Repository.GetByIdAsync(Id.Value);
             if (!result.Success || result.Data is null) return;
             Input = result.Data.ToInput();
         }
@@ -84,7 +84,7 @@
     {
         ArgumentNullException.ThrowIfNull(Input);
 
-        Input.UserId = App?.CurrentUser?.Id ?? Guid.Empty;
+        Input.UserId = App?.CurrentUser?.Id ?? null;
         Input.NoteFolderId = CurrentFolderId;
 
         var result = Id is null

@@ -139,7 +139,7 @@
     [Parameter] public Movie? Entity { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
 
-    string Title => Entity?.Id == Guid.Empty ? "New" : "Update";
+    string Title => Entity?.Id == null ? "New" : "Update";
     string PosterPath => string.IsNullOrEmpty(Entity?.TmdbImageUrl) ? Globals.NoImage : $"{Globals.BaseTmdbImageUrl}{Entity?.TmdbImageUrl}";
 
     protected override async Task OnParametersSetAsync()
@@ -159,7 +159,7 @@
 
         try
         {
-            if (Entity?.Id == Guid.Empty) context.Movies.Add(Entity);
+            if (Entity?.Id == null) context.Movies.Add(Entity);
             else context.Movies.Update(Entity!);
             await context.SaveChangesAsync();
             await App!.ShowToast($"{Entity?.Title} {(Title == "New" ? "Add" : "Update")} to database!", "success");

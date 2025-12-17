@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class Movie : BaseAuditableEntity<Guid>
+public class Movie : BaseAuditableEntity
 {
     public string FileName { get; set; } = string.Empty;
 

@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class TvShowEpisode : BaseAuditableEntity<Guid>
+public class TvShowEpisode : BaseAuditableEntity
 {
     public string FileName { get; set; } = string.Empty;
     public int? Season { get; set; }
@@ -16,6 +16,6 @@ public class TvShowEpisode : BaseAuditableEntity<Guid>
     public string? Video { get; set; }
     public string? Release { get; set; }
 
-    public Guid TvShowId { get; set; }
+    public int TvShowId { get; set; }
     public virtual TvShow TvShow { get; set; } = null!;
 }

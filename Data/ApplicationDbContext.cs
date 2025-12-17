@@ -1,9 +1,7 @@
-using System.Reflection;
-
 namespace N10.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor contextAccessor)
-    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>(options)
 {
     #region Note Entities
     public virtual DbSet<Note> Notes { get; set; }
@@ -30,7 +28,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var entry in base.ChangeTracker.Entries<BaseAuditableEntity<Guid>>().Where(q => q.State == EntityState.Added || q.State == EntityState.Modified))
+        foreach (var entry in base.ChangeTracker.Entries<BaseAuditableEntity>().Where(q => q.State == EntityState.Added || q.State == EntityState.Modified))
         {
             entry.Entity.LastModifiedUtc = DateTime.UtcNow;
             entry.Entity.LastModifiedId = GetCurrentUserId();
@@ -45,13 +43,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    private Guid GetCurrentUserId()
+    int? GetCurrentUserId()
     {
         var httpContext = contextAccessor.HttpContext;
-        if (httpContext?.User?.Identity?.IsAuthenticated != true) return Guid.Empty;
+        if (httpContext?.User?.Identity?.IsAuthenticated != true) return null;
 
         var userIdClaim = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(userIdClaim, out Guid userId) ? userId : Guid.Empty;
+        return int.TryParse(userIdClaim, out int userId) ? userId : null;
     }
 
     // Guid GetCurrentUserId() => Guid.TryParse(contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId) ? userId : Guid.Empty;

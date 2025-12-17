@@ -59,7 +59,7 @@ else
     bool NoteAscending = true;
 
 
-    Guid? CurrentFolderId;
+    int? CurrentFolderId;
     NoteFolderDto? CurrentFolder;
     List<NoteFolderDto> CurrentPath = [];
     List<NoteFolderDto> RootFolders = [];
@@ -80,14 +80,14 @@ else
         else RootFolders = [];
     }
 
-    async Task SelectFolderId(Guid? folderId)
+    async Task SelectFolderId(int? folderId)
     {
         CurrentFolderId = folderId;
 
         var notesResult = await NoteRepository.GetNotesInCurrentFolderAsync(App?.CurrentUser?.Id, CurrentFolderId);
         Entities = notesResult.Success ? notesResult.Data : [];
 
-        if (CurrentFolderId.HasValue && CurrentFolderId != Guid.Empty)
+        if (CurrentFolderId.HasValue && CurrentFolderId != null)
         {
             var pathResult = await NoteFolderRepository.GetPathToFolderAsync(App?.CurrentUser?.Id, CurrentFolderId.Value);
             CurrentPath = pathResult.Success ? pathResult.Data ?? [] : [];
@@ -106,7 +106,7 @@ else
         App?.ShowDeleteConfirmation(input.Title.ToString(), input.Id.ToString(), EventCallback.Factory.Create(this, () => ConfirmDelete(input.Id)));
     }
 
-    async Task ConfirmDelete(Guid id)
+    async Task ConfirmDelete(int id)
     {
         var result = await NoteRepository.DeleteAsync(id);
         if (result.Success) await SelectFolderId(CurrentFolderId);

@@ -21,10 +21,10 @@ public class UserRepository(
 
 
     #region Current User
-    public Guid GetCurrentUserId()
+    public int? GetCurrentUserId()
     {
         var userIdClaim = _contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userIdClaim != null && Guid.TryParse(userIdClaim, out var gid) ? gid : Guid.Empty;
+        return userIdClaim != null && int.TryParse(userIdClaim, out var gid) ? gid : null;
     }
 
     public async Task<Result<UserDto>> GetCurrentUserAsync()
@@ -133,7 +133,7 @@ public class UserRepository(
         return ResultQPagination<UserDto>.Ok(items, pagination);
     }
 
-    public async Task<Result<UserDto>> GetByIdAsync(Guid id)
+    public async Task<Result<UserDto>> GetByIdAsync(int id)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
         if (user is null) return Result<UserDto>.Error("User not found");
@@ -157,7 +157,7 @@ public class UserRepository(
         return Result.Ok("User added!");
     }
 
-    public async Task<Result> UpdateAsync(Guid id, UserInput input)
+    public async Task<Result> UpdateAsync(int id, UserInput input)
     {
         var validateInput = await _validator.ValidateAsync(input);
         if (!validateInput.IsValid) return Result.Error(string.Join(Environment.NewLine, validateInput.Errors.Select(e => e.ErrorMessage)));
@@ -172,7 +172,7 @@ public class UserRepository(
         return Result.Ok("User updated!");
     }
 
-    public async Task<Result> DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(int id)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
         if (user is null) return Result.Error("User not found");
@@ -191,7 +191,7 @@ public class UserRepository(
     #endregion
 
     #region Avatar
-    public async Task<Result> UpdateAvatarAsync(Guid id, AvatarInput input, bool isOriginal)
+    public async Task<Result> UpdateAvatarAsync(int id, AvatarInput input, bool isOriginal)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
@@ -229,7 +229,7 @@ public class UserRepository(
         return Result.Ok("Avatar updated!");
     }
 
-    public async Task<Result> DeleteAvatarAsync(Guid id)
+    public async Task<Result> DeleteAvatarAsync(int id)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
@@ -249,7 +249,7 @@ public class UserRepository(
     #endregion
 
     #region Roles (for user)
-    public async Task<Result<List<RoleDto>>> GetRolesByUserIdAsync(Guid userId)
+    public async Task<Result<List<RoleDto>>> GetRolesByUserIdAsync(int userId)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null) return Result<List<RoleDto>>.Error("User not found");
@@ -265,7 +265,7 @@ public class UserRepository(
         return Result<List<RoleDto>>.Ok(roles);
     }
 
-    public async Task<Result<List<RoleDto>>> GetRolesNotAssignedToUserAsync(Guid userId)
+    public async Task<Result<List<RoleDto>>> GetRolesNotAssignedToUserAsync(int userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         var userRoles = db.UserRoles.Where(ur => ur.UserId == userId).Select(ur => ur.RoleId);
@@ -273,7 +273,7 @@ public class UserRepository(
         return Result<List<RoleDto>>.Ok(roles);
     }
 
-    public async Task<Result<RoleDto>> GetRoleByIdAsync(Guid userId, Guid roleId)
+    public async Task<Result<RoleDto>> GetRoleByIdAsync(int userId, int roleId)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null) return Result<RoleDto>.Error("User not found");
@@ -288,7 +288,7 @@ public class UserRepository(
         return Result<RoleDto>.Ok(role);
     }
 
-    public async Task<Result> AddRoleAsync(Guid userId, Guid roleId)
+    public async Task<Result> AddRoleAsync(int userId, int roleId)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null) return Result.Error("User not found");
@@ -306,7 +306,7 @@ public class UserRepository(
         return Result.Ok("Role added successfully!");
     }
 
-    public async Task<Result> DeleteRoleAsync(Guid userId, Guid roleId)
+    public async Task<Result> DeleteRoleAsync(int userId, int roleId)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null) return Result.Error("User not found");

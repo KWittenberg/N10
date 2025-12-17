@@ -2,7 +2,7 @@
 
 public class AppState(AuthenticationStateProvider authStateProvider,
                         UserManager<ApplicationUser> userManager,
-                        RoleManager<IdentityRole<Guid>> roleManager
+                        RoleManager<IdentityRole<int>> roleManager
                         // IHttpContextAccessor contextAccessor, IServiceScopeFactory scopeFactory
                         )
 {

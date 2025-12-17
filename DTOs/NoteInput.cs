@@ -1,10 +1,10 @@
-﻿namespace N10.Entities;
+﻿namespace N10.DTOs;
 
 public class NoteInput
 {
-    public Guid? UserId { get; set; }
+    public int? UserId { get; set; }
 
-    public Guid? NoteFolderId { get; set; }
+    public int? NoteFolderId { get; set; }
 
     public string Title { get; set; } = string.Empty;
 

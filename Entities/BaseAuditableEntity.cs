@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public abstract class BaseAuditableEntity<TKey> : BaseEntity<TKey>
+public abstract class BaseAuditableEntity : BaseEntity
 {
     private protected BaseAuditableEntity()
     {
@@ -13,11 +13,11 @@ public abstract class BaseAuditableEntity<TKey> : BaseEntity<TKey>
 
     public bool IsDeleted { get; set; }
 
-    public TKey? CreatedId { get; set; }
+    public int? CreatedId { get; set; }
 
     public DateTime CreatedUtc { get; set; }
 
-    public TKey? LastModifiedId { get; set; }
+    public int? LastModifiedId { get; set; }
 
     public DateTime LastModifiedUtc { get; set; }
 }

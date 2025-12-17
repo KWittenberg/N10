@@ -4,24 +4,24 @@ public interface INoteFolderRepository
 {
     Task<Result<List<NoteFolderDto>>> GetAllAsync();
 
-    Task<Result<List<NoteFolderDto>>> GetSubFoldersInCurrentFolderAsync(Guid? userId, Guid? currentFolderId);
+    Task<Result<List<NoteFolderDto>>> GetSubFoldersInCurrentFolderAsync(int? userId, int? currentFolderId);
 
-    Task<Result<NoteFolderDto>> GetByIdAsync(Guid id);
+    Task<Result<NoteFolderDto>> GetByIdAsync(int id);
 
     Task<Result> AddAsync(NoteFolderInput input);
 
-    Task<Result> UpdateAsync(Guid id, NoteFolderInput input);
+    Task<Result> UpdateAsync(int id, NoteFolderInput input);
 
-    Task<Result> DeleteAsync(Guid id);
-
-
+    Task<Result> DeleteAsync(int id);
 
 
-    Task<Result<List<NoteFolderDto>>> GetPathToFolderAsync(Guid? userId, Guid? folderId);
+
+
+    Task<Result<List<NoteFolderDto>>> GetPathToFolderAsync(int? userId, int? folderId);
 
 
 
     Task<List<NoteFolder>> GetHierarchicalFoldersAsync();
 
-    Task<List<NoteFolderDto>> GetPathToFolderAsync(Guid folderId);
+    Task<List<NoteFolderDto>> GetPathToFolderAsync(int folderId);
 }

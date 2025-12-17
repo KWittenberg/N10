@@ -1,13 +1,13 @@
-﻿namespace N10.Entities;
+﻿namespace N10.DTOs;
 
 public class NoteDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
-    public Guid? UserId { get; set; }
+    public int? UserId { get; set; }
     public virtual UserDto? User { get; set; } = null!;
 
-    public Guid? NoteFolderId { get; set; }
+    public int? NoteFolderId { get; set; }
     //public virtual NoteFolderDto? NoteFolder { get; set; } = null!;
 
 

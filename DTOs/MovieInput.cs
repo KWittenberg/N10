@@ -1,4 +1,4 @@
-﻿namespace N10.Entities;
+﻿namespace N10.DTOs;
 
 public class MovieInput
 {

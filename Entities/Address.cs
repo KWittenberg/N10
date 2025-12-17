@@ -1,6 +1,6 @@
 ﻿namespace N10.Entities;
 
-public class Address : BaseEntity<Guid>
+public class Address : BaseEntity
 {
     public string? Country { get; set; }
 

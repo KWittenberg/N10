@@ -4,13 +4,13 @@ public interface IMovieRepository
 {
     Task<Result<List<MovieDto>>> GetAllAsync();
 
-    Task<Result<MovieDto>> GetByIdAsync(Guid id);
+    Task<Result<MovieDto>> GetByIdAsync(int id);
 
     Task<Result> AddAsync(MovieInput input);
 
-    Task<Result> UpdateAsync(Guid id, MovieInput input);
+    Task<Result> UpdateAsync(int id, MovieInput input);
 
-    Task<Result> DeleteAsync(Guid id);
+    Task<Result> DeleteAsync(int id);
 
 
 
@@ -30,5 +30,5 @@ public interface IMovieRepository
 
     Task PopulateFromTmdbAsync();
 
-    Task<Result> PopulateFromTmdbByIdAsync(Guid id);
+    Task<Result> PopulateFromTmdbByIdAsync(int id);
 }

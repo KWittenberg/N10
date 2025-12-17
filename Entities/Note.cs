@@ -1,11 +1,11 @@
 ﻿namespace N10.Entities;
 
-public class Note : BaseAuditableEntity<Guid>
+public class Note : BaseAuditableEntity
 {
-    public Guid? ApplicationUserId { get; set; }
+    public int? ApplicationUserId { get; set; }
     public virtual ApplicationUser? ApplicationUser { get; set; } = null!;
 
-    public Guid? NoteFolderId { get; set; }
+    public int? NoteFolderId { get; set; }
     public virtual NoteFolder? NoteFolder { get; set; } = null!;
 
 
