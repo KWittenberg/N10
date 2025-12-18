@@ -324,7 +324,7 @@ public class MovieService(IDbContextFactory<ApplicationDbContext> contextFactory
             }
 
             // Mali odmor za API
-            await Task.Delay(200);
+            await Task.Delay(50);
         }
 
         if (success == 0 && failed > 0) return Result.Error($"All {failed} failed. Check logs.");

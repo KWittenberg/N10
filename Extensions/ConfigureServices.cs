@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Web;
-
-namespace N10.Extensions;
+﻿namespace N10.Extensions;
 
 public static class ConfigureServices
 {
@@ -23,10 +21,20 @@ public static class ConfigureServices
         services.AddScoped<MovieService>();
 
         services.AddTransient<TmdbAuthenticationHandler>();
-        services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();
+        //services.AddHttpClient<ITmdbService, TmdbService>().AddHttpMessageHandler<TmdbAuthenticationHandler>();
+
+        services.AddHttpClient<ITmdbService, TmdbService>((serviceProvider, client) =>
+            {
+                // Dohvati opcije da izvučemo BaseUrl
+                var tmdbOptions = serviceProvider.GetRequiredService<IOptions<TmdbOptions>>().Value;
+
+                // Postavi Base Address OVDJE (npr. "https://api.themoviedb.org/3/")
+                client.BaseAddress = new Uri(tmdbOptions.BaseUrl);
+            })
+            .AddHttpMessageHandler<TmdbAuthenticationHandler>() // Tvoj auth
+            .AddStandardResilienceHandler(); // 🚀 N10 MAGIJA: Automatski retry, circuit breaker, timeout!
 
 
-        services.AddHttpClient<OpenWeatherClient>();
 
 
         // Alternative way to configure HttpClient with BaseAddress from configuration
@@ -35,7 +43,7 @@ public static class ConfigureServices
         //    client.BaseAddress = new Uri(configuration["TmdbOptions:BaseUrl"]!);
         //}).AddHttpMessageHandler<TmdbAuthenticationHandler>();
 
-
+        services.AddHttpClient<OpenWeatherClient>();
 
         //services.AddScoped<LocalAiService>();
         services.AddSingleton<LocalAiService>();

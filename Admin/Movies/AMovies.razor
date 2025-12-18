@@ -16,7 +16,22 @@
         <div class="row align-items-center">
             <div class="col-12 col-md-6">
                 <div class="d-inline-flex align-items-center gap-2">
-                    <_Button OnClick="ScanAsync" IsWorking="IsScanWorking" Name="Scan" />
+                    @if (Sources is not null && Sources.Any())
+                    {
+                        <div class="">
+                            <InputSelect class="form-select" @bind-Value="SourceId">
+                                <option value="0">Select Source</option>
+                                @foreach (var source in Sources)
+                                {
+                                    <option value="@source.Id">@source.Name</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        if (Source is not null)
+                        {
+                            <_Button OnClick="ScanAsync" IsWorking="IsScanWorking" Name="Scan"/>
+                        }
+                    }
                     @if (Movies is not null && Movies.Any())
                     {
                         <_Button OnClick="AddAllToDbAsync" IsWorking="IsAddToDbWorking" Name="Add To db" />
@@ -49,7 +64,7 @@
 @if (IsProcessing)
 {
     <_Loading Title="Please Scan to populate the database!"
-              Subtitle="@($"Scanning Folder: {ScanPath}")"
+              Subtitle="@($"Scanning Folder: {Source?.BasePath}")"
               ButtonText="Scan" OnClick="ScanAsync" />
 }
 else
@@ -108,15 +123,29 @@ else
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
+    
+    List<ScanMovieModel>? Movies;
+    Movie? Entity;
+    
     readonly Stopwatch Stopwatch = new();
 
-    // References to tables
     _Table? ScanTable;
     _Table? DbTable;
 
-    List<ScanMovieModel>? Movies;
-    Movie? Entity;
-
+    List<MediaSource>? Sources;
+    MediaSource? Source;
+    int sourceId;
+    int SourceId
+    {
+        get => sourceId;
+        set
+        {
+            if (sourceId == value) return;
+            sourceId = value;
+            Source = Sources?.FirstOrDefault(s => s.Id == value);
+        }
+    }
+    
     const string Title = "Movies";
     bool MoviesHaveData, MoviesNeedPopulate, IsScanWorking, IsAddToDbWorking, IsPopulateWorking = false;
     bool IsProcessing = true;
@@ -125,14 +154,13 @@ else
     TmdbSearchList? TmdbSearch;
     TmdbDetails? TmdbDetails;
 
-    string ScanPath => Globals.X265Path;
-
-
+    
     protected override async Task OnInitializedAsync()
     {
         await using var db = await ContextFactory.CreateDbContextAsync();
         MoviesHaveData = await db.Movies.AsNoTracking().AnyAsync();
         MoviesNeedPopulate = await db.Movies.AsNoTracking().Where(x => !x.IsMetadataFetched).AnyAsync();
+        Sources = await db.MediaSources.AsNoTracking().Where(x => x.Type == MediaType.Movie).OrderBy(x => x.Name).ToListAsync();
         IsProcessing = false;
     }
 
@@ -171,6 +199,11 @@ else
 
     async Task ScanAsync()
     {
+        if (Source is null)
+        {
+            await App!.ShowToast("Please select a Media Source!", "warning");
+            return;
+        }
         StartTimer(ref IsScanWorking);
         HashSet<string> existingFileNames;
         await using (var context = await ContextFactory.CreateDbContextAsync())
@@ -178,7 +211,7 @@ else
             existingFileNames = await context.Movies.AsNoTracking().Select(m => m.FileName).ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
         }
 
-        Movies = await MovieService.GetNewMoviesOnlyAsync(ScanPath, existingFileNames);
+        Movies = await MovieService.GetNewMoviesOnlyAsync(Source.BasePath, existingFileNames);
         var duration = StopTimer(ref IsScanWorking);
         if (Movies.Count > 0) await App!.ShowNotify($"Found: {Movies.Count} new movies!", "success", $"Check took {duration}");
         else await App!.ShowNotify($"No new movies found!", "info", $"Check took {duration}");
@@ -188,10 +221,16 @@ else
     {
         if (Movies is not null || Movies?.Count > 0)
         {
+            if (SourceId == 0)
+            {
+                await App!.ShowToast("Please select a Media Source!", "warning");
+                return;
+            }
             StartTimer(ref IsAddToDbWorking);
             await using var context = await ContextFactory.CreateDbContextAsync();
             foreach (var movie in Movies.Select(newMovie => newMovie.ToMovieEntity()))
             {
+                movie.MediaSourceId = SourceId;
                 await context.Movies.AddAsync(movie);
             }
 
@@ -207,6 +246,12 @@ else
     {
         try
         {
+            if (SourceId == 0)
+            {
+                await App!.ShowToast("Please select a Media Source!", "warning");
+                return;
+            }
+            input.MediaSourceId = SourceId;
             await using var context = await ContextFactory.CreateDbContextAsync();
             context.Movies.Add(input);
             await context.SaveChangesAsync();
@@ -236,7 +281,7 @@ else
         if (result.Success) await App!.ShowToast($"{result.Message}", "success");
         else await App!.ShowToast($"{result.Message}", "error");
     }
-    
+
     void StartTimer(ref bool workingFlag)
     {
         workingFlag = true;

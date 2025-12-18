@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Headers;
-
-namespace N10.Services;
+﻿namespace N10.Services;
 
 public class TmdbAuthenticationHandler(IOptions<TmdbOptions> options) : DelegatingHandler
 {
