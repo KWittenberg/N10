@@ -2,6 +2,9 @@
 
 public class Movie : BaseAuditableEntity
 {
+    public int MediaSourceId { get; set; }
+    public virtual MediaSource? MediaSource { get; set; }
+
     public string FileName { get; set; } = string.Empty;
 
     public string Title { get; set; } = string.Empty;

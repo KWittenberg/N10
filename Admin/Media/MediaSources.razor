@@ -1,0 +1,190 @@
+﻿@page "/admin/media-sources"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+
+<title>@Title</title>
+<_PageHeader Title="@Title" />
+
+@if (Sources is null)
+{
+    <_Loading />
+}
+else
+{
+    <div class="mt-3 @App?.GetContentClass()">
+
+        <!-- EDITOR SECTION -->
+        <div class="card mb-4 border-0 shadow-sm bg-transparent20">
+            <div class="card-body">
+                <EditForm Model="@CurrentSource" OnValidSubmit="@HandleSave">
+                    <DataAnnotationsValidator />
+
+                    <div class="row g-3 align-items-end">
+                        @* Name *@
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Name</label>
+                            <InputText class="form-control" @bind-Value="CurrentSource.Name" placeholder="e.g. Toshiba USB" required />
+                            <ValidationMessage For="@(() => CurrentSource.Name)" />
+                        </div>
+
+                        @* Type (Enum) *@
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted">Type</label>
+                            <InputSelect class="form-select" @bind-Value="CurrentSource.Type">
+                                @foreach (var type in Enum.GetValues<MediaType>())
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        @* Path *@
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted">Base Path (UNC or Local)</label>
+                            <InputText class="form-control" @bind-Value="CurrentSource.BasePath" placeholder="e.g. \\192.168.1.1\Movies" required />
+                            <ValidationMessage For="@(() => CurrentSource.BasePath)" />
+                        </div>
+
+                        @* Buttons *@
+                        <div class="col-md-2 text-end">
+                            @if (IsEditing)
+                            {
+                                <button type="button" class="btn btn-secondary me-2" @onclick="CancelEdit">Cancel</button>
+                            }
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> @(IsEditing ? "Update" : "Add")
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+
+        <!-- LIST SECTION -->
+        <div class="quickgrid-wrapper table-responsive">
+            @* Ovdje koristimo Items (List) jer je malo podataka. QuickGrid to voli. *@
+            <QuickGrid Items="Sources.AsQueryable()" Class="table table-hover align-middle">
+
+                <PropertyColumn Property="x => x.Id" Title="ID" Align="Align.Center" Sortable="true" />
+
+                <PropertyColumn Property="x => x.Name" Title="Name" Sortable="true" />
+
+                <TemplateColumn Title="Type" Align="Align.Center" SortBy="GridSort<MediaSource>.ByAscending(x => x.Type)">
+                    @if (context.Type == MediaType.Movie)
+                    {
+                        <span class="badge bg-primary">Movie</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">TvShow</span>
+                    }
+                </TemplateColumn>
+
+                <PropertyColumn Property="x => x.BasePath" Title="Path" Sortable="true" />
+
+                @* Brojač filmova (Optional - ako si napravio navigaciju) *@
+                <TemplateColumn Title="Files" Align="Align.Center">
+                    <span class="badge bg-secondary">@context.Movies.Count</span>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Actions" Align="Align.End">
+                    <button class="btn btn-link text-primary p-0 me-3" @onclick="() => Edit(context)" title="Edit">
+                        <i class="bi bi-pencil-square h5"></i>
+                    </button>
+                    <button class="btn btn-link text-danger p-0" @onclick="() => Delete(context)" title="Delete">
+                        <i class="bi bi-trash h5"></i>
+                    </button>
+                </TemplateColumn>
+
+            </QuickGrid>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<MediaSource>? Sources;
+    MediaSource CurrentSource = new();
+    bool IsEditing = false;
+    const string Title = "Media Sources";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    async Task LoadAsync()
+    {
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        Sources = await db.MediaSources.Include(x => x.Movies).AsNoTracking().OrderBy(x => x.Name).ToListAsync();
+    }
+
+    void Edit(MediaSource source)
+    {
+        CurrentSource = new MediaSource
+        {
+            Id = source.Id,
+            Name = source.Name,
+            Type = source.Type,
+            BasePath = source.BasePath
+        };
+        IsEditing = true;
+    }
+
+    void CancelEdit()
+    {
+        CurrentSource = new MediaSource();
+        IsEditing = false;
+    }
+
+    async Task HandleSave()
+    {
+        try
+        {
+            await using var db = await ContextFactory.CreateDbContextAsync();
+
+            if (IsEditing)
+            {
+                db.MediaSources.Update(CurrentSource);
+                await App!.ShowToast("Source updated!", "success");
+            }
+            else
+            {
+                db.MediaSources.Add(CurrentSource);
+                await App!.ShowToast("New source added!", "success");
+            }
+
+            await db.SaveChangesAsync();
+            CancelEdit();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Error: {ex.Message}", "error");
+        }
+    }
+
+    void Delete(MediaSource source)
+    {
+        var msg = source.Movies.Count > 0
+            ? $"Warning: This will also delete {source.Movies.Count} movies linked to this source!"
+            : "Are you sure?";
+
+        App?.ShowDeleteConfirmation(source.Name, msg, EventCallback.Factory.Create(this, () => ConfirmDelete(source)));
+    }
+
+    async Task ConfirmDelete(MediaSource source)
+    {
+        try
+        {
+            await using var db = await ContextFactory.CreateDbContextAsync();
+            db.MediaSources.Remove(new MediaSource { Id = source.Id });
+            await db.SaveChangesAsync();
+            await App!.ShowToast("Source deleted!", "success");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to delete: {ex.Message}", "error");
+        }
+    }
+}

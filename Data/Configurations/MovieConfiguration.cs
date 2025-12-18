@@ -4,6 +4,8 @@ public class MovieConfiguration : IEntityTypeConfiguration<Movie>
 {
     public void Configure(EntityTypeBuilder<Movie> entity)
     {
+        entity.ToTable("Movies");
+
         entity.HasKey(e => e.Id);
 
         entity.Property(e => e.FileName).HasMaxLength(MovieConst.FileNameLength).IsRequired();
@@ -25,6 +27,7 @@ public class MovieConfiguration : IEntityTypeConfiguration<Movie>
         entity.Property(e => e.ImdbId).HasMaxLength(MovieConst.ImdbIdLength);
 
 
+        entity.HasIndex(e => e.FileName);
         entity.HasIndex(e => e.Title);
         entity.HasIndex(e => e.Year);
 

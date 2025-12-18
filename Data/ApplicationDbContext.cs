@@ -11,6 +11,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public virtual DbSet<NoteAttachment> NoteAttachments { get; set; }
     #endregion
 
+
+    public virtual DbSet<MediaSource> MediaSources { get; set; }
+
     #region Movie Entities
     public virtual DbSet<Movie> Movies { get; set; }
     public virtual DbSet<MovieGenre> MovieGenres { get; set; }
