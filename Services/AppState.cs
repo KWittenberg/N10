@@ -2,104 +2,61 @@
 
 public class AppState(AuthenticationStateProvider authStateProvider,
                         UserManager<ApplicationUser> userManager,
-                        RoleManager<IdentityRole<int>> roleManager
-                        // IHttpContextAccessor contextAccessor, IServiceScopeFactory scopeFactory
-                        )
+                        RoleManager<IdentityRole<int>> roleManager)
 {
+
+
     #region CurrentUser
-    public UserDto? CurrentUser => _currentUser;
-    public bool IsAuthenticated => _currentUser is not null;
+    UserDto? User;
+    bool IsLoaded;
 
-
-    private UserDto? _currentUser;
-    private bool _isLoaded;
-
+    public UserDto? CurrentUser => User;
 
     public async Task InitializeCurrentUserAsync()
     {
-        if (_isLoaded) return;
+        if (IsLoaded) return;
 
         try
         {
             var authState = await authStateProvider.GetAuthenticationStateAsync();
-            var principal = authState.User;
-
-            if (principal?.Identity?.IsAuthenticated != true)
+            if (authState.User?.Identity?.IsAuthenticated != true)
             {
-                _isLoaded = true;
+                IsLoaded = true;
                 return;
             }
 
-            var user = await userManager.GetUserAsync(principal);
+            var user = await userManager.GetUserAsync(authState.User);
             if (user is null)
             {
-                _isLoaded = true;
+                IsLoaded = true;
                 return;
             }
 
-            // Dohvati role names
+            List<RoleDto> roles = new();
             var roleNames = await userManager.GetRolesAsync(user);
-
-            // Dohvati pune role preko RoleManager-a
-            var roles = new List<RoleDto>();
             foreach (var roleName in roleNames)
             {
                 var role = await roleManager.FindByNameAsync(roleName);
                 if (role is not null) roles.Add(role.ToDto());
             }
 
-            _currentUser = user.ToDto();
-            _currentUser.Roles = roles;
+            User = user.ToDto();
+            User.Roles = roles;
 
-            _isLoaded = true;
+            IsLoaded = true;
         }
         catch
         {
-            _isLoaded = true;
+            IsLoaded = true;
         }
     }
 
     public void Clear()
     {
-        _currentUser = null;
-        _isLoaded = false;
+        User = null;
+        IsLoaded = false;
     }
     #endregion
-
-    #region CurrentUserOLD
-    //public UserDto? CurrentUser { get; private set; }
-
-    //public async Task LoadCurrentUser()
-    //{
-    //    var userId = GetCurrentUserId();
-    //    if (userId == Guid.Empty) return;
-
-    //    using var scope = scopeFactory.CreateScope();
-    //    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    //    var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
-    //    if (user is null) return;
-
-    //    var userRoleIds = db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).ToList();
-    //    var userRoles = db.Roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
-
-    //    var output = user.Adapt<UserDto>();
-    //    output.Roles = userRoles.Select(r => r.Adapt<RoleDto>()).ToList();
-
-    //    CurrentUser = output;
-    //}
-
-    //public Guid GetCurrentUserId()
-    //{
-    //    var userIdClaim = contextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    //    return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
-    //}
-    #endregion
-
-
-
-
-
 
 
 
