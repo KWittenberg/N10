@@ -19,6 +19,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public virtual DbSet<MovieGenre> MovieGenres { get; set; }
     #endregion
 
+    public virtual DbSet<Chronicle> Chronicles { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
