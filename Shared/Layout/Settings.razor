@@ -17,7 +17,8 @@
 style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) ? Placeholder.BackgroundUrl : App.Background?.ImageUrl)')"> *@
 
 
-<div id="Settings" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="offcanvasSettingsLabel">
+<div id="Settings" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="offcanvasSettingsLabel"
+     style="background-image: url('@ActiveBackground?.ImageUrl')">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasSettings">Settings</h5>
         <div class="d-flex align-items-center gap-2">
@@ -42,16 +43,16 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
         <!-- Theme -->
         <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-theme" role="tabpanel" aria-labelledby="pills-theme-tab" tabindex="0">
-                <h4 class="text-center">Themes for your template</h4>
+                <h5 class="text-center">Themes for your template</h5>
                 <div class="d-flex flex-wrap gap-3 align-items-center justify-content-center my-3">
                     @foreach (string theme in siteThemes)
                     {
-                        <div class="card" data-cf-theme="@theme">
-                            <div class="card-body">
-                                <h3 class="card-title d-flex align-items-center">
+                        <div class="" data-cf-theme="@theme">
+                            <div class="">
+                                <h6 class="d-flex align-items-center">
                                     Theme:&nbsp;<span style="color: var(--cf-theme-core)">@theme</span>
                                     <button class="ms-auto btn btn-sm btn-primary" @onclick="() => ChangeTheme(theme)">Set Theme</button>
-                                </h3>
+                                </h6>
                                 <h6 class="small fw-bold mt-3">Palette</h6>
                                 <div class="d-flex gap-0 align-items-center">
                                     @foreach (string weight in Weights)
@@ -73,7 +74,7 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
 
             <!-- Background -->
             <div class="tab-pane fade" id="pills-bg" role="tabpanel" aria-labelledby="pills-bg-tab" tabindex="0">
-                <h4 class="text-center">Backgrounds for your template</h4>
+                <h6 class="text-center">Backgrounds for your template</h6>
                 @if (ActiveBackground is not null)
                 {
                     <div class="items">
@@ -116,6 +117,7 @@ style="background-image: url('@(string.IsNullOrEmpty(App?.Background?.ImageUrl) 
     bool isInitialized = false;
 
 
+    
     List<Background> Backgrounds = Background.GetAll();
     //Background? ActiveBackground { get; set; } = new Background("Galaxy", "img/bg/2.Galaxy.jpg");
         

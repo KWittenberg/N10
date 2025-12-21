@@ -30,6 +30,7 @@ body:has(.offcanvas.show) .open-settings {
     background-repeat: no-repeat;
     background-position: center;
     background-attachment: fixed;
+    /*background-color: rgba(var(--bs-black-rgb), 0.2);*/
     transition: transform 0.3s ease-in-out;
 }
 
@@ -38,7 +39,8 @@ body:has(.offcanvas.show) .open-settings {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1.5px solid white;
-    background-color: rgba(0, 0, 0, 0.2);
+    /*background-color: rgba(0, 0, 0, 0.2);*/
+    background-color: var(--cf-theme-850);
 }
 
 .offcanvas-body p {

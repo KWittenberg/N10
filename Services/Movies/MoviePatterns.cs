@@ -71,10 +71,10 @@ public static class MoviePatterns
         ["FLAC"] = (m, _) => m.Audio = "FLAC",
 
         // Video
-        ["X264"] = (m, _) => m.Video = "x264",
-        ["X265"] = (m, _) => m.Video = "x265",
-        ["HEVC"] = (m, _) => m.Video = "HEVC",
-        ["AV1"] = (m, _) => m.Video = "AV1",
+        ["X264"] = (m, _) => m.Video = AddVideo(m, "x264"),
+        ["X265"] = (m, _) => m.Video = AddVideo(m, "x265"),
+        ["HEVC"] = (m, _) => m.Video = AddVideo(m, "HEVC"),
+        ["AV1"] = (m, _) => m.Video = AddVideo(m, "AV1"),
 
         // Release
         ["BONE"] = (m, _) => m.Release = "BONE",
@@ -89,7 +89,7 @@ public static class MoviePatterns
         ["YIFY"] = (m, _) => m.Release = "YIFY"
     };
 
-    // --- HELPER METODA ---
+    #region --- HELPER METODA ---
     static string AddVersion(ScanMovieModel m, string value)
     {
         if (string.IsNullOrEmpty(m.Version)) return value;
@@ -101,8 +101,17 @@ public static class MoviePatterns
     static string AddColor(ScanMovieModel m, string value)
     {
         if (string.IsNullOrEmpty(m.Color)) return value;
-        if (m.Color.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Color; // već postoji, preskoči
+        if (m.Color.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Color;
 
         return $"{m.Color}.{value}";
     }
+
+    static string AddVideo(ScanMovieModel m, string value)
+    {
+        if (string.IsNullOrEmpty(m.Video)) return value;
+        if (m.Video.Contains(value, StringComparison.OrdinalIgnoreCase)) return m.Video;
+
+        return $"{m.Video}.{value}";
+    }
+    #endregion
 }
