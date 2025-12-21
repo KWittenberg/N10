@@ -52,6 +52,10 @@ public static class ConfigureServices
         //modelPath: @"C:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
         //llamaPath: @"C:\llama\llama-cli.exe"));
 
+
+        services.AddScoped<ChronicleService>();
+
+
         return services;
     }
 }

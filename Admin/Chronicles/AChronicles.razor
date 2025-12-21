@@ -1,0 +1,82 @@
+﻿@page "/admin/chronicles"
+@inject ChronicleService Service
+
+<title>@Title</title>
+
+<_PageHeader Title="@Title" />
+
+@if (Chronicles is null)
+{
+    <_Loading />
+}
+else
+{
+    <div class="mt-3 @App?.GetContentClass()">
+        <div class="quickgrid-wrapper table-responsive">
+            <QuickGrid Class="p-sm table table-hover align-middle" Items="Chronicles?.AsQueryable()" Pagination="PaginationState">
+
+                <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
+                <TemplateColumn Title="Datum" Align="Align.Center" SortBy="@dateSort">
+                    @if (context.Date.HasValue)
+                    {
+                        <span class="text-success">@context.Date.Value.ToShortDateString()</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">NEPOZNAT</span>
+                    }
+                </TemplateColumn>
+                @* <PropertyColumn Property="x => x.Title" Title="Title" Align="Align.Center" Sortable="true" /> *@
+                @* <PropertyColumn Property="x => x.Content" Title="Content" Align="Align.Left" Sortable="true" /> *@
+                <TemplateColumn Title="Content" Align="Align.Left">
+                    <span>@context.Content.Substring(0, Math.Min(100, context.Content.Length))...</span>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Ok" Align="Align.Center" SortBy="@okSort">
+                    @if (context.Date.HasValue)
+                    {
+                        <span>✅</span>
+                    }
+                    else
+                    {
+                        <span>❌ Greška</span>
+                    }
+                </TemplateColumn>
+
+                <TemplateColumn Title="Actions" Align="Align.Center">
+                    @* <ChildContent>
+                        <span class="text-primary" @onclick="() => EditRole(context)"><i class="bi bi-pencil-square"></i></span>
+                        <span class="ms-2 text-danger" @onclick="() => DeleteRole(context)"><i class="bi bi-trash"></i></span>
+                    </ChildContent> *@
+                </TemplateColumn>
+            </QuickGrid>
+            <div class="quickgrid-pagination">
+                <Paginator State="PaginationState" />
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<Chronicle>? Chronicles;
+    GridSort<Chronicle> dateSort = GridSort<Chronicle>.ByAscending(x => x.Date);
+    GridSort<Chronicle> okSort = GridSort<Chronicle>.ByAscending(x => x.Date.HasValue);
+    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 35 };
+
+    const string Title = "Uvoz podataka (Preview)";
+    string path = @"C:\TRASH\Chronicle\Kalendar.txt";
+
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+
+    async Task LoadAsync()
+    {
+        Chronicles = await Service.LoadAndParseAsync(path);
+        // StateHasChanged();
+    }
+}
