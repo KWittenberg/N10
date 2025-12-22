@@ -1,0 +1,115 @@
+﻿@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@inject NavigationManager Navigation
+
+@if (Entity is not null)
+{
+    <div class="page @App?.GetContentClass()">
+        <EditForm Model=@Entity OnValidSubmit=@HandleValidSubmit>
+            <DataAnnotationsValidator />
+
+            <div class="d-flex justify-content-end align-items-end gap-2">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => OnBack.InvokeAsync()">back</button>
+                <button class="btn btn-lg btn-primary rounded-pill" type="submit">@Title</button>
+            </div>
+
+            <div class="mt-4 row">
+                <div class="mt-2 p-2 col-12 col-md-3 rounded border bg-transparent10">
+                    <div class="px-2">
+                        <div class="d-flex justify-content-center">
+                            <div class="">
+                                <span class="ms-1 p-sm">Day</span>
+                                <input type="number" @bind-value="@Entity.Day" class="form-control form-control-sm" />
+                                <ValidationMessage For="() => Entity.Day" class="text-danger" />
+                            </div>
+                            <div class="">
+                                <span class="ms-1 p-sm">Month</span>
+                                <input type="number" @bind-value="@Entity.Month" class="form-control form-control-sm" />
+                                <ValidationMessage For="() => Entity.Month" class="text-danger" />
+                            </div>
+                            <div class="">
+                                <span class="ms-1 p-sm">Year</span>
+                                <InputNumber @bind-Value="Entity.Year" class="form-control form-control-sm" />
+                                <ValidationMessage For="() => Entity.Year" class="text-danger" />
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="ms-1 p-sm">Date</span>
+                            <InputDate @bind-Value="Entity.Date" class="form-control form-control-sm" />
+                            <ValidationMessage For="() => Entity.Date" class="text-danger" />
+                        </div>
+                        <div class="mt-3">
+                            <span class="ms-1 p-sm">Type</span>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="Entity.Type">
+                                @foreach (var type in Enum.GetValues<ChronicleType>())
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-2 col-12 col-md-9">
+                    <div class="p-4 rounded border bg-transparent20">
+                        <div class="d-flex justify-content-center align-items-center gap-4">
+                            <div class="w-100">
+                                <span class="ms-1 p-sm">Title</span>
+                                <InputText @bind-Value="Entity.Title" class="form-control form-control-sm" placeholder="required.." required />
+                                <ValidationMessage For="() => Entity.Title" class="text-danger" />
+                            </div>
+                            <div class="">
+                                <span class="ms-1 p-sm">Approved</span>
+                                <InputCheckbox @bind-Value="Entity.IsApproved" class="form-check form-check-input" />
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <span class="ms-1 p-sm">Content</span>
+                            <InputTextArea @bind-Value="Entity.Content" class="form-control form-control-sm" placeholder="required.." required />
+                            <ValidationMessage For="() => Entity.Content" class="text-danger" />
+                        </div>
+                        <div class="mt-3">
+                            <span class="ms-1 p-sm">Enhanced Content</span>
+                            <InputTextArea @bind-Value="Entity.EnhancedContent" class="form-control form-control-sm" />
+                            <ValidationMessage For="() => Entity.EnhancedContent" class="text-danger" />
+                        </div>
+                        <div class="mt-3">
+                            <span class="ms-1 p-sm">Note</span>
+                            <InputText @bind-Value="Entity.Note" class="form-control form-control-sm" />
+                            <ValidationMessage For="() => Entity.Note" class="text-danger" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    [Parameter] public Chronicle? Entity { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    string Title => Entity?.Id == 0 ? "New" : "Update";
+    
+
+    async Task HandleValidSubmit()
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync();
+
+        try
+        {
+            if (Entity?.Id == 0) context.Chronicles.Add(Entity);
+            else context.Chronicles.Update(Entity!);
+            await context.SaveChangesAsync();
+            await App!.ShowToast($"{Entity?.Title} {(Title == "New" ? "Add" : "Update")} to database!", "success");
+            StateHasChanged();
+            await OnBack.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            await App!.ShowToast($"Failed to {(Title == "New" ? "Add" : "Update")} {Entity?.Title} to database: {ex.Message}", "error");
+        }
+    }
+}

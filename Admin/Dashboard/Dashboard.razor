@@ -49,6 +49,12 @@ else
 
         <div class="mt-5 row">
             <div class="col-xl-3 col-md-6">
+                <a href="admin/roles"><_IconComponent Icon="C" Title="Chronicles" Value="@Data.Chronicles" PredictedValue="4000" /></a>
+            </div>
+        </div>
+
+        <div class="mt-5 row">
+            <div class="col-xl-3 col-md-6">
                 <a href="admin/roles"><_IconComponent Icon="NF" Title="Note Folders" Value="@Data.NoteFolders" PredictedValue="10" /></a>
             </div>
             <div class="col-xl-3 col-md-6">
@@ -82,6 +88,7 @@ else
         public int Notes { get; set; }
         public int Movies { get; set; }
         public int MovieGeners { get; set; }
+        public int Chronicles { get; set; }
     }
 
     DashboardData Data = new();
@@ -106,6 +113,8 @@ else
 
         Data.Movies = await Context.Movies.AsNoTracking().CountAsync();
         Data.MovieGeners = await Context.MovieGenres.AsNoTracking().CountAsync();
+        
+        Data.Chronicles = await Context.Chronicles.AsNoTracking().CountAsync();
 
         IsProcessing = false;
     }

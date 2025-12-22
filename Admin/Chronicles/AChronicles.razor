@@ -5,7 +5,7 @@
 
 <title>@Title</title>
 
-<_PageHeader Title="@Title" />
+<_PageHeader Title="@Title" AddButtonText="New" OnAddButtonClick="() => Entity = new Chronicle{Content = string.Empty}" />
 
 @if (Chronicles is null)
 {
@@ -13,10 +13,17 @@
 }
 else
 {
-    <div class="mt-3 @App?.GetContentClass()">
-        <_Table Chronicles="Today" Title="Today" />
-        <_Table Chronicles="Chronicles" Title="@Title" />
-    </div>
+    if (Entity is not null)
+    {
+        <_Form Entity="Entity" OnBack="() => Entity = null" />
+    }
+    else
+    {
+        <div class="mt-3 @App?.GetContentClass()">
+            <_Table Chronicles="Today" Title="Today" OnEdit="AddEdit" OnDelete="LoadAsync" />
+            <_Table Chronicles="Chronicles" Title="@Title" OnEdit="AddEdit" OnDelete="LoadAsync" />
+        </div>
+    }
 }
 
 
@@ -25,6 +32,7 @@ else
 
     List<Chronicle>? Chronicles;
     List<Chronicle>? Today;
+    Chronicle? Entity;
     const string Title = "Chronicle";
 
 
@@ -41,5 +49,11 @@ else
         Chronicles = await db.Chronicles.AsNoTracking().ToListAsync();
 
         Today = Chronicles.Where(c => c.Date.HasValue && c.Date.Value.Month == nowInCroatia.Month && c.Date.Value.Day == nowInCroatia.Day).ToList();
+    }
+
+    async Task AddEdit(Chronicle? input)
+    {
+        Entity = input;
+        await Task.CompletedTask;
     }
 }
