@@ -1,6 +1,4 @@
-﻿@page "/admin/chronicles"
-
-@inject IDbContextFactory<ApplicationDbContext> contextFactory
+﻿@page "/admin/chronicles-preview"
 @inject ChronicleService Service
 
 <title>@Title</title>
@@ -64,7 +62,8 @@ else
     </div>
 }
 
-
+<button class="btn btn-primary" @onclick="ImportToDatabaseAsync">Import to Database</button>
+<p>U bazu je učitano: @importedCount</p>
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
@@ -74,14 +73,22 @@ else
     GridSort<Chronicle> okSort = GridSort<Chronicle>.ByAscending(x => x.Date.HasValue);
     readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 35 };
 
-    const string Title = "Chronicle";
-
+    const string Title = "Uvoz podataka (Preview)";
+    string path = @"C:\TRASH\Chronicle\Kalendar.txt";
+    int importedCount = 0;
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
+
     async Task LoadAsync()
     {
-        await using var db = await contextFactory.CreateDbContextAsync();
-        Chronicles = await db.Chronicles.AsNoTracking().ToListAsync();
+        Chronicles = await Service.LoadAndParseAsync(path);
+        // StateHasChanged();
+    }
+
+    async Task<int> ImportToDatabaseAsync()
+    {
+        importedCount = await Service.ImportToDatabaseAsync(path);
+        return importedCount;
     }
 }

@@ -452,10 +452,27 @@ namespace N10.Data.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateOnly?>("Date")
                         .HasColumnType("date");
+
+                    b.Property<byte?>("Day")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("EnhancedContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<byte?>("Month")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Title")
                         .HasMaxLength(255)
@@ -464,9 +481,16 @@ namespace N10.Data.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Year")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("Month", "Day");
+
+                    b.HasIndex("Year", "Month", "Day");
 
                     b.ToTable("Chronicles", (string)null);
                 });

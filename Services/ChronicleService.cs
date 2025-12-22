@@ -1,15 +1,14 @@
-﻿using System.Text;
+﻿namespace N10.Services;
 
-namespace N10.Services;
-
-public class ChronicleService
+public class ChronicleService(IDbContextFactory<ApplicationDbContext> contextFactory)
 {
 
 
 
 
 
-    #region Chronicle Loading and Parsing
+    #region Chronicle -> Loading and Parsing - Import to db
+    // Metoda koja učitava i parsira datoteku, vraća listu Chronicle objekata za Preview
     public async Task<List<Chronicle>?> LoadAndParseAsync(string filePath)
     {
         if (!File.Exists(filePath)) throw new FileNotFoundException($"Nema datoteke na lokaciji: {filePath}");
@@ -30,6 +29,57 @@ public class ChronicleService
         return parsedChronicles;
     }
 
+    public async Task<int> ImportToDatabaseAsync(string filePath)
+    {
+        // 1. Provjere
+        if (!File.Exists(filePath)) throw new FileNotFoundException($"Nema datoteke na lokaciji: {filePath}");
+
+        // Sigurnosna provjera: Jel baza već puna? 
+        // Ako želiš da samo nadoda, makni ovaj dio. 
+        // Ako želiš čisti start, ovo ti javlja da prvo pobrišeš.
+
+        await using var db = await contextFactory.CreateDbContextAsync();
+        if (await db.Chronicles.AnyAsync())
+        {
+            // Odluka: Ili throwaj grešku ili samo return 0.
+            // Za sada recimo da ne želimo duplikate.
+            throw new Exception("Baza već sadrži podatke! Prvo je isprazni ako želiš novi import.");
+        }
+
+        // 2. Čitanje fajla
+        var lines = await File.ReadAllLinesAsync(filePath, Encoding.UTF8);
+        if (lines.Length == 0) return 0;
+
+        List<Chronicle> chroniclesBatch = new();
+
+        // 3. Parsiranje
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            // Pozivamo tvoju ParseLine metodu (onu koju smo složili prije)
+            var c = ParseLine(line);
+
+            // Ovdje su Day, Month, Year već popunjeni u ParseLine metodi
+            chroniclesBatch.Add(c);
+        }
+
+        // 4. SPREMANJE U BAZU (Bulk Insert)
+        if (chroniclesBatch.Count > 0)
+        {
+            // Ovo dodaje sve u memoriju EF-a
+            await db.Chronicles.AddRangeAsync(chroniclesBatch);
+
+            // Ovo šalje SQL INSERT naredbu za sve odjednom
+            await db.SaveChangesAsync();
+        }
+
+        return chroniclesBatch.Count;
+    }
+
+
+
+
     // Regex koji "hvata" tvoj format
     // Grupe: 1=Id, 2=Dan, 3=Mjesec(tekst), 4=Godina, 5=Ostatak teksta
     static readonly Regex _formatRegex = new Regex(@"^(\d+)\.-\s*(\d+)\.\s*([a-zA-ZčćžšđČĆŽŠĐ]+)\s*(\d+)\.\s*godine\s*(.*)$", RegexOptions.Compiled);
@@ -49,13 +99,17 @@ public class ChronicleService
         {
             // 1. Parsiranje ID-a (Onaj 0001)
             // Ne koristimo ga za ID baze, ali možemo ga spremiti u Title ili logirati
-            int id = int.Parse(match.Groups[1].Value);
-            chronicle.Id = id;
+            // int id = int.Parse(match.Groups[1].Value);
+            // chronicle.Id = id;
 
             // 2. Parsiranje Datuma
-            int day = int.Parse(match.Groups[2].Value);
+            byte day = byte.Parse(match.Groups[2].Value);
             string monthStr = match.Groups[3].Value;
             int year = int.Parse(match.Groups[4].Value);
+
+            chronicle.Day = day;
+            chronicle.Month = DateParsingHelper.MjeseciGenitiv.TryGetValue(monthStr, out int monthVal) ? (byte?)monthVal : null;
+            chronicle.Year = year;
 
             // Pokušaj naći broj mjeseca iz teksta
             if (DateParsingHelper.MjeseciGenitiv.TryGetValue(monthStr, out int month))
@@ -104,7 +158,7 @@ public static class DateParsingHelper
         { "kolovoza", 8 }, { "kolovoz", 8 },
         { "rujna", 9 },    { "rujan", 9 },
         { "listopada", 10 }, { "listopad", 10 },
-        { "studenoga", 11 }, { "studeni", 11 }, { "studenog", 11 },
+        { "studenoga", 11 }, { "studeni", 11 }, { "studenog", 11 }, {"studena", 11 },
         { "prosinca", 12 }, { "prosinac", 12 }
     };
 }
