@@ -26,7 +26,7 @@
             <span class="ms-4" style="cursor: pointer;" @onclick="() => PlayInVlc(context.Title, context.FileName)">
                 <i class="@((context.Release == "PSA" && context.Source == "BluRay") ? "text-success" : string.Empty) bi bi-play-circle-fill"></i>
             </span>
-            <span class="ms-3 @((context.IsMetadataFetched) ? "text-core" : "text-muted")" style="cursor: pointer;" @onclick="() => OnTmdbSearch.InvokeAsync((context.TmdbId, context.Title, context.Year))">
+            <span class="ms-3 @((context.IsMetadataFetched) ? "text-core" : "text-muted")" style="cursor: pointer;" @onclick="() => OnTmdbSearch.InvokeAsync((context.TmdbId, context.Title, context.Year))" title="@context.FileName">
                 @(string.IsNullOrEmpty(context.TmdbTitle) ? context.Title : context.TmdbTitle)
             </span>
         </TemplateColumn>

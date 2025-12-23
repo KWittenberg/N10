@@ -21,29 +21,38 @@
             </div>
         </div>
 
-        <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
+        @* <PropertyColumn Property="x => x.Id" Title="Id" Align="Align.Center" Sortable="true" />
         @if (App!.IsExpanded)
         {
             <PropertyColumn Property="x => x.Day" Title="Day" Align="Align.Center" Sortable="true" />
             <PropertyColumn Property="x => x.Month" Title="Month" Align="Align.Center" Sortable="true" />
             <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
-        }
+        } *@
+        <TemplateColumn Title="✅" Align="Align.Center" SortBy="@isApprovedSort">
+            <span><i class="fas @(context.IsApproved ? "fa-check-circle" : "fa-times-circle") fa-lg @(context.IsApproved ? "text-success" : "text-danger")"></i></span>
+        </TemplateColumn>
         <TemplateColumn Title="Datum" Align="Align.Center" SortBy="@dateSort">
             <span class="@(context.Date.HasValue ? "text-success" : "text-danger")">@(context.Date.HasValue? context.Date.Value.ToShortDateString() : "NEPOZNAT")</span>
         </TemplateColumn>
         <PropertyColumn Property="x => x.Title" Title="Title" Align="Align.Center" Sortable="true" />
+
         <TemplateColumn Title="Content" Align="Align.Left">
-            <span title="@context.Content">@(App!.IsExpanded ? context.Content : $"{context.Content[..Math.Min(80, context.Content.Length)]}...")</span>
+            @if (context.EnhancedContent is null)
+            {
+                <span title="@context.Content">@(App!.IsExpanded ? context.Content : $"{context.Content[..Math.Min(80, context.Content.Length)]}...")</span>
+            }
+            else
+            {
+                <span class="text-core" title="@context.EnhancedContent">@(App!.IsExpanded ? context.EnhancedContent : $"{context.EnhancedContent?[..Math.Min(80, context.EnhancedContent.Length)]}...")</span>
+            }
         </TemplateColumn>
-        <TemplateColumn Title="EnhancedContent" Align="Align.Left">
-            <span title="@context.EnhancedContent">@(App!.IsExpanded ? context.EnhancedContent : $"{context.EnhancedContent?[..Math.Min(80, context.EnhancedContent.Length)]}...")</span>
-        </TemplateColumn>
+                
         @* <TemplateColumn Title="Ok" Align="Align.Center" SortBy="@okSort">
             <span>@(context.Date.HasValue ? "✅" : "❌")</span>
         </TemplateColumn> *@
-        <TemplateColumn Title="Approved" Align="Align.Center" SortBy="@isApprovedSort">
-            <span><i class="fas @(context.IsApproved ? "fa-check-circle" : "fa-times-circle") fa-lg @(context.IsApproved ? "text-success" : "text-danger")"></i></span>
-        </TemplateColumn>
+
+        <PropertyColumn Property="x => x.Type" Title="Type" Align="Align.Center" Sortable="true" />
+
         <TemplateColumn Title="Actions" Align="Align.Center">
             <ChildContent>
                 <span @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
@@ -84,7 +93,8 @@
     GridSort<Chronicle> dateSort = GridSort<Chronicle>.ByAscending(x => x.Date);
     // GridSort<Chronicle> okSort = GridSort<Chronicle>.ByAscending(x => x.Date.HasValue);
     GridSort<Chronicle> isApprovedSort = GridSort<Chronicle>.ByAscending(x => x.IsApproved);
-    readonly PaginationState PaginationState = new PaginationState { ItemsPerPage = 25 };
+    PaginationState? paginationState;
+    PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = Title == "5 Days" ? 10 : 25 };
 
     #region ---> DELETE
     void Delete(Chronicle input)
