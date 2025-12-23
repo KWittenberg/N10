@@ -54,6 +54,8 @@ public static class ConfigureServices
 
 
         services.AddScoped<ChronicleService>();
+        services.AddScoped<AiStudioService>();
+
 
 
         return services;

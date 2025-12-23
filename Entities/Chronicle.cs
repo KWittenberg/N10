@@ -25,10 +25,29 @@ public class Chronicle : BaseEntity
 
 public enum ChronicleType
 {
-    Unspecified = 0, // Default dok ne znamo
-    Historical = 1,  // Događaji (bitke, osnivanja)
-    Biography = 2,   // Rođenja/Smrti (Trenk, Kučera)
-    Religious = 3,   // Župe, svećenici
+    Unspecified = 0,
+
+    // --- OSOBE ---
+    Birth = 10,          // Rođenja (Trenk, Kučera, Thaller)
+    Death = 11,          // Smrti (uključuje i pogibije u ratu ako je fokus na osobi)
+    Biography = 12,      // Imenovanja, selidbe, vjenčanja
+
+    // --- DRUŠTVO ---
+    Religious = 20,      // Župe, svećenici, misije, kapele
+    Education = 21,      // Škole, učitelji, tečajevi
+    Culture = 22,        // Kazalište, glazba, knjižnice, izložbe, KUD
+    Sports = 23,         // Šahovski klub, planinari, ribiči
+    Politics = 24,       // Župani, općine, izbori, sabor, dekreti
+
+    // --- DOGAĐAJI ---
+    War = 30,            // Bitke, vojska, napadi, logori (Partizani, Ustaše, Turci)
+    Crime = 31,          // Ubojstva, pljačke (razbojnici), suđenja
+    Disaster = 32,       // Požari, poplave, vremenske nepogode ("Smrdi po dimu")
+
+    // --- INFRASTRUKTURA ---
+    Economy = 40,        // Tvornice (Zvečevo, Orljava), obrtnici, zadruge
+    Infrastructure = 41, // Ceste, pruge, struja, vodovod, građevine
+
     Other = 99
 }
 

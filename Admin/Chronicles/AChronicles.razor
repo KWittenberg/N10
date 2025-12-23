@@ -2,6 +2,7 @@
 
 @inject IDbContextFactory<ApplicationDbContext> contextFactory
 @inject ChronicleService Service
+@inject AiStudioService AiStudioService
 
 <title>@Title</title>
 
@@ -49,6 +50,8 @@ else
         Chronicles = await db.Chronicles.AsNoTracking().ToListAsync();
 
         Today = Chronicles.Where(c => c.Date.HasValue && c.Date.Value.Month == nowInCroatia.Month && c.Date.Value.Day == nowInCroatia.Day).ToList();
+
+        //await AiStudioService.DebugListModelsAsync();
     }
 
     async Task AddEdit(Chronicle? input)
