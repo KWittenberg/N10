@@ -10,15 +10,8 @@
 
             <div class="d-flex justify-content-end align-items-end gap-2">
                 <button class="btn btn-sm btn-warning rounded-pill" type="button" @onclick="ApplyAiMagic" disabled="@IsAiBusy">
-            @if (IsAiBusy)
-            {
-                <span class="spinner-border spinner-border-sm"></span> <span>Generiram...</span>
-            }
-            else
-            {
-                <span>✨ AI Magic</span>
-            }
-        </button>
+                    <span class="@(IsAiBusy ? "spinner-border spinner-border-sm me-2" : "")"></span><span>@(IsAiBusy ? "Working..." : "✨ AI Magic")</span>
+                </button>
                 <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => OnBack.InvokeAsync()">back</button>
                 <button class="btn btn-lg btn-primary rounded-pill" type="submit">@Title</button>
             </div>
@@ -147,7 +140,7 @@
 
         IsAiBusy = false;
     }
-    
+
     async Task GetAiContent()
     {
         if (Entity is null || string.IsNullOrWhiteSpace(Entity.Content))
@@ -158,10 +151,10 @@
         try
         {
             await App!.ShowToast("Generating enhanced content using AI...", "info");
-            
+
             Entity.EnhancedContent = "Generiram...";
             Entity.EnhancedContent = await AiStudioService.EnhanceChronicleTextAsync(Entity.Content);
-                        
+
             await App.ShowToast("Enhanced content generated successfully!", "success");
             StateHasChanged();
         }
