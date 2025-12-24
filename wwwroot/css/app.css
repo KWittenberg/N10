@@ -20,6 +20,22 @@
 /* 3. BODY FONT (Za glavni tekst) */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
+
+/* -----------------------------------------------------------
+   START VREMEPLOV
+----------------------------------------------------------- */
+/* 1. GLAVNI FONTOVI (Inter za tekst + Playfair Display za naslove) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+/* 2. IKONE (Material Symbols Outlined) */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1');
+
+/* -----------------------------------------------------------
+   END VREMEPLOV
+----------------------------------------------------------- */
+
+
+
 /* -----------------------------------------------------------
    2. CONFIGURATION (Postavke)
 ----------------------------------------------------------- */

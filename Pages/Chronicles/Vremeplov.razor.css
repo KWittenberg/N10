@@ -1,0 +1,195 @@
+﻿/* Custom Varijable - definiramo ih na razini komponente */
+.vremeplov-page {
+    --c-primary: #d4af37;
+    --c-bg: #09090b;
+    --c-text-muted: #94a3b8;
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Inter', sans-serif;
+    /* Postavljamo pozadinu i font na glavni wrapper */
+    background-color: var(--c-bg);
+    color: #e2e8f0;
+    font-family: var(--font-sans);
+    min-height: 100vh; /* Da pokrije cijeli ekran */
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* POZADINSKI EFEKTI */
+.bg-blob {
+    position: absolute; /* Pazi: promijenjeno iz fixed u absolute jer je unutar wrappera */
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.blob-gold {
+    top: 0%;
+    right: -5%;
+    width: 600px;
+    height: 600px;
+    background: var(--c-primary);
+}
+
+.blob-blue {
+    bottom: 0%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: #3b82f6;
+}
+
+.bg-noise {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.05;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+');
+    pointer-events: none;
+}
+
+/* TIPOGRAFIJA */
+.font-display {
+    font-family: var(--font-serif);
+}
+
+.text-gradient-gold {
+    background: linear-gradient(to right, #ffffff, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* KARTICE */
+.glass-card {
+    background: rgba(20, 20, 25, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+    .glass-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-8px);
+        border-color: rgba(212, 175, 55, 0.3);
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+
+.card-bg-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    opacity: 0.03;
+    transform: rotate(15deg);
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.glass-card:hover .card-bg-icon {
+    opacity: 0.1;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+}
+
+/* NAVIGACIJA */
+.nav-container {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn-nav {
+    border-radius: 50px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    padding: 0.6rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8;
+    background: rgba(255,255,255,0.02);
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+    .btn-nav:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+.btn-nav-active {
+    background: var(--c-primary);
+    color: #000;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+    .btn-nav-active:hover {
+        background: #bfa030;
+        color: #000;
+    }
+
+
+
+.rudina-bg-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    /*overflow: hidden; *//* Jako bitno! Reže sve što viri van ekrana */
+    pointer-events: none; /* Da možeš klikati kroz nju */
+    z-index: 0;
+}
+
+.rudina-big-head {
+    position: absolute;
+    top: -25%; /* Malo gore da se ne vidi rub slike */
+    right: -10%; /* Malo desno da ne bude centrirana */
+    width: 60vw; /* Zauzima 60% širine ekrana (responzivno) */
+    max-width: 900px; /* Ali ne više od 900px na ogromnim ekranima */
+    opacity: 0.15; /* Jako suptilno, samo da se nazire */
+    /* ROTACIJA - fiksna, ne animacija, izgleda ozbiljnije */
+    transform: rotate(-7deg);
+    /* MAGIJA: Fade-out efekt prema lijevo i dolje */
+    /* Ovo čini da slika "nestaje" u crnoj boji umjesto da ima oštar rub */
+    -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+    mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+    /* Ako želiš da se boja stopi s podlogom (blend mode) */
+    mix-blend-mode: luminosity;
+}
+
+/* Na mobitelu je smanjimo da ne smeta tekstu */
+/*@media (max-width: 768px) {
+    .rudina-big-head {
+        width: 120vw;*/ /* Veća od ekrana */
+        /*right: -40%;
+        top: 10%;
+        opacity: 0.1;
+    }
+}*/
+
+/* Samo za mobitele (ekrani uži od 768px) */
+@media (max-width: 768px) {
+    .rudina-big-head {
+        width: 120vw; /* Povećamo je da izađe iz okvira */
+        top: -10%; /* Malo spustimo ili dignemo po potrebi */
+        right: -30%; /* Gurnemo desno */
+        opacity: 0.1; /* Smanjimo prozirnost da se tekst bolje čita */
+        transform: rotate(0deg); /* Izravnamo je malo */
+    }
+}
