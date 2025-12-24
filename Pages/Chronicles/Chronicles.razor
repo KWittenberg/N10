@@ -1,0 +1,94 @@
+﻿@page "/chronicles"
+@* @layout FrontLayout *@
+
+@inject IDbContextFactory<ApplicationDbContext> contextFactory
+@inject ChronicleService Service
+
+@if (Today is null)
+{
+    <_Loading />
+}
+else
+{
+    <div class="mt-3 @App?.GetContentClass()">
+
+        <!-- HEADER: Datum i Navigacija -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
+                <h5 class="text-uppercase text-muted letter-spacing-2">Dogodilo se na današnji dan</h5>
+                <h1 class="display-3 fw-bold text-gradient">24. Prosinca</h1>
+
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    <button class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left"></i> Jučer</button>
+                    <button class="btn btn-primary rounded-pill px-4">Danas</button>
+                    <button class="btn btn-outline-secondary rounded-pill px-4">Sutra <i class="bi bi-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRID KARTICA -->
+        <div class="row g-4 masonry-grid">
+            @foreach (var item in Today)
+            {
+                <div class="col-md-6 col-xxl-4">
+                    <!-- KARTICA -->
+                    <div class="card h-100 border-0 shadow-sm hover-card card-category-@item.Type.ToString().ToLower()">
+                        <div class="card-body p-4">
+
+                            <!-- Gornji dio: Godina i Ikona -->
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="h2t"><i class="@GetIconForType(item.Type)"></i></div>
+                                <span class="h3t">@item.Year.</span>
+                            </div>
+
+                            <!-- Sadržaj -->
+                            <h5 class="mt-2 fw-bold">@item.Title</h5>
+                            <p class="text-secondary">@(string.IsNullOrEmpty(item.EnhancedContent) ? item.Content : item.EnhancedContent)</p>
+
+                            <!-- Footer: Kategorija i Share -->
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-light">
+                                <span class="badge bg-light text-dark fw-normal rounded-pill px-3">@item.Type.ToString()</span>
+                                <button class="btn btn-sm btn-link text-decoration-none text-muted"><i class="bi bi-share me-1"></i> Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] AppState? App { get; set; }
+
+    List<Chronicle>? Today;
+    const string Title = "Chronicles";
+
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    async Task LoadAsync()
+    {
+        var croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, croatiaZone).Date;
+
+        await using var db = await contextFactory.CreateDbContextAsync();
+
+        Today = await db.Chronicles.AsNoTracking()
+                                   .Where(x => x.Day == today.Day && x.Month == today.Month)
+                                   .ToListAsync();
+    }
+
+    string GetIconForType(ChronicleType type) => type switch
+    {
+        ChronicleType.War => "bi bi-shield-shaded",
+        ChronicleType.Birth => "bi bi-gift",
+        ChronicleType.Death => "bi bi-flower1",
+        ChronicleType.Religious => "bi bi-bank", // Kao crkva
+        ChronicleType.Politics => "bi bi-flag",
+        ChronicleType.Economy => "bi bi-graph-up",
+        _ => "bi bi-hourglass-split"
+    };
+}

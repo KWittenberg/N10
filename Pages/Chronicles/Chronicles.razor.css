@@ -1,0 +1,60 @@
+﻿.card {
+    background-color: rgba(var(--bs-black-rgb), 0.2);
+    /*border-radius: 0.75rem;*/ /* Zaobljeni kutovi */
+    /*box-shadow: 0 .25rem .5rem rgba(0,0,0,.5);*/ /* Blaga sjena */
+    /*transition: box-shadow 0.3s ease-in-out;*/ /* Glatka tranzicija sjene */
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2c3e50, #4ca1af);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    }
+
+/* GODINA - Ovo je tvoja 'slika' kad nemaš sliku */
+/*.year-badge {
+    font-family: 'Georgia', serif;*/ /* Neki ozbiljan font */
+    /*font-size: 2.5rem;
+    font-weight: 900;
+    color: #e9ecef;*/ /* Svijetlo siva */
+    /*line-height: 1;
+    position: relative;
+    z-index: 0;
+}*/
+/* Trik: Stavimo godinu da bude 'vodeni žig' */
+/*.year-badge {
+    color: rgba(255,255,255,0.5);*/ /* Skoro nevidljiva */
+    /*position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 2.5rem;
+    pointer-events: none;
+}*/
+
+/* COLOR CODING - Lijeva crta u boji */
+.card-category-war {
+    border-left: 5px solid #dc3545 !important;
+}
+/* Crveno */
+.card-category-birth {
+    border-left: 5px solid #198754 !important;
+}
+/* Zeleno */
+.card-category-religious {
+    border-left: 5px solid #6610f2 !important;
+}
+/* Ljubičasto */
+.card-category-politics {
+    border-left: 5px solid #0d6efd !important;
+}
+/* Plavo */
+/* ... dodaj ostale ... */
