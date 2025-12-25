@@ -3,6 +3,9 @@
 
 @inject IDbContextFactory<ApplicationDbContext> contextFactory
 @inject ChronicleService Service
+@inject IJSRuntime JS
+
+<PageTitle>Požeški Vremeplov</PageTitle>
 
 <div class="vremeplov-page">
     <div class="bg-noise"></div>
@@ -49,7 +52,7 @@
             <div class="row g-4">
                 @foreach (var item in Events)
                 {
-                    <div class="col-md-6 col-lg-4">
+                    <div id="card-@item.Id" class="col-md-6 col-lg-4">
                         <div class="glass-card">
                             <div class="card-bg-icon">
                                 <span class="material-symbols-outlined" style="font-size: 150px; color: @GetColor(item.Type)">@GetIcon(item.Type)</span>
@@ -59,8 +62,8 @@
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <span class="font-display fw-bold text-white display-5 text-shadow">@item.Year.</span>
                                     <div class="icon-box" style="background: linear-gradient(135deg, @GetColorAlpha(item.Type, 0.2), transparent);
-                                                                                                                 border-color: @GetColorAlpha(item.Type, 0.3);
-                                                                                                                 box-shadow: 0 0 15px @GetColorAlpha(item.Type, 0.1);">
+                                                                                                                                         border-color: @GetColorAlpha(item.Type, 0.3);
+                                                                                                                                         box-shadow: 0 0 15px @GetColorAlpha(item.Type, 0.1);">
                                         <span class="material-symbols-outlined fs-4" style="color: @GetColor(item.Type)">@GetIcon(item.Type)</span>
                                     </div>
                                 </div>
@@ -72,7 +75,9 @@
 
                                 <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
                                     <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">@item.Type</span>
-                                    <button class="btn btn-link p-0 text-muted text-decoration-none"><span class="material-symbols-outlined">share</span></button>
+                                    <button class="btn btn-link p-0 text-muted text-decoration-none" @onclick="() => ShareCard(item)">
+                                        <span class="material-symbols-outlined" title="Share">share</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -90,8 +95,8 @@
 
     DateTime SelectedDate;
     bool IsToday => SelectedDate.Date == DateTime.Now.Date;
-
     string CurrentHeadUrl = string.Empty;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,6 +115,13 @@
                                    .Where(x => x.Day == SelectedDate.Day && x.Month == SelectedDate.Month)
                                    .OrderBy(x => x.Year) // Sortiraj po godini
                                    .ToListAsync();
+    }
+
+    async Task ShareCard(Chronicle item)
+    {
+        await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Chronicles/Vremeplov.razor.js");
+
+        await jsModule.InvokeVoidAsync("copyCardToClipboard", $"card-{item.Id}");
     }
 
     async Task ChangeDate(int days)
