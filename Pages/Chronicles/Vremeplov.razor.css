@@ -158,10 +158,11 @@
 
 .rudina-big-head {
     position: absolute;
-    top: -25%; /* Malo gore da se ne vidi rub slike */
+    top: -10%; /* Malo gore da se ne vidi rub slike */
     right: -10%; /* Malo desno da ne bude centrirana */
-    width: 60vw; /* Zauzima 60% širine ekrana (responzivno) */
+    width: 100vw; /* Zauzima 60% širine ekrana (responzivno) */
     max-width: 900px; /* Ali ne više od 900px na ogromnim ekranima */
+    object-fit: contain;
     opacity: 0.15; /* Jako suptilno, samo da se nazire */
     /* ROTACIJA - fiksna, ne animacija, izgleda ozbiljnije */
     transform: rotate(-7deg);
@@ -171,6 +172,21 @@
     mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
     /* Ako želiš da se boja stopi s podlogom (blend mode) */
     mix-blend-mode: luminosity;
+    animation: slowFloat 20s infinite ease-in-out;
+}
+
+@keyframes slowFloat {
+    0% {
+        transform: rotate(-7deg) translateY(0px);
+    }
+
+    50% {
+        transform: rotate(-5deg) translateY(-20px);
+    }
+    /* Malo se uspravi i digne */
+    100% {
+        transform: rotate(-7deg) translateY(0px);
+    }
 }
 
 /* Na mobitelu je smanjimo da ne smeta tekstu */
@@ -190,6 +206,6 @@
         top: -10%; /* Malo spustimo ili dignemo po potrebi */
         right: -30%; /* Gurnemo desno */
         opacity: 0.1; /* Smanjimo prozirnost da se tekst bolje čita */
-        transform: rotate(0deg); /* Izravnamo je malo */
+        /*transform: rotate(0deg);*/ /* Izravnamo je malo */
     }
 }
