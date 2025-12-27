@@ -55,6 +55,7 @@
 
         <TemplateColumn Title="Actions" Align="Align.Center">
             <ChildContent>
+                <span @onclick="() => Chronicle = context" title="Post"><i class="bi bi-p-square"></i></span>
                 <span @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
                 <span class="ms-2 text-danger" @onclick="() => Delete(context)"><i class="bi bi-trash"></i></span>
             </ChildContent>
@@ -64,6 +65,7 @@
         <Paginator State="PaginationState" />
     </div>
 </div>
+<_Post Chronicle="Chronicle" />
 
 
 @code {
@@ -74,6 +76,7 @@
     [Parameter] public EventCallback OnDelete { get; set; }
 
     string? SearchTerm;
+    Chronicle? Chronicle;
     List<Chronicle>? FilteredChronicles
     {
         get
@@ -95,6 +98,8 @@
     GridSort<Chronicle> isApprovedSort = GridSort<Chronicle>.ByAscending(x => x.IsApproved);
     PaginationState? paginationState;
     PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = Title == "5 Days" ? 10 : 25 };
+
+
 
     #region ---> DELETE
     void Delete(Chronicle input)

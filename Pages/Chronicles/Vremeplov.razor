@@ -2,7 +2,6 @@
 @layout VremeplovLayout
 
 @inject IDbContextFactory<ApplicationDbContext> contextFactory
-@inject ChronicleService Service
 @inject IJSRuntime JS
 
 <PageTitle>Požeški Vremeplov</PageTitle>
@@ -22,19 +21,19 @@
 
             <div class="ms-4 text-center text-lg-start mx-auto" style="z-index: 2;">
 
-                <!-- NASLOV I AUTOR -->
-                <div class="d-inline-block border-start border-2 border-warning ps-3 mb-3">
+                <!-- Title & Author -->
+                <div class="title-author d-inline-block border-start border-warning">
                     <span class="text-uppercase text-warning small fw-bold" style="letter-spacing: 3px;">Požeški Vremeplov</span>
-                    <span class="d-block text-muted small mt-1" style="font-family: var(--font-serif); font-style: italic;">autor: Tomislav Wittenberg</span>
+                    <span class="mt-1 d-block text-muted small" style="font-family: var(--kw-v-font-title);">autor: Tomislav Wittenberg</span>
                 </div>
 
-                <h1 class="font-display fw-bold display-2 lh-1 mb-4">
+                <h1 class="mt-3 font-display fw-bold display-2 lh-1">
                     <span class="d-block text-gradient-gold">@SelectedDate.Day.</span>
-                    <span class="d-block" style="color: var(--c-primary);">@GetMonthName(SelectedDate.Month)</span>
+                    <span class="d-block" style="color: var(--kw-v-primary);">@GetMonthName(SelectedDate.Month)</span>
                 </h1>
 
                 <!-- NAVIGACIJA (buttons) -->
-                <div class="d-inline-flex gap-2 p-1 rounded-pill nav-container">
+                <div class="mt-4 d-inline-flex gap-2 p-1 rounded-pill nav-container">
                     <button class="btn btn-nav d-flex align-items-center gap-2" @onclick="() => ChangeDate(-1)"><span class="material-symbols-outlined fs-6">arrow_back</span> Jučer</button>
                     <button class="btn btn-nav @(IsToday ? "btn-nav-active" : "") d-flex align-items-center gap-2" @onclick="GoToToday">Danas</button>
                     <button class="btn btn-nav d-flex align-items-center gap-2" @onclick="() => ChangeDate(1)">Sutra <span class="material-symbols-outlined fs-6">arrow_forward</span></button>
@@ -53,34 +52,7 @@
                 @foreach (var item in Events)
                 {
                     <div id="card-@item.Id" class="col-md-6 col-lg-4">
-                        <div class="glass-card">
-                            <div class="card-bg-icon">
-                                <span class="material-symbols-outlined" style="font-size: 150px; color: @GetColor(item.Type)">@GetIcon(item.Type)</span>
-                            </div>
-
-                            <div class="card-body p-4 d-flex flex-column h-100" style="z-index: 2;">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <span class="font-display fw-bold text-white display-5 text-shadow">@item.Year.</span>
-                                    <div class="icon-box" style="background: linear-gradient(135deg, @GetColorAlpha(item.Type, 0.2), transparent);
-                                                                                                                                         border-color: @GetColorAlpha(item.Type, 0.3);
-                                                                                                                                         box-shadow: 0 0 15px @GetColorAlpha(item.Type, 0.1);">
-                                        <span class="material-symbols-outlined fs-4" style="color: @GetColor(item.Type)">@GetIcon(item.Type)</span>
-                                    </div>
-                                </div>
-
-                                <h3 class="font-display h4 mb-3" style="color: @GetColor(item.Type)">@item.Title</h3>
-                                <div class="mb-3" style="width: 3rem; height: 2px; background: rgba(255,255,255,0.1);"></div>
-
-                                <p class="mb-4 flex-grow-1" style="color: var(--c-text-muted); font-size: 0.95rem; line-height: 1.6;">@(string.IsNullOrEmpty(item.EnhancedContent) ? item.Content : item.EnhancedContent)</p>
-
-                                <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-                                    <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">@item.Type</span>
-                                    <button class="btn btn-link p-0 text-muted text-decoration-none" @onclick="() => ShareCard(item)">
-                                        <span class="material-symbols-outlined" title="Share">share</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <_ChronicleCard Item="item" OnShare="ShareCard" />
                     </div>
                 }
             </div>
@@ -88,6 +60,7 @@
         <_Footer />
     </div>
 </div>
+
 
 
 @code {
@@ -136,47 +109,6 @@
         SelectedDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, croatiaZone).Date;
         await LoadAsync();
     }
-
-    // --- HELPERI ZA BOJE I IKONE ---
-    string GetColor(ChronicleType type) => type switch
-    {
-        ChronicleType.War => "#d4af37",        // Gold
-        ChronicleType.Biography => "#f59e0b",  // Amber
-        ChronicleType.Religious => "#818cf8",  // Indigo
-        ChronicleType.Education => "#34d399",  // Emerald
-        ChronicleType.Birth => "#fb7185",      // Rose
-        ChronicleType.Death => "#94a3b8",      // Slate
-        ChronicleType.Politics => "#ef4444",   // Red
-        ChronicleType.Economy => "#06b6d4",    // Cyan
-        _ => "#d4af37"
-    };
-
-    string GetColorAlpha(ChronicleType type, double opacity)
-    {
-        // Jednostavna simulacija RGBA za border
-        return type switch
-        {
-            ChronicleType.War => $"rgba(212, 175, 55, {opacity})",
-            ChronicleType.Biography => $"rgba(245, 158, 11, {opacity})",
-            ChronicleType.Religious => $"rgba(129, 140, 248, {opacity})",
-            ChronicleType.Education => $"rgba(52, 211, 153, {opacity})",
-            ChronicleType.Birth => $"rgba(251, 113, 133, {opacity})",
-            _ => $"rgba(148, 163, 184, {opacity})"
-        };
-    }
-
-    string GetIcon(ChronicleType type) => type switch
-    {
-        ChronicleType.War => "shield",
-        ChronicleType.Biography => "history_edu",
-        ChronicleType.Religious => "church",
-        ChronicleType.Education => "school",
-        ChronicleType.Birth => "child_care",
-        ChronicleType.Death => "sentiment_sad",
-        ChronicleType.Politics => "gavel",
-        ChronicleType.Economy => "factory",
-        _ => "article"
-    };
 
     string GetMonthName(int month) => month switch
     {

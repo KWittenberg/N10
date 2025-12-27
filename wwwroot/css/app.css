@@ -46,8 +46,13 @@
     --kw-font-body: 'Open Sans', sans-serif;
     /* Override Bootstrap body fonta (da cijela stranica koristi Open Sans) */
     --bs-body-font-family: var(--kw-font-body);
-    
-    
+    /* VREMEPLOV PALETA */
+    --kw-v-primary: #d4af37; /* Zlatna */
+    --kw-v-bg: #09090b; /* Tamna pozadina */
+    --kw-v-text-muted: #94a3b8; /* Sivi tekst */
+    /* VREMEPLOV FONTOVI */
+    --kw-v-font-title: 'Playfair Display', serif;
+    --kw-v-font-body: 'Inter', sans-serif;
     /* Custom fontovi za AIDA */
     /*--kw-title-font: "Wix Madefor Text", sans-serif;
     --kw-subtitle-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -335,6 +340,14 @@ h1:focus {
 
 .bg-transparent60 {
     background-color: rgba(var(--bs-black-rgb), 0.6);
+}
+
+.bg-transparent70 {
+    background-color: rgba(var(--bs-black-rgb), 0.7);
+}
+
+.bg-transparent80 {
+    background-color: rgba(var(--bs-black-rgb), 0.8);
 }
 /*#endregion END Background-Transparent*/
 
