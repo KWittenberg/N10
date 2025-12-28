@@ -1,44 +1,42 @@
-﻿.glass-card {
-    background: rgba(20, 20, 25, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.5rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+﻿.image-bg {
+    padding: 2rem;
+    background-color: var(--kw-v-bg);
+    color: #e2e8f0;
     position: relative;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
 }
 
-    .glass-card:hover {
-        background: rgba(255, 255, 255, 0.08);
-        transform: translateY(-8px);
-        border-color: rgba(212, 175, 55, 0.3);
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-    }
-
-.card-bg-icon {
+/* POZADINSKI EFEKTI */
+.bg-blob {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    opacity: 0.03;
-    transform: rotate(15deg);
-    transition: opacity 0.3s;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+    opacity: 0.15;
     pointer-events: none;
 }
 
-.glass-card:hover .card-bg-icon {
-    opacity: 0.1;
+.blob-gold {
+    top: 0%;
+    right: -5%;
+    width: 600px;
+    height: 600px;
+    background: var(--kw-v-primary);
 }
 
-.icon-box {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid;
+.blob-blue {
+    bottom: 0%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: #3b82f6;
+}
+
+.bg-noise {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.05;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+');
+    pointer-events: none;
 }

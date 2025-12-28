@@ -1,117 +1,33 @@
-﻿<!-- Post Modal Component -->
-@* <div class="modal fade @Show bg-transparent60" id="postModal" style="">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 bg-transparent" style="width: 600px;">
-            <div class="modal-header">
-                <div class="d-flex justify-content-between align-items-center gap-4">
-                    <button type="button" class="btn-close" @onclick="() => Chronicle = null"></button>
-                    <button type="button" class="btn btn-primary rounded-pill">Post</button>
-                </div>
-            </div>
-            <div class="modal-body bg-dark-subtle">
-                <p>@sB</p>
-            </div>
-            <div class="modal-footer bg-transparent80" style="width: 600px; height: 600px">
-            </div>
-        </div>
-    </div>
-</div> *@
+﻿@inject IJSRuntime JS
 
-
-@inject IJSRuntime JS
-
-<!-- MODAL -->
+<!-- Post Modal Component -->
 <div class="modal fade @ShowClass" style="display: @(Chronicle is not null ? "block" : "none"); background: rgba(0,0,0,0.50); backdrop-filter: blur(4px);" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
 
-        <div class="modal-content text-white border-0 bg-transparent" style="width: 600px;">
+        <div class="modal-content text-white border-0 bg-transparent">
 
             <!-- 1. HEADER -->
-            <div class="modal-header d-flex justify-content-between align-items-center w-100">
-                <button type="button" class="btn btn-outline-secondary rounded-circle p-2" style="width: 40px; height: 40px;" @onclick="Close"><i class="bi bi-x-lg"></i></button>
+            <div class="modal-header d-flex justify-content-between align-items-center border-0 w-100">
+                <button type="button" class="btn btn-outline-secondary rounded-circle p-2" style="width: 40px; height: 40px;" @onclick="() => Chronicle = null"><i class="bi bi-x-lg"></i></button>
                 <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" @onclick="PostToFacebook">POST <i class="bi bi-send-fill ms-2"></i></button>
             </div>
 
             <!-- 2. BODY (Tekst) -->
-            <div class="modal-body p-0">
-                <textarea class="form-control bg-dark-subtle text-white border-0 p-4"
-                          rows="10"
-                          style="resize: none; font-size: 1rem; line-height: 1.6; border-radius: 0;"
-                          @bind="PostText"></textarea>
+            <div class="p-0 pb-0 modal-body">
+                <InputTextArea @bind-Value="PostText" class="form-control bg-dark-subtle text-white border-0 p-4" rows="12"></InputTextArea>
             </div>
 
             <!-- 3. FOOTER (Preview Slike) -->
-            <div class="mt-2 modal-footer bg-dark border-0 justify-content-center p-4">
-
-                @* <div id="capture-target" style="width: 600px; background: #09090b; padding: 0; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
-
-                    <!-- Dekoracija pozadine -->
-                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.1; background-image: radial-gradient(circle at center, #d4af37 1px, transparent 1px); background-size: 20px 20px;"></div>
-
-                    <!-- Rudinska glava (Vodeni žig) -->
-                    <!-- <img src="/images/rudina-head.png" style="position: absolute; right: -50px; top: -50px; width: 300px; opacity: 0.15; transform: rotate(-15deg); mix-blend-mode: luminosity;" /> -->
-                    <!-- Okvir Kartice -->
-                    <div style="border: 2px solid rgba(212, 175, 55, 0.4); border-radius: 20px; padding: 40px; background: rgba(20,20,25,0.9); position: relative; z-index: 1;">
-
-                        <!-- Header Kartice -->
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <span style="font-family: serif; font-size: 4rem; font-weight: 700; color: #fff; line-height: 1;">@Chronicle?.Year.</span>
-
-                            <div style="width: 60px; height: 60px; border-radius: 50%; border: 1px solid #d4af37; display: flex; align-items: center; justify-content: center; color: #d4af37;">
-                                <i class="@GetIconForType(Chronicle?.Type)" style="font-size: 1.8rem;"></i>
-                            </div>
-                        </div>
-
-                        <!-- Naslov -->
-                        <h2 style="font-family: serif; color: #d4af37; font-size: 2rem; margin-bottom: 20px;">@Chronicle?.Title</h2>
-
-                        <!-- Sadržaj -->
-                        <p style="font-family: sans-serif; color: #cbd5e1; font-size: 1.2rem; line-height: 1.6;">
-                            @(string.IsNullOrEmpty(Chronicle?.EnhancedContent) ? Chronicle?.Content : Chronicle?.EnhancedContent)
-                        </p>
-
-                        <!-- Footer Kartice -->
-                        <div class="mt-5 pt-4 border-top border-secondary d-flex justify-content-between align-items-center">
-                            <span style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; color: #64748b;">POŽEŠKI VREMEPLOV</span>
-                            <span style="color: #d4af37; font-weight: bold;">Tomislav Wittenberg</span>
-                        </div>
-                    </div>
-                </div> *@
-
-                @if(Chronicle is not null)
+            <div class="mt-4 justify-content-center">
+                @if (Chronicle is not null)
                 {
-                
-                
-                <div class="glass-card">
-                    <div class="card-bg-icon">
-                        <span class="material-symbols-outlined" style="font-size: 150px; color: @GetColor(Chronicle.Type)">@GetIcon(Chronicle.Type)</span>
+                    <div class="image-bg">
+                        <div class="bg-noise"></div>
+                        <div class="bg-blob blob-gold"></div>
+                        <div class="bg-blob blob-blue"></div>
+                        <N10.Pages.Chronicles._ChronicleCard Item="Chronicle" Share="false" />
                     </div>
-
-                    <div class="card-body p-4 d-flex flex-column h-100" style="z-index: 2;">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="font-display fw-bold text-white display-5 text-shadow">@Chronicle.Year.</span>
-                            <div class="icon-box" style="background: linear-gradient(135deg, @GetColorAlpha(Chronicle.Type, 0.2), transparent);
-                                                                                                                                         border-color: @GetColorAlpha(Chronicle.Type, 0.3);
-                                                                                                                                         box-shadow: 0 0 15px @GetColorAlpha(Chronicle.Type, 0.1);">
-                                <span class="material-symbols-outlined fs-4" style="color: @GetColor(Chronicle.Type)">@GetIcon(Chronicle.Type)</span>
-                            </div>
-                        </div>
-
-                        <h3 class="font-display h4 mb-3" style="color: @GetColor(Chronicle.Type)">@Chronicle.Title</h3>
-                        <div class="mb-3" style="width: 3rem; height: 2px; background: rgba(255,255,255,0.1);"></div>
-
-                        <p class="mb-4 flex-grow-1" style="color: var(--c-text-muted); font-size: 0.95rem; line-height: 1.6;">@(string.IsNullOrEmpty(Chronicle.EnhancedContent) ? Chronicle.Content : Chronicle.EnhancedContent)</p>
-
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-                            <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">@Chronicle.Type</span>
-                            @* <button class="btn btn-link p-0 text-muted text-decoration-none" @onclick="() => ShareCard(item)">
-                                <span class="material-symbols-outlined" title="Share">share</span>
-                            </button> *@
-                        </div>
-                    </div>
-                </div>
                 }
-
             </div>
         </div>
     </div>
@@ -119,11 +35,9 @@
 
 @code {
     [Parameter] public Chronicle? Chronicle { get; set; }
-    [Parameter] public EventCallback OnClose { get; set; }
 
     string ShowClass => Chronicle is not null ? "show d-block" : string.Empty;
     string PostText = string.Empty;
-    int ImageHeight = 600;
 
 
     protected override void OnParametersSet()
@@ -138,9 +52,10 @@
         sb.AppendLine("");
         sb.AppendLine(string.IsNullOrEmpty(Chronicle.EnhancedContent) ? Chronicle.Content : Chronicle.EnhancedContent);
         sb.AppendLine("");
-        sb.AppendLine("#Požega #Vremeplov #Povijest #Baština #wittenberg");
+        sb.AppendLine("#Požeški #Vremeplov #Wittenberg #Požega #Povijest #Baština");
 
         PostText = sb.ToString();
+        PostText = PostText.TrimEnd();
     }
 
     async Task PostToFacebook()
@@ -163,78 +78,7 @@
 
             // Za test:
             Console.WriteLine($"Slika spremna! Veličina: {imageBytes.Length / 1024} KB");
-            await Close();
+            //await Close();
         }
     }
-
-    Task Close() => OnClose.InvokeAsync();
-
-    string GetIconForType(ChronicleType? type) => type switch
-    {
-        ChronicleType.War => "bi bi-shield-shaded",
-        ChronicleType.Biography => "bi bi-person-badge",
-        ChronicleType.Religious => "bi bi-bank", // Ili church
-        ChronicleType.Education => "bi bi-book",
-        _ => "bi bi-hourglass-split"
-    };
-
-
-
-    // --- HELPERI ZA BOJE I IKONE ---
-    string GetColor(ChronicleType type) => type switch
-    {
-        ChronicleType.War => "#d4af37",        // Gold
-        ChronicleType.Biography => "#f59e0b",  // Amber
-        ChronicleType.Religious => "#818cf8",  // Indigo
-        ChronicleType.Education => "#34d399",  // Emerald
-        ChronicleType.Birth => "#fb7185",      // Rose
-        ChronicleType.Death => "#94a3b8",      // Slate
-        ChronicleType.Politics => "#ef4444",   // Red
-        ChronicleType.Economy => "#06b6d4",    // Cyan
-        _ => "#d4af37"
-    };
-
-    string GetColorAlpha(ChronicleType type, double opacity)
-    {
-        // Jednostavna simulacija RGBA za border
-        return type switch
-        {
-            ChronicleType.War => $"rgba(212, 175, 55, {opacity})",
-            ChronicleType.Biography => $"rgba(245, 158, 11, {opacity})",
-            ChronicleType.Religious => $"rgba(129, 140, 248, {opacity})",
-            ChronicleType.Education => $"rgba(52, 211, 153, {opacity})",
-            ChronicleType.Birth => $"rgba(251, 113, 133, {opacity})",
-            _ => $"rgba(148, 163, 184, {opacity})"
-        };
-    }
-
-    string GetIcon(ChronicleType type) => type switch
-    {
-        ChronicleType.War => "shield",
-        ChronicleType.Biography => "history_edu",
-        ChronicleType.Religious => "church",
-        ChronicleType.Education => "school",
-        ChronicleType.Birth => "child_care",
-        ChronicleType.Death => "sentiment_sad",
-        ChronicleType.Politics => "gavel",
-        ChronicleType.Economy => "factory",
-        _ => "article"
-    };
-
-    string GetMonthName(int month) => month switch
-    {
-        1 => "Siječnja",
-        2 => "Veljače",
-        3 => "Ožujka",
-        4 => "Travnja",
-        5 => "Svibnja",
-        6 => "Lipnja",
-        7 => "Srpnja",
-        8 => "Kolovoza",
-        9 => "Rujna",
-        10 => "Listopada",
-        11 => "Studenoga",
-        12 => "Prosinca",
-        _ => ""
-    };
 }

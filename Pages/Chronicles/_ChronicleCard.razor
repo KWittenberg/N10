@@ -4,6 +4,8 @@
     </div>
 
     <div class="card-body p-4 d-flex flex-column h-100" style="z-index: 2;">
+
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <span class="font-display fw-bold text-white display-5 text-shadow">@Item.Year.</span>
             <div class="icon-box" style="background: linear-gradient(135deg, @GetColorAlpha(Item.Type, 0.2), transparent);
@@ -18,19 +20,32 @@
 
         <p class="mb-4 flex-grow-1" style="color: var(--kw-v-text-muted); font-size: 0.95rem; line-height: 1.6;">@(string.IsNullOrEmpty(Item.EnhancedContent) ? Item.Content : Item.EnhancedContent)</p>
 
-        <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-            <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">@Item.Type</span>
-            <button class="btn btn-link p-0 text-muted text-decoration-none" @onclick="() => OnShare.InvokeAsync(Item)">
-                <span class="material-symbols-outlined" title="Share">share</span>
-            </button>
+        <div class="pt-3 d-flex justify-content-between align-items-center border-top" style="border-color: rgba(255,255,255,0.1) !important;">
+            @if (Share)
+            {
+                <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">@Item.Type</span>
+                <button class="btn btn-link p-0 text-muted text-decoration-none" @onclick="() => OnShare.InvokeAsync(Item)">
+                    <span class="material-symbols-outlined" title="Share">share</span>
+                </button>
+            }
+            else
+            {
+                <!-- Title & Author -->
+                <div class="ps-3 d-inline-block border-start border-warning border-3">
+                    <span class="text-uppercase text-warning small fw-bold" style="letter-spacing: 3px;">Požeški Vremeplov</span>
+                    <span class="mt-1 d-block text-muted small" style="font-family: var(--kw-v-font-title);">autor: Tomislav Wittenberg</span>
+                </div>
+                <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">@Item.Type</span>
+            }
         </div>
     </div>
 </div>
 
 @code {
     [Parameter, EditorRequired] public Chronicle Item { get; set; } = default!;
+    [Parameter] public bool Share { get; set; }
     [Parameter] public EventCallback<Chronicle> OnShare { get; set; }
-    
+
 
     // --- HELPERI ZA BOJE I IKONE (Isti kao prije) ---
     string GetColor(ChronicleType type) => type switch

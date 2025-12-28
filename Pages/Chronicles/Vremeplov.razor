@@ -22,7 +22,7 @@
             <div class="ms-4 text-center text-lg-start mx-auto" style="z-index: 2;">
 
                 <!-- Title & Author -->
-                <div class="title-author d-inline-block border-start border-warning">
+                <div class="ps-3 d-inline-block border-start border-warning border-3">
                     <span class="text-uppercase text-warning small fw-bold" style="letter-spacing: 3px;">Požeški Vremeplov</span>
                     <span class="mt-1 d-block text-muted small" style="font-family: var(--kw-v-font-title);">autor: Tomislav Wittenberg</span>
                 </div>
@@ -52,7 +52,7 @@
                 @foreach (var item in Events)
                 {
                     <div id="card-@item.Id" class="col-md-6 col-lg-4">
-                        <_ChronicleCard Item="item" OnShare="ShareCard" />
+                        <_ChronicleCard Item="item" Share="true" OnShare="ShareCard" />
                     </div>
                 }
             </div>
