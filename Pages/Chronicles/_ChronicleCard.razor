@@ -1,6 +1,6 @@
 ﻿<div class="glass-card">
     <div class="card-bg-icon">
-        <span class="material-symbols-outlined" style="font-size: 150px; color: @GetColor(Item.Type)">@GetIcon(Item.Type)</span>
+        <span class="material-symbols-outlined" style="font-size: 150px; color: @Item.Type.GetColor()">@Item.Type.GetIcon()</span>
     </div>
 
     <div class="card-body p-4 d-flex flex-column h-100" style="z-index: 2;">
@@ -8,14 +8,14 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <span class="font-display fw-bold text-white display-5 text-shadow">@Item.Year.</span>
-            <div class="icon-box" style="background: linear-gradient(135deg, @GetColorAlpha(Item.Type, 0.2), transparent);
-                                         border-color: @GetColorAlpha(Item.Type, 0.3);
-                                         box-shadow: 0 0 15px @GetColorAlpha(Item.Type, 0.1);">
-                <span class="material-symbols-outlined fs-4" style="color: @GetColor(Item.Type)">@GetIcon(Item.Type)</span>
+            <div class="icon-box" style="background: linear-gradient(135deg, @Item.Type.GetColorAlpha(0.2), transparent);
+                                         border-color: @Item.Type.GetColorAlpha(0.3);
+                                         box-shadow: 0 0 15px @Item.Type.GetColorAlpha(0.1);">
+                <span class="material-symbols-outlined fs-4" style="color: @Item.Type.GetColor()">@Item.Type.GetIcon()</span>
             </div>
         </div>
 
-        <h3 class="font-display h4 mb-3" style="color: @GetColor(Item.Type)">@Item.Title</h3>
+        <h3 class="font-display h4 mb-3" style="color: @Item.Type.GetColor()">@Item.Title</h3>
         <div class="mb-3" style="width: 3rem; height: 2px; background: rgba(255,255,255,0.1);"></div>
 
         <p class="mb-4 flex-grow-1" style="color: var(--kw-v-text-muted); font-size: 0.95rem; line-height: 1.6;">@(string.IsNullOrEmpty(Item.EnhancedContent) ? Item.Content : Item.EnhancedContent)</p>
@@ -43,41 +43,7 @@
 
 @code {
     [Parameter, EditorRequired] public Chronicle Item { get; set; } = default!;
+
     [Parameter] public bool Share { get; set; }
     [Parameter] public EventCallback<Chronicle> OnShare { get; set; }
-
-
-    // --- HELPERI ZA BOJE I IKONE (Isti kao prije) ---
-    string GetColor(ChronicleType type) => type switch
-    {
-        ChronicleType.War => "#d4af37",        // Gold
-        ChronicleType.Biography => "#f59e0b",  // Amber
-        ChronicleType.Religious => "#818cf8",  // Indigo
-        ChronicleType.Education => "#34d399",  // Emerald
-        ChronicleType.Birth => "#fb7185",      // Rose
-        ChronicleType.Death => "#94a3b8",      // Slate
-        _ => "#d4af37"
-    };
-
-    string GetColorAlpha(ChronicleType type, double opacity)
-    {
-        return type switch
-        {
-            ChronicleType.War => $"rgba(212, 175, 55, {opacity})",
-            ChronicleType.Biography => $"rgba(245, 158, 11, {opacity})",
-            ChronicleType.Religious => $"rgba(129, 140, 248, {opacity})",
-            _ => $"rgba(148, 163, 184, {opacity})"
-        };
-    }
-
-    string GetIcon(ChronicleType type) => type switch
-    {
-        ChronicleType.War => "shield",
-        ChronicleType.Biography => "history_edu",
-        ChronicleType.Religious => "church",
-        ChronicleType.Education => "school",
-        ChronicleType.Birth => "child_care",
-        ChronicleType.Death => "sentiment_sad",
-        _ => "article"
-    };
 }
