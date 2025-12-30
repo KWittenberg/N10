@@ -115,7 +115,7 @@
 
         if (ImageBytes is not null)
         {
-            var result = await MetaService.PostImageFromMemoryAsync(PostText, ImageBytes);
+            var result = await MetaService.PostToFacebookAsync(PostText, ImageBytes);
 
             if (result.Success)
             {

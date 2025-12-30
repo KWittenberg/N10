@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.Configure<GmailOptions>(configuration.GetSection(nameof(GmailOptions)));
         services.Configure<TmdbOptions>(configuration.GetSection(nameof(TmdbOptions)));
         services.Configure<OpenWeatherOptions>(configuration.GetSection(nameof(OpenWeatherOptions)));
+        services.Configure<MetaOptions>(configuration.GetSection(nameof(MetaOptions)));
 
         // 3. Infrastructure/platform services
         services.AddQuickGridEntityFrameworkAdapter();

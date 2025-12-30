@@ -2,7 +2,7 @@
 
 public class MetaService(HttpClient client, IOptions<MetaOptions> options)
 {
-    public async Task<Result> PostImageFromMemoryAsync(string message, byte[] imageBytes)
+    public async Task<Result> PostToFacebookAsync(string message, byte[] imageBytes)
     {
         using var content = new MultipartFormDataContent();
 
@@ -21,7 +21,7 @@ public class MetaService(HttpClient client, IOptions<MetaOptions> options)
         // 4. Pošalji na /photos endpoint
         var response = await client.PostAsync($"{options.Value.BaseUrl}{options.Value.BoltaId}/photos", content);
 
-        if (response.IsSuccessStatusCode) return Result.Ok($"Facebook Image Posted! - {DateTime.Now:f}");
+        if (response.IsSuccessStatusCode) return Result.Ok($"Posted to facebook! - {DateTime.Now:f}");
         else return Result.Error(await response.Content.ReadAsStringAsync());
     }
 }

@@ -56,7 +56,8 @@ public static class ConfigureServices
         services.AddScoped<ChronicleService>();
         services.AddScoped<AiStudioService>();
 
-        services.AddScoped<MetaService>();
+        services.AddTransient<MetaAuthenticationHandler>();
+        services.AddHttpClient<MetaService>().AddHttpMessageHandler<MetaAuthenticationHandler>();
 
 
 
