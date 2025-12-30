@@ -6,7 +6,7 @@
         if (typeof html2canvas === 'undefined') return null;
 
         const canvas = await html2canvas(element, {
-            scale: 1,
+            scale: 2,
             backgroundColor: '#09090b',
             useCORS: true,
             logging: false,
@@ -21,9 +21,6 @@
                 }
             }
         });
-
-        // Vraća string tipa "data:image/png;base64,iVBORw0KGgo..."
-        // return canvas.toDataURL("image/jpeg", 0.9);
 
         const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.85));
 

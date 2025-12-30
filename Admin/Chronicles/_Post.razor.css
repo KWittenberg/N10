@@ -1,42 +1,4 @@
-﻿.image-bg {
-    padding: 2rem;
-    background-color: var(--kw-v-bg);
-    color: #e2e8f0;
-    position: relative;
-    overflow: hidden;
-}
-
-/* POZADINSKI EFEKTI */
-.bg-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    z-index: 0;
-    opacity: 0.15;
-    pointer-events: none;
-}
-
-.blob-gold {
-    top: 0%;
-    right: -5%;
-    width: 600px;
-    height: 600px;
-    background: var(--kw-v-primary);
-}
-
-.blob-blue {
-    bottom: 0%;
-    left: -10%;
-    width: 500px;
-    height: 500px;
-    background: #3b82f6;
-}
-
-.bg-noise {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0.05;
-    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+');
+﻿#capture-target {
+    background-image: url('/img/bg/bg-image1.jpg');
     pointer-events: none;
 }
