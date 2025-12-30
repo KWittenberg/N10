@@ -120,7 +120,7 @@
             if (result.Success)
             {
                 await App!.ShowToast("Objava uspješno poslana!", "success");
-                Chronicle = null;
+                Close();
             }
             else await App!.ShowToast("Greška: " + result.Message, "error");
         }

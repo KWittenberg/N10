@@ -46,7 +46,7 @@
                 <span class="text-core" title="@context.EnhancedContent">@(App!.IsExpanded ? context.EnhancedContent : $"{context.EnhancedContent?[..Math.Min(80, context.EnhancedContent.Length)]}...")</span>
             }
         </TemplateColumn>
-                
+
         @* <TemplateColumn Title="Ok" Align="Align.Center" SortBy="@okSort">
             <span>@(context.Date.HasValue ? "✅" : "❌")</span>
         </TemplateColumn> *@
@@ -55,9 +55,14 @@
 
         <TemplateColumn Title="Actions" Align="Align.Center">
             <ChildContent>
-                <span @onclick="() => Chronicle = context" title="Post"><i class="bi bi-p-square"></i></span>
-                <span @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
-                <span class="ms-2 text-danger" @onclick="() => Delete(context)"><i class="bi bi-trash"></i></span>
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    @if (context.Day == Today.Day && context.Month == Today.Month)
+                    {
+                        <span @onclick="() => Chronicle = context" title="Post"><i class="bi bi-p-square"></i></span>
+                    }
+                    <span @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
+                    <span class="text-danger" @onclick="() => Delete(context)"><i class="bi bi-trash"></i></span>
+                </div>
             </ChildContent>
         </TemplateColumn>
     </QuickGrid>
@@ -75,6 +80,7 @@
     [Parameter] public EventCallback<Chronicle> OnEdit { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
 
+    DateTime Today;
     string? SearchTerm;
     Chronicle? Chronicle;
     List<Chronicle>? FilteredChronicles
@@ -98,6 +104,14 @@
     GridSort<Chronicle> isApprovedSort = GridSort<Chronicle>.ByAscending(x => x.IsApproved);
     PaginationState? paginationState;
     PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = Title == "5 Days" ? 10 : 25 };
+
+
+
+    protected override void OnParametersSet()
+    {
+        var croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        Today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, croatiaZone).Date;
+    }
 
 
 
