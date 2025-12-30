@@ -21,7 +21,7 @@
             <div class="mt-4 justify-content-center">
                 @if (Chronicle is not null)
                 {
-                    <div class="image-bg">
+                    <div id="capture-target" class="image-bg">
                         <div class="bg-noise"></div>
                         <div class="bg-blob blob-gold"></div>
                         <div class="bg-blob blob-blue"></div>
@@ -62,7 +62,7 @@
     {
         // 1. Zovi JS da generira sliku (SCALE 2 = 1200px)
         // Moraš u JS dodati { scale: 2 } u opcije html2canvasa
-        await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/ChroniclesVremeplov.razor.js");
+        await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Admin/Chronicles/_Post.razor.js");
 
         // Vrati Base64 string
         string base64Image = await jsModule.InvokeAsync<string>("getCardImageBase64", "capture-target");
