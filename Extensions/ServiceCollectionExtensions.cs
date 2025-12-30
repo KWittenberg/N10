@@ -5,7 +5,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddServiceCollectionExtensions(this IServiceCollection services, IConfiguration configuration)
     {
         // 1. Core framework services
-        services.AddRazorComponents().AddInteractiveServerComponents();
+        services.AddRazorComponents()
+                .AddInteractiveServerComponents()
+                .AddHubOptions(options =>
+                {
+                    options.MaximumReceiveMessageSize = 50 * 1024 * 1024; // 10 MB limit (za prijenos slika iz JS-a)
+                });
+
         // For Production, set DetailedErrors to false
         services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
         services.AddLocalizationExtensions();

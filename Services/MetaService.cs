@@ -13,7 +13,7 @@ public class MetaService(HttpClient client, IOptions<MetaOptions> options)
         // "source" je naziv parametra koji Facebook traži za upload fajla
         var imageContent = new ByteArrayContent(imageBytes);
         imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/png");
-        content.Add(imageContent, "source", $"vremeplov-{DateTime.Now:f}.png");
+        content.Add(imageContent, "source", $"vremeplov-{DateTime.Now:dd.MM.yyyy-HH.mm}.png");
 
         // 3. Dodaj flag da se odmah objavi
         content.Add(new StringContent("true"), "published");

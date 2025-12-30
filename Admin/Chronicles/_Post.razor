@@ -1,4 +1,5 @@
-﻿@inject IJSRuntime JS
+﻿@inject MetaService MetaService
+@inject IJSRuntime JS
 
 <!-- Post Modal Component -->
 <div class="modal fade @ShowClass" style="display: @(Chronicle is not null ? "block" : "none"); background: rgba(0,0,0,0.50); backdrop-filter: blur(4px);" tabindex="-1">
@@ -9,12 +10,28 @@
             <!-- 1. HEADER -->
             <div class="modal-header d-flex justify-content-between align-items-center border-0 w-100">
                 <button type="button" class="btn btn-outline-secondary rounded-circle p-2" style="width: 40px; height: 40px;" @onclick="() => Chronicle = null"><i class="bi bi-x-lg"></i></button>
+                
+                <button type="button" class="btn btn-outline-info rounded-pill px-3 fw-bold" @onclick="GeneratePreview">📸 Testiraj</button>
                 <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" @onclick="PostToFacebook">POST <i class="bi bi-send-fill ms-2"></i></button>
             </div>
 
             <!-- 2. BODY (Tekst) -->
             <div class="p-0 pb-0 modal-body">
                 <InputTextArea @bind-Value="PostText" class="form-control bg-dark-subtle text-white border-0 p-4" rows="12"></InputTextArea>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center justify-content-center bg-black">
+                @if (!string.IsNullOrEmpty(PreviewImageSrc))
+                {
+                    <div class="text-center">
+                        <p class="text-success small mb-2">Ovako izgleda slika za Facebook:</p>
+                        <img src="@PreviewImageSrc" class="img-fluid border border-secondary" style="max-height: 400px;" />
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Klikni "Testiraj" da vidiš sliku...</p>
+                }
             </div>
 
             <!-- 3. FOOTER (Preview Slike) -->
@@ -34,11 +51,14 @@
 </div>
 
 @code {
+    [CascadingParameter] AppState? App { get; set; }
     [Parameter] public Chronicle? Chronicle { get; set; }
 
     string ShowClass => Chronicle is not null ? "show d-block" : string.Empty;
     string PostText = string.Empty;
-
+    
+    string PreviewImageSrc = string.Empty; // Ovdje spremamo Base64 string za prikaz
+    byte[]? ImageBytes = null; // Ovdje spremamo bajtove slike za slanje na Facebook
 
     protected override void OnParametersSet()
     {
@@ -58,6 +78,63 @@
         PostText = PostText.TrimEnd();
     }
 
+    async Task GeneratePreview()
+    {
+        // 1. Učitaj modul (s onim trikom protiv cache-a)
+        await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", $"./Admin/Chronicles/_Post.razor.js?v={DateTime.Now.Ticks}");
+
+        try
+        {
+            // 2. DOHVATI STREAM REFERENCU (Ne ruši SignalR!)
+            var dataReference = await jsModule.InvokeAsync<IJSStreamReference>("getCardImageStream", "capture-target");
+
+            // 3. OTVORI STREAM I ČITAJ (Limit 10MB)
+            using var dataStream = await dataReference.OpenReadStreamAsync(maxAllowedSize: 10_000_000);
+
+            using var ms = new MemoryStream();
+            await dataStream.CopyToAsync(ms);
+
+            // 4. SPREMI BAJTOVE
+            byte[] bytes = ms.ToArray();
+
+            if (bytes.Length > 0)
+            {
+                ImageBytes = bytes;
+                var base64 = Convert.ToBase64String(bytes);
+                PreviewImageSrc = $"data:image/jpeg;base64,{base64}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GREŠKA KOD SLIKANJA: {ex.Message}");
+            await App!.ShowToast($"GREŠKA KOD SLIKANJA: {ex.Message}", "error");
+            // Tu možeš staviti Toast error
+        }
+    }
+    
+    
+    
+    // async Task GeneratePreview()
+    // {
+    //     await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Admin/Chronicles/_Post.razor.js");
+
+    //     // KLJUČNO: Tražimo byte[] (puno brže od stringa)
+    //     var bytes = await jsModule.InvokeAsync<byte[]>("getCardImageBytes", "capture-target");
+
+    //     if (bytes is not null && bytes.Length > 0)
+    //     {
+    //         // Spremimo bajtove u memoriju za kasnije slanje
+    //         ImageBytes = bytes;
+
+    //         // Za prikaz na ekranu pretvorimo u Base64 (ovo je sigurno raditi u C#)
+    //         var base64 = Convert.ToBase64String(bytes);
+    //         PreviewImageSrc = $"data:image/jpeg;base64,{base64}";
+
+    //         StateHasChanged();
+    //     }
+    // }
+
     async Task PostToFacebook()
     {
         // 1. Zovi JS da generira sliku (SCALE 2 = 1200px)
@@ -73,12 +150,18 @@
             var base64Data = base64Image.Split(',')[1];
             byte[] imageBytes = Convert.FromBase64String(base64Data);
 
-            // 3. Šalji na API (Otkomentiraj kad spojiš MetaService)
-            // await Facebook.PostImageFromMemoryAsync(PostText, imageBytes);
+            // 3. Šalji na API
+            var result = await MetaService.PostImageFromMemoryAsync(PostText, imageBytes);
+            if (result.Success)
+            {
+                await App!.ShowToast("Objava uspješno poslana na Facebook!", "success");
+                Chronicle = null; // Zatvori modal
+            }
+            else await App!.ShowToast("Greška pri objavi na Facebook.", "error");
+
 
             // Za test:
             Console.WriteLine($"Slika spremna! Veličina: {imageBytes.Length / 1024} KB");
-            //await Close();
         }
     }
 }
