@@ -62,14 +62,14 @@
         if (Chronicle is null) return;
 
         var sb = new StringBuilder();
-        sb.AppendLine("POŽEŠKI VREMEPLOV - DOGODILO SE NA DANAŠNJI DAN");
-        sb.AppendLine("autor: Tomislav Wittenberg");
-        sb.AppendLine("");
-        sb.AppendLine($"📜 {Chronicle.Title}");
+        // sb.AppendLine("POŽEŠKI VREMEPLOV - DOGODILO SE NA DANAŠNJI DAN");
+        // sb.AppendLine("autor: Tomislav Wittenberg");
+        // sb.AppendLine("");
+        sb.AppendLine($"📜{Chronicle.Title} - {Chronicle.Year}. godine");
         sb.AppendLine("");
         sb.AppendLine(string.IsNullOrEmpty(Chronicle.EnhancedContent) ? Chronicle.Content : Chronicle.EnhancedContent);
         sb.AppendLine("");
-        sb.AppendLine("#Požeški #Vremeplov #Wittenberg #Požega #Povijest #Baština");
+        sb.AppendLine("#Požeški #Vremeplov #Povijest #Baština #Wittenberg");
 
         PostText = sb.ToString();
         PostText = PostText.TrimEnd();
