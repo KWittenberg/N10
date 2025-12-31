@@ -79,6 +79,7 @@
     [Parameter] public string? Title { get; set; }
     [Parameter] public EventCallback<Chronicle> OnEdit { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter, EditorRequired] public PaginationState PaginationState { get; set; } = default!;
 
     DateTime Today;
     string? SearchTerm;
@@ -102,8 +103,10 @@
     GridSort<Chronicle> dateSort = GridSort<Chronicle>.ByAscending(x => x.Date);
     // GridSort<Chronicle> okSort = GridSort<Chronicle>.ByAscending(x => x.Date.HasValue);
     GridSort<Chronicle> isApprovedSort = GridSort<Chronicle>.ByAscending(x => x.IsApproved);
-    PaginationState? paginationState;
-    PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = Title == "5 Days" ? 10 : 25 };
+    
+    // Prebačeno u AChronicles.razor
+    // PaginationState? paginationState;
+    // PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = Title == "5 Days" ? 10 : 25 };
 
 
 
@@ -112,8 +115,6 @@
         var croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
         Today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, croatiaZone).Date;
     }
-
-
 
     #region ---> DELETE
     void Delete(Chronicle input)

@@ -21,8 +21,8 @@ else
     else
     {
         <div class="mt-3 @App?.GetContentClass()">
-            <_Table Chronicles="FiveDays" Title="5 Days" OnEdit="AddEdit" OnDelete="LoadAsync" />
-            <_Table Chronicles="Chronicles" Title="@Title" OnEdit="AddEdit" OnDelete="LoadAsync" />
+            <_Table Chronicles="FiveDays" Title="5 Days" OnEdit="AddEdit" OnDelete="LoadAsync" PaginationState="PaginationState5Days" />
+            <_Table Chronicles="Chronicles" Title="@Title" OnEdit="AddEdit" OnDelete="LoadAsync" PaginationState="PaginationStateAll" />
         </div>
     }
 }
@@ -35,6 +35,9 @@ else
     List<Chronicle>? FiveDays;
     Chronicle? Entity;
     const string Title = "Chronicle";
+
+    PaginationState PaginationState5Days = new PaginationState { ItemsPerPage = 10 };
+    PaginationState PaginationStateAll = new PaginationState { ItemsPerPage = 25 };
 
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
