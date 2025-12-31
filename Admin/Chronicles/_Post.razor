@@ -86,7 +86,7 @@
             var dataReference = await jsModule.InvokeAsync<IJSStreamReference>("getCardImageStream", "capture-target");
 
             // 3. OTVORI STREAM I ČITAJ (Limit 10MB)
-            using var dataStream = await dataReference.OpenReadStreamAsync(maxAllowedSize: 10_000_000);
+            using var dataStream = await dataReference.OpenReadStreamAsync(maxAllowedSize: 10 * 1024 * 1024);
 
             using var ms = new MemoryStream();
             await dataStream.CopyToAsync(ms);
@@ -110,9 +110,7 @@
 
     async Task PostToFacebook()
     {
-        // Ako korisnik nije kliknuo preview, generiraj sad
         if (ImageBytes is null) await GenerateImage();
-
         if (ImageBytes is not null)
         {
             var result = await MetaService.PostToFacebookAsync(PostText, ImageBytes);
@@ -122,60 +120,9 @@
                 await App!.ShowToast("Objava uspješno poslana!", "success");
                 Close();
             }
-            else await App!.ShowToast("Greška: " + result.Message, "error");
+            else await App!.ShowToast("Error: " + result.Message, "error");
         }
     }
-
-
-    // async Task GeneratePreview()
-    // {
-    //     await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Admin/Chronicles/_Post.razor.js");
-
-    //     // KLJUČNO: Tražimo byte[] (puno brže od stringa)
-    //     var bytes = await jsModule.InvokeAsync<byte[]>("getCardImageBytes", "capture-target");
-
-    //     if (bytes is not null && bytes.Length > 0)
-    //     {
-    //         // Spremimo bajtove u memoriju za kasnije slanje
-    //         ImageBytes = bytes;
-
-    //         // Za prikaz na ekranu pretvorimo u Base64 (ovo je sigurno raditi u C#)
-    //         var base64 = Convert.ToBase64String(bytes);
-    //         PreviewImageSrc = $"data:image/jpeg;base64,{base64}";
-
-    //         StateHasChanged();
-    //     }
-    // }
-
-    // async Task PostToFacebook()
-    // {
-    //     // 1. Zovi JS da generira sliku (SCALE 2 = 1200px)
-    //     // Moraš u JS dodati { scale: 2 } u opcije html2canvasa
-    //     await using var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Admin/Chronicles/_Post.razor.js");
-
-    //     // Vrati Base64 string
-    //     string base64Image = await jsModule.InvokeAsync<string>("getCardImageBase64", "capture-target");
-
-    //     if (!string.IsNullOrEmpty(base64Image))
-    //     {
-    //         // 2. Pretvori u bajtove
-    //         var base64Data = base64Image.Split(',')[1];
-    //         byte[] imageBytes = Convert.FromBase64String(base64Data);
-
-    //         // 3. Šalji na API
-    //         var result = await MetaService.PostImageFromMemoryAsync(PostText, imageBytes);
-    //         if (result.Success)
-    //         {
-    //             await App!.ShowToast("Objava uspješno poslana na Facebook!", "success");
-    //             Chronicle = null; // Zatvori modal
-    //         }
-    //         else await App!.ShowToast("Greška pri objavi na Facebook.", "error");
-
-
-    //         // Za test:
-    //         Console.WriteLine($"Slika spremna! Veličina: {imageBytes.Length / 1024} KB");
-    //     }
-    // }
 
     void Close()
     {

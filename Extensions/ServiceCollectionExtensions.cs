@@ -6,11 +6,11 @@ public static class ServiceCollectionExtensions
     {
         // 1. Core framework services
         services.AddRazorComponents()
-                .AddInteractiveServerComponents()
-                .AddHubOptions(options =>
-                {
-                    options.MaximumReceiveMessageSize = 50 * 1024 * 1024; // 10 MB limit (za prijenos slika iz JS-a)
-                });
+                .AddInteractiveServerComponents();
+        //.AddHubOptions(options =>
+        //{
+        //    options.MaximumReceiveMessageSize = 50 * 1024 * 1024; // 10 MB limit (za prijenos slika iz JS-a)
+        //});
 
         // For Production, set DetailedErrors to false
         services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
