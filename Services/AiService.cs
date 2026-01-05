@@ -2,11 +2,32 @@
 
 namespace N10.Services;
 
-public class AiStudioService(IConfiguration config)
+public class AiService(IConfiguration config)
 {
     readonly string apiKey = config["Google:AiStudioKey"] ?? throw new ArgumentNullException("AiStudio:ApiKey not set in configuration");
     readonly string modelId = "gemma-3-27b-it"; // "gemini-2.5-flash" gemini-flash-lite-latest gemini-2.0-flash-lite
 
+
+    public async Task<AiResult?> EnhanceAsync(string prompt)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+            var response = await client.Models.GenerateContentAsync(model: modelId, contents: prompt);
+
+            string rawJson = response.Candidates[0].Content.Parts[0].Text;
+
+            rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
+
+            var result = JsonSerializer.Deserialize<AiResult>(rawJson);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AI Greška: {ex.Message}");
+            return null;
+        }
+    }
 
     public async Task<string> EnhanceChronicleTextAsync(string originalText)
     {

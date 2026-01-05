@@ -7,4 +7,6 @@ public class AiResult
     public string EnhancedContent { get; set; } = string.Empty;
 
     public int SuggestedTypeId { get; set; }
+
+    public string? InternalNote { get; set; }
 }
