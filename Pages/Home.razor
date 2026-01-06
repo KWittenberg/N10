@@ -2,6 +2,7 @@
 @layout FrontLayout
 
 @inject IStringLocalizer<Home> L
+@* @inject AiService AiService *@
 
 <PageTitle>AIDA</PageTitle>
 
@@ -62,4 +63,10 @@
 
 @code {
     [CascadingParameter] AppState? App { get; set; }
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     await AiService.DebugListModelsAsync();
+    //     await AiService.DebugListModels2Async();
+    // }
 }

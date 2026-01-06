@@ -1,11 +1,82 @@
 ﻿using Google.GenAI;
+using Google.GenAI.Types;
 
 namespace N10.Services;
 
 public class AiService(IConfiguration config)
 {
     readonly string apiKey = config["Google:AiStudioKey"] ?? throw new ArgumentNullException("AiStudio:ApiKey not set in configuration");
-    readonly string modelId = "gemma-3-27b-it"; // "gemini-2.5-flash" gemini-flash-lite-latest gemini-2.0-flash-lite
+    readonly string modelId = "gemma-3-27b-it"; // gemma-3-27b-it gemini-2.5-flash    ne postoji očito: gemini-1.5-flash
+
+
+    public async Task<AiResult?> EnhanceWithGemmaAsync(string prompt)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+            List<Content> content = [new() { Role = "user", Parts = [new Part { Text = prompt }] }];
+
+            var response = await client.Models.GenerateContentAsync(modelId, content);
+            if (response?.Candidates == null || response.Candidates.Count == 0) return null;
+
+            string rawJson = response.Candidates[0].Content.Parts[0].Text;
+            rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
+
+            return JsonSerializer.Deserialize<AiResult>(rawJson);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AI Greška: {ex.Message}");
+            if (ex.InnerException != null) Console.WriteLine($"Inner: {ex.InnerException.Message}");
+            return null;
+        }
+    }
+
+    public async Task<AiResult?> EnhanceWithGeminiAsync(string systemInstruction, string userMessage)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+
+            // 1. Priprema User Poruke
+            List<Content> userContent = [new() { Role = "user", Parts = [new Part { Text = userMessage }] }];
+
+            // 2. Konfiguracija (Tu ide System Prompt i JSON mode)
+            var config = new GenerateContentConfig
+            {
+                SystemInstruction = new Content { Parts = [new Part { Text = systemInstruction }] }, // System Instruction se šalje ovdje kao Content objekt
+                ResponseMimeType = "application/json", // Forsiranje JSON-a
+                Temperature = 0.7f // Možeš dodati i temperaturu ako želiš preciznije/kreativnije
+            };
+
+            // 3. Poziv Metode: Model + Sadržaj + Konfiguracija
+            var response = await client.Models.GenerateContentAsync(modelId, userContent, config);
+
+            // 4. Obrada odgovora
+            if (response?.Candidates == null || response.Candidates.Count == 0) return null;
+
+            string rawJson = response.Candidates[0].Content.Parts[0].Text;
+
+            // Čišćenje markdowna ako ga model ipak vrati
+            rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
+
+            // Ponekad modeli vrate tekst prije JSON-a, pa tražimo zagrade
+            int startIndex = rawJson.IndexOf('{');
+            int endIndex = rawJson.LastIndexOf('}');
+            if (startIndex >= 0 && endIndex > startIndex) rawJson = rawJson.Substring(startIndex, endIndex - startIndex + 1);
+
+            var result = JsonSerializer.Deserialize<AiResult>(rawJson);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AI Greška: {ex.Message}");
+            // Dobro je vidjeti inner exception ako postoji
+            if (ex.InnerException != null) Console.WriteLine($"Inner: {ex.InnerException.Message}");
+            return null;
+        }
+    }
+
 
 
     public async Task<AiResult?> EnhanceAsync(string prompt)
@@ -127,11 +198,12 @@ public class AiService(IConfiguration config)
     }
 
 
-    // Pomoćna metoda za ispis svih dostupnih modela (za debug)
+    #region -- Debug metode za modele --
     public async Task DebugListModelsAsync()
     {
-        Console.WriteLine("--------------------------------------------------");
-        Console.WriteLine("POPIS SVIH MODELA (SIROVI ISPIS):");
+        string sep = "--------------------------------------------------------------------";
+        Console.WriteLine(sep);
+        Console.WriteLine("POPIS SVIH 'Base' MODELA:");
 
         try
         {
@@ -144,12 +216,38 @@ public class AiService(IConfiguration config)
             await foreach (var model in response)
             {
                 // Ispiši samo ime, to je jedino što nam treba za config
-                Console.WriteLine($"👉 {model.Name}");
+                Console.WriteLine($"- {model.Name}");
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ GREŠKA: {ex.Message}");
         }
+
+        Console.WriteLine(sep);
     }
+
+    public async Task DebugListModels2Async()
+    {
+        // assuming credentials are set up in environment variables as instructed above.
+        using var client = new Client(apiKey: apiKey);
+
+        // List base models with default settings
+        Console.WriteLine("Base Models:");
+        var pager = await client.Models.ListAsync();
+        await foreach (var model in pager)
+        {
+            Console.WriteLine(model.Name);
+        }
+
+        // List tuned models with a page size of 10
+        Console.WriteLine("Tuned Models:");
+        var config = new ListModelsConfig { QueryBase = false, PageSize = 100 };
+        var tunedModelsPager = await client.Models.ListAsync(config);
+        await foreach (var model in tunedModelsPager)
+        {
+            Console.WriteLine(model.Name);
+        }
+    }
+    #endregion
 }

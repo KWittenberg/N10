@@ -12,12 +12,12 @@
                 @if (AiPromptId != 0)
                 {
                     <button class="btn btn-sm btn-warning rounded-pill" type="button" @onclick="ApplyAi" disabled="@IsAiBusy">
-                        <span class="@(IsAiBusy ? "spinner-border spinner-border-sm me-2" : "")"></span><span>@(IsAiBusy ? "Working..." : "✨ AI")</span>
+                        <span class="@(IsAiBusy ? "spinner-border spinner-border-sm me-2" : "")"></span><span>@(IsAiBusy ? "Working..." : "✨ AiGemma")</span>
                     </button>
                 }
-                <button class="btn btn-sm btn-warning rounded-pill" type="button" @onclick="ApplyAiMagic" disabled="@IsAiBusy">
+                @* <button class="btn btn-sm btn-warning rounded-pill" type="button" @onclick="ApplyAiMagic" disabled="@IsAiBusy">
                     <span class="@(IsAiBusy ? "spinner-border spinner-border-sm me-2" : "")"></span><span>@(IsAiBusy ? "Working..." : "✨ AI Magic")</span>
-                </button>
+                </button> *@
                 <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => OnBack.InvokeAsync()">back</button>
                 <button class="btn btn-lg btn-primary rounded-pill" type="submit">@Title</button>
             </div>
@@ -25,7 +25,7 @@
             <div class="mt-4 row">
                 <!-- Left -->
                 <div class="mt-2 col-12 col-md-4 h-100">
-                    <div class="p-2 rounded border bg-transparent10">
+                    <div class="p-2 rounded bg-gradient">
                         <div class="px-2 d-flex justify-content-center">
                             <div class="">
                                 <span class="ms-1 p-sm text-uppercase">Day</span>
@@ -49,7 +49,7 @@
                             <ValidationMessage For="() => Entity.Date" class="text-danger" />
                         </div>
                     </div>
-                    <div class="mt-3 p-2 rounded border bg-transparent10">
+                    <div class="mt-3 p-2 rounded bg-gradient">
                         <div class="px-2">
                             <span class="ms-1 p-sm text-uppercase">Type</span>
                             <InputSelect class="form-select form-select-sm" @bind-Value="Entity.Type">
@@ -62,33 +62,25 @@
                     </div>
                     @if (AiPromptTemplates is not null && AiPromptTemplates.Any())
                     {
-                        <div class="mt-3 p-2 rounded border bg-transparent10">
-                            <div class="px-2">
+                        <div class="mt-3 rounded bg-gradient">
+                            <div class="p-2 px-3">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="ms-1 p-sm text-uppercase">Ai Prompt</span>
-                                    <button class="btn btn-sm btn-link text-decoration-none text-light" @onclick="ToggleAiPrompt">
+                                    <span class="ms-1 p-sm text-core">AiGemma</span>
+                                    <button class="btn btn-sm btn-link text-decoration-none text-light" @onclick="() => ShowAiPrompt = !ShowAiPrompt">
                                         @(ShowAiPrompt ? "Hide 🔼" : "Show 🔽")
                                     </button>
                                 </div>
                                 <InputSelect @bind-Value="AiPromptId" class="form-select form-select-sm">
-                                    @* <option value="0">Select AiPrompt</option> *@
                                     @foreach (var item in AiPromptTemplates)
                                     {
                                         <option value="@item.Id">@item.Name</option>
                                     }
                                 </InputSelect>
                             </div>
-                            @if (AiPromptTemplate is not null)
+                            @if (ShowAiPrompt && AiPromptTemplate is not null)
                             {
-                                <div class="mt-3 px-2 animate-fade-in">
-                                    <div class="">
-                                        <span class="ms-1 p-sm">System Instruction</span>
-                                        <InputTextArea @bind-Value="AiPromptTemplate.SystemInstruction" class="form-control" rows="15" style="font-size: 0.5rem;" />
-                                    </div>
-                                    <div class="mt-2">
-                                        <span class="ms-1 p-sm">User Message</span>
-                                        <InputTextArea @bind-Value="AiPromptTemplate.UserMessageTemplate" class="form-control" rows="15" style="font-size: 0.5rem;" />
-                                    </div>
+                                <div class="mt-2">
+                                    <InputTextArea @bind-Value="AiPromptTemplate.Prompt" class="form-control bg-gradient" rows="20" style="font-size: 0.5rem;" />
                                 </div>
                             }
                         </div>
@@ -130,10 +122,26 @@
                 </div>
             </div>
         </EditForm>
-        @if (!string.IsNullOrEmpty(Prompt))
-        {
-            <InputTextArea @bind-Value="Prompt" class="form-control form-control-sm" rows="30" />
-        }
+        <div class="mt-4 row">
+            @if (!string.IsNullOrEmpty(AiPromptTemplate?.Prompt))
+            {
+                <div class="col-12 col-md-6 h-100">
+                    <div class="">
+                        <span class="ms-1 p-sm">Send to AiGemma:</span>
+                        <InputTextArea @bind-Value="AiPromptTemplate.Prompt" class="form-control bg-gradient" rows="40" style="font-size: 0.5rem;" />
+                    </div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(GemmaResponse))
+            {
+                <div class="col-12 col-md-6 h-100">
+                    <div class="">
+                        <span class="ms-1 p-sm">AiGemma Response:</span>
+                        <InputTextArea @bind-Value="GemmaResponse" class="form-control bg-gradient" rows="40" style="font-size: 0.5rem;" />
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 }
 
@@ -226,34 +234,33 @@
     }
 
     bool ShowAiPrompt = true;
-    void ToggleAiPrompt() => ShowAiPrompt = !ShowAiPrompt;
+    string? GemmaResponse;
 
-
-    string? Prompt;
-
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
+        string currentYear = DateTime.Now.Year.ToString();
+        string dateContext = Entity.Date.HasValue ? Entity.Date.Value.ToShortDateString() : $"{Entity.Day}. {Entity.Month}. {Entity.Year}.";
+
         AiPromptTemplates = PromptRepository.Templates;
-        AiPromptTemplate = AiPromptTemplates?.FirstOrDefault(x => x.Id == 1);
+        var defaultTemplate = AiPromptTemplates.FirstOrDefault();
+        if (defaultTemplate != null)
+        {
+            AiPromptId = defaultTemplate.Id; // Ovo će okinuti setter i popuniti AiPromptTemplate
+            AiPromptTemplate = defaultTemplate; // Ako setter ne okida kod inicijalizacije (ponekad), ručno popuni:
+            AiPromptTemplate.Prompt = AiPromptTemplate?.Prompt.Replace("{{CURRENT_YEAR}}", currentYear).Replace("{{DATE}}", dateContext).Replace("{{CONTENT}}", Entity.Content) ?? "";
+        }
     }
 
     async Task ApplyAi()
     {
         if (string.IsNullOrWhiteSpace(Entity?.Content)) return;
-
+        if (string.IsNullOrWhiteSpace(AiPromptTemplate?.Prompt)) return;
         IsAiBusy = true;
 
-
-        string currentYear = DateTime.Now.Year.ToString();
-        string dateContext = Entity.Date.HasValue ? Entity.Date.Value.ToShortDateString() : $"{Entity.Day}. {Entity.Month}. {Entity.Year}.";
-
-        var prompt = AiPromptTemplate?.SystemInstruction.Replace("{{CURRENT_YEAR}}", currentYear) + AiPromptTemplate?.UserMessageTemplate.Replace("{{CURRENT_YEAR}}", currentYear).Replace("{{DATE}}", dateContext).Replace("{{CONTENT}}", Entity.Content);
-        Prompt = prompt;
-        StateHasChanged();
-        var result = await AiService.EnhanceAsync(prompt);
-
+        var result = await AiService.EnhanceWithGemmaAsync(AiPromptTemplate.Prompt);
         if (result != null)
         {
+            GemmaResponse = result.ToString();
             Entity.Title = result.Title;
             Entity.EnhancedContent = result.EnhancedContent;
             if (Enum.IsDefined(typeof(ChronicleType), result.SuggestedTypeId)) Entity.Type = (ChronicleType)result.SuggestedTypeId;
@@ -262,5 +269,4 @@
 
         IsAiBusy = false;
     }
-
 }
