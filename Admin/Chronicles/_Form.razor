@@ -258,13 +258,19 @@
         IsAiBusy = true;
 
         var result = await AiService.EnhanceWithGemmaAsync(AiPromptTemplate.Prompt);
-        if (result != null)
+        if (!result.Success)
+        {
+            await App!.ShowToast($"AiGemma failed to process the request: {result.Message}", "error");
+            IsAiBusy = false;
+            return;
+        }
+        else
         {
             GemmaResponse = result.ToString();
-            Entity.Title = result.Title;
-            Entity.EnhancedContent = result.EnhancedContent;
-            if (Enum.IsDefined(typeof(ChronicleType), result.SuggestedTypeId)) Entity.Type = (ChronicleType)result.SuggestedTypeId;
-            Entity.Note = result.InternalNote;
+            Entity.Title = result?.Data?.Title;
+            Entity.EnhancedContent = result?.Data?.EnhancedContent;
+            if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
+            Entity.Note = result?.Data?.InternalNote;
         }
 
         IsAiBusy = false;

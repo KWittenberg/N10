@@ -6,10 +6,10 @@ namespace N10.Services;
 public class AiService(IConfiguration config)
 {
     readonly string apiKey = config["Google:AiStudioKey"] ?? throw new ArgumentNullException("AiStudio:ApiKey not set in configuration");
-    readonly string modelId = "gemma-3-27b-it"; // gemma-3-27b-it gemini-2.5-flash    ne postoji očito: gemini-1.5-flash
+    readonly string modelId = "gemma-3-27b-it"; // gemma-3-27b-it   gemini-2.5-flash
 
 
-    public async Task<AiResult?> EnhanceWithGemmaAsync(string prompt)
+    public async Task<Result<AiResult?>> EnhanceWithGemmaAsync(string prompt)
     {
         try
         {
@@ -17,18 +17,18 @@ public class AiService(IConfiguration config)
             List<Content> content = [new() { Role = "user", Parts = [new Part { Text = prompt }] }];
 
             var response = await client.Models.GenerateContentAsync(modelId, content);
-            if (response?.Candidates == null || response.Candidates.Count == 0) return null;
+            if (response?.Candidates == null || response.Candidates.Count == 0) return Result<AiResult?>.Error($"AiError: Candidates??");
 
             string rawJson = response.Candidates[0].Content.Parts[0].Text;
             rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
 
-            return JsonSerializer.Deserialize<AiResult>(rawJson);
+            //return JsonSerializer.Deserialize<AiResult>(rawJson);
+            return Result<AiResult?>.Ok(JsonSerializer.Deserialize<AiResult>(rawJson));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"AI Greška: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"Inner: {ex.InnerException.Message}");
-            return null;
+            if (ex.InnerException != null) return Result<AiResult?>.Error($"AiError: {ex.Message} - Inner: {ex.InnerException.Message}");
+            return Result<AiResult?>.Error($"AiError: {ex.Message}");
         }
     }
 
