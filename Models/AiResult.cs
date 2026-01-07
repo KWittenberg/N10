@@ -9,4 +9,14 @@ public class AiResult
     public int SuggestedTypeId { get; set; }
 
     public string? InternalNote { get; set; }
+
+
+
+    public string? ModelName { get; set; }
+
+    public int? PromptTokens { get; set; }
+
+    public int? ResponseTokens { get; set; }
+
+    public int? TotalTokens { get; set; }
 }

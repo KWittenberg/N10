@@ -7,6 +7,8 @@ public class AiService(IConfiguration config)
 {
     readonly string apiKey = config["Google:AiStudioKey"] ?? throw new ArgumentNullException("AiStudio:ApiKey not set in configuration");
     readonly string modelId = "gemma-3-27b-it"; // gemma-3-27b-it   gemini-2.5-flash
+    readonly string ModelGemma = "gemma-3-27b-it";
+    readonly string ModelGemini = "gemini-2.5-flash";
 
 
     public async Task<Result<AiResult?>> EnhanceWithGemmaAsync(string prompt)
@@ -15,16 +17,39 @@ public class AiService(IConfiguration config)
         {
             using var client = new Client(apiKey: apiKey);
             List<Content> content = [new() { Role = "user", Parts = [new Part { Text = prompt }] }];
+            // Call the Gemma model
+            var response = await client.Models.GenerateContentAsync(ModelGemma, content);
+            if (response?.Candidates == null || response.Candidates.Count == 0) return Result<AiResult?>.Error($"AiError: Safety block??");
 
-            var response = await client.Models.GenerateContentAsync(modelId, content);
-            if (response?.Candidates == null || response.Candidates.Count == 0) return Result<AiResult?>.Error($"AiError: Candidates??");
-
+            // Izvlačenje teksta
             string rawJson = response.Candidates[0].Content.Parts[0].Text;
+            // Čišćenje markdowna (Gemma to voli dodati)
             rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
 
-            //return JsonSerializer.Deserialize<AiResult>(rawJson);
-            return Result<AiResult?>.Ok(JsonSerializer.Deserialize<AiResult>(rawJson));
+            // Pokušaj parsirati samo JSON dio ako ima smeća okolo
+            int start = rawJson.IndexOf('{');
+            int end = rawJson.LastIndexOf('}');
+            if (start >= 0 && end > start) rawJson = rawJson.Substring(start, end - start + 1);
+
+            // DESERIJALIZACIJA (S podrškom za č,ć,š...)
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping // OVO RJEŠAVA KODNU STRANICU:
+            };
+
+            var aiData = JsonSerializer.Deserialize<AiResult>(rawJson, options);
+            if (aiData is null) return Result<AiResult?>.Error("Failed to deserialize JSON.");
+
+            aiData.ModelName = ModelGemma;
+            aiData.PromptTokens = response.UsageMetadata?.PromptTokenCount ?? 0;
+            aiData.ResponseTokens = response.UsageMetadata?.CandidatesTokenCount ?? 0;
+            aiData.TotalTokens = response.UsageMetadata?.TotalTokenCount ?? 0;
+
+            return Result<AiResult?>.Ok(aiData);
         }
+        catch (Google.GenAI.ClientError ce) { return Result<AiResult?>.Error($"Google API Error: {ce.Message}"); }// Specifična greška ako model ne postoji ili je ključ krivi
+        catch (JsonException) { return Result<AiResult?>.Error("AI je vratio neispravan JSON format."); }
         catch (Exception ex)
         {
             if (ex.InnerException != null) return Result<AiResult?>.Error($"AiError: {ex.Message} - Inner: {ex.InnerException.Message}");
@@ -247,6 +272,21 @@ public class AiService(IConfiguration config)
         await foreach (var model in tunedModelsPager)
         {
             Console.WriteLine(model.Name);
+        }
+    }
+
+    // Helper za provjeru modela (Zovi samo na Admin Dashboardu npr., ne svaki put)
+    public async Task<bool> CheckModelAvailability(string modelName)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+            await client.Models.GetAsync(modelName);
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
     #endregion

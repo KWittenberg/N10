@@ -137,7 +137,7 @@
                 <div class="col-12 col-md-6 h-100">
                     <div class="">
                         <span class="ms-1 p-sm">AiGemma Response:</span>
-                        <InputTextArea @bind-Value="GemmaResponse" class="form-control bg-gradient" rows="40" style="font-size: 0.5rem;" />
+                        <InputTextArea @bind-Value="GemmaResponse" class="form-control bg-gradient" rows="20" />
                     </div>
                 </div>
             }
@@ -153,6 +153,7 @@
     [Parameter] public Chronicle? Entity { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
 
+    readonly Stopwatch Stopwatch = new();
     string Title => Entity?.Id == 0 ? "New" : "Update";
     bool IsAiBusy = false;
 
@@ -235,6 +236,7 @@
 
     bool ShowAiPrompt = true;
     string? GemmaResponse;
+    AiResult? AiResult;
 
     protected override void OnParametersSet()
     {
@@ -255,24 +257,45 @@
     {
         if (string.IsNullOrWhiteSpace(Entity?.Content)) return;
         if (string.IsNullOrWhiteSpace(AiPromptTemplate?.Prompt)) return;
-        IsAiBusy = true;
+        string? duration;
+        StartTimer(ref IsAiBusy);
 
         var result = await AiService.EnhanceWithGemmaAsync(AiPromptTemplate.Prompt);
         if (!result.Success)
         {
-            await App!.ShowToast($"AiGemma failed to process the request: {result.Message}", "error");
-            IsAiBusy = false;
+            duration = StopTimer(ref IsAiBusy);
+            await App!.ShowNotify($"AiGemma failed to process the request: {result.Message}", "error", $"AiGemma took {duration}");
             return;
         }
-        else
-        {
-            GemmaResponse = result.ToString();
-            Entity.Title = result?.Data?.Title;
-            Entity.EnhancedContent = result?.Data?.EnhancedContent;
-            if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
-            Entity.Note = result?.Data?.InternalNote;
-        }
 
-        IsAiBusy = false;
+        AiResult = result.Data;
+        // OVO JE TRIK: Pretvorimo cijeli objekt (sa statistikom) natrag u lijepi string
+        GemmaResponse = JsonSerializer.Serialize(result.Data, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+        
+        Entity.Title = result?.Data?.Title;
+        Entity.EnhancedContent = result?.Data?.EnhancedContent;
+        if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
+        Entity.Note = result?.Data?.InternalNote;
+
+        duration = StopTimer(ref IsAiBusy);
+        await App!.ShowNotify($"AiGemma Ok!", "success", $"AiGemma took {duration}");
     }
+
+
+
+    #region Timer
+    void StartTimer(ref bool workingFlag)
+    {
+        workingFlag = true;
+        Stopwatch.Restart();
+    }
+
+    string StopTimer(ref bool workingFlag)
+    {
+        Stopwatch.Stop();
+        workingFlag = false;
+        var ms = Stopwatch.ElapsedMilliseconds;
+        return ms > 1000 ? $"{ms / 1000.0:F2} s" : $"{ms} ms";
+    }
+    #endregion
 }
