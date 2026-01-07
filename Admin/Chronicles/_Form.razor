@@ -258,7 +258,10 @@
             return;
         }
 
+        duration = StopTimer(ref IsAiBusy);
         AiResult = result.Data;
+        AiResult?.ResponseTime = duration;
+                
         // OVO JE TRIK: Pretvorimo cijeli objekt (sa statistikom) natrag u lijepi string
         AiResponse = JsonSerializer.Serialize(result.Data, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 
@@ -266,9 +269,7 @@
         Entity.EnhancedContent = result?.Data?.EnhancedContent;
         if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
         Entity.Note = result?.Data?.InternalNote;
-
-        duration = StopTimer(ref IsAiBusy);
-        AiResult?.ResponseTime = duration;
+                
         await App!.ShowNotify($"AiGemma Ok!", "success", $"AiGemma took {duration}");
     }
 
