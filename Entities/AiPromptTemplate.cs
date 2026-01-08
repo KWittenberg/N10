@@ -92,10 +92,13 @@ ZADATAK 2: KATEGORIZACIJA (SuggestedTypeId)
 
 ZADATAK 3: DETEKTIVSKI POSAO (InternalNote)
 Ovo polje služi meni (uredniku). Upiši napomenu AKO:
-1. Tekst spominje neki DRUGI datum koji nije 'DATUM FOKUSA'.
-2. Ako je ovo zapis o SMRTI, a u tekstu piše godina ROĐENJA (npr. 'r. 1892.'), napiši: ""PROVJERITI: Postoji li zaseban zapis za rođenje [godina]?"".
-3. Ako nedostaje godina u originalnom tekstu.
-4. Ako je sve čisto, ostavi prazno.
+- Tekst spominje neki DRUGI datum koji nije 'DATUM FOKUSA'.
+- Ako je ovo zapis o SMRTI, a u tekstu piše godina ROĐENJA (npr. 'r. 1892.'), napiši: ""PROVJERITI: Postoji li zaseban zapis za rođenje [godina]?"".
+- PROVJERA DOBI: Ako je ovo zapis o ROĐENJU, a godina rođenja je prije 1945., I u tekstu se NE spominje datum smrti:
+   - Napiši: ""PROVJERITI: Osoba bi danas imala [X] godina. Postoji li zapis o smrti?"".
+   - (Pazi: Ako u tekstu piše ""živi u..."", to je možda zastario podatak, svejedno stavi napomenu).
+- Ako nedostaje godina u originalnom tekstu.
+- Ako je sve čisto, ostavi prazno.
 ---
 JSON OUTPUT FORMAT (Vrati SAMO ovo):
 {

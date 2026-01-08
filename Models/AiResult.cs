@@ -18,7 +18,7 @@ public class AiResult
 
     public int? ResponseTokens { get; set; }
 
-    public string? ResponseTime { get; set; }
+    public string? Duration { get; set; }
 
     public int? TotalTokens { get; set; }
 }

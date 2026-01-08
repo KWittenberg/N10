@@ -28,9 +28,11 @@
             <PropertyColumn Property="x => x.Month" Title="Month" Align="Align.Center" Sortable="true" />
             <PropertyColumn Property="x => x.Year" Title="Year" Align="Align.Center" Sortable="true" />
         } *@
+
         <TemplateColumn Title="✅" Align="Align.Center" SortBy="@isApprovedSort">
             <span><i class="fas @(context.IsApproved ? "fa-check-circle" : "fa-times-circle") fa-lg @(context.IsApproved ? "text-success" : "text-danger")"></i></span>
         </TemplateColumn>
+        <PropertyColumn Property="x => x.Type" Title="Type" Align="Align.Center" Sortable="true" />
         <TemplateColumn Title="Datum" Align="Align.Center" SortBy="@dateSort">
             <span class="@(context.Date.HasValue ? "text-success" : "text-danger")">@(context.Date.HasValue? context.Date.Value.ToShortDateString() : "NEPOZNAT")</span>
         </TemplateColumn>
@@ -46,13 +48,13 @@
                 <span class="text-core" title="@context.EnhancedContent">@(App!.IsExpanded ? context.EnhancedContent : $"{context.EnhancedContent?[..Math.Min(80, context.EnhancedContent.Length)]}...")</span>
             }
         </TemplateColumn>
-
+        @if (App!.IsExpanded)
+        {
+            <PropertyColumn Property="x => x.Note" Title="Note" Align="Align.Left" Sortable="true" />
+        }
         @* <TemplateColumn Title="Ok" Align="Align.Center" SortBy="@okSort">
             <span>@(context.Date.HasValue ? "✅" : "❌")</span>
         </TemplateColumn> *@
-
-        <PropertyColumn Property="x => x.Type" Title="Type" Align="Align.Center" Sortable="true" />
-
         <TemplateColumn Title="Actions" Align="Align.Center">
             <ChildContent>
                 <div class="d-flex justify-content-end align-items-center gap-2">
@@ -103,7 +105,7 @@
     GridSort<Chronicle> dateSort = GridSort<Chronicle>.ByAscending(x => x.Date);
     // GridSort<Chronicle> okSort = GridSort<Chronicle>.ByAscending(x => x.Date.HasValue);
     GridSort<Chronicle> isApprovedSort = GridSort<Chronicle>.ByAscending(x => x.IsApproved);
-    
+
     // Prebačeno u AChronicles.razor
     // PaginationState? paginationState;
     // PaginationState PaginationState => paginationState ??= new PaginationState { ItemsPerPage = Title == "5 Days" ? 10 : 25 };

@@ -46,6 +46,13 @@ public class AiService(IConfiguration config)
             aiData.ResponseTokens = response.UsageMetadata?.CandidatesTokenCount ?? 0;
             aiData.TotalTokens = response.UsageMetadata?.TotalTokenCount ?? 0;
 
+            // HACK: Ako iz nekog razloga tokeni nisu dostupni, napravi grubu procjenu
+            if (aiData.ResponseTokens == 0 && !string.IsNullOrEmpty(rawJson))
+            {
+                aiData.ResponseTokens = rawJson.Length / 4; // Gruba procjena
+                aiData.TotalTokens = (aiData.PromptTokens ?? 0) + aiData.ResponseTokens;
+            }
+
             return Result<AiResult?>.Ok(aiData);
         }
         catch (Google.GenAI.ClientError ce) { return Result<AiResult?>.Error($"Google API Error: {ce.Message}"); }// Specifična greška ako model ne postoji ili je ključ krivi

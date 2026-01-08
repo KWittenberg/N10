@@ -18,7 +18,7 @@
                 @* <button class="btn btn-sm btn-warning rounded-pill" type="button" @onclick="ApplyAiMagic" disabled="@IsAiBusy">
                     <span class="@(IsAiBusy ? "spinner-border spinner-border-sm me-2" : "")"></span><span>@(IsAiBusy ? "Working..." : "✨ AI Magic")</span>
                 </button> *@
-                <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => OnBack.InvokeAsync()">back</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="HandleBack">back</button>
                 <button class="btn btn-lg btn-primary rounded-pill" type="submit">@Title</button>
             </div>
             <!-- Form -->
@@ -64,10 +64,10 @@
                         <div class="mt-3 rounded bg-gradient">
                             <div class="p-2 px-3">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="ms-1 p-sm text-core">AiPrompt</span>
-                                    <button class="btn btn-sm btn-link text-decoration-none text-light" @onclick="() => ShowAiPrompt = !ShowAiPrompt">
+                                    <span class="ms-1 p-sm">AiPrompt</span>
+                                    <span class="me-1 p-sm text-core" @onclick="() => ShowAiPrompt = !ShowAiPrompt" style="cursor: pointer;">
                                         @(ShowAiPrompt ? "Hide 🔼" : "Show 🔽")
-                                    </button>
+                                    </span>
                                 </div>
                                 <InputSelect @bind-Value="AiPromptId" class="form-select form-select-sm">
                                     @foreach (var item in AiPromptTemplates)
@@ -76,10 +76,10 @@
                                     }
                                 </InputSelect>
                             </div>
-                            @if (ShowAiPrompt && AiPromptTemplate is not null)
+                            @if (ShowAiPrompt && !string.IsNullOrEmpty(DisplayPrompt))
                             {
                                 <div class="mt-2">
-                                    <InputTextArea @bind-Value="AiPromptTemplate.Prompt" class="pt-0 form-control bg-gradient" style="font-size: 0.5rem; field-sizing: content;" />
+                                    <InputTextArea @bind-Value="DisplayPrompt" class="pt-0 form-control bg-gradient" style="font-size: 0.5rem; field-sizing: content;" />
                                 </div>
                             }
                         </div>
@@ -118,13 +118,13 @@
                             <ValidationMessage For="() => Entity.Note" class="text-danger" />
                         </div>
                     </div>
-                    @if (!string.IsNullOrEmpty(AiResponse))
+                    @if (ShowAiPrompt && !string.IsNullOrEmpty(AiResponse))
                     {
                         <div class="mt-3 h-100">
                             <div class="pt-2 rounded border bg-transparent20">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="ms-3 p-sm text-core">AiResponse:</span>
-                                    <span class="me-3 p-sm">Model: @AiResult?.ModelName | AiLatency: @AiResult?.ResponseTime</span>
+                                    <span class="me-3 p-sm">Model: @AiResult?.ModelName | AiDuration: @AiResult?.Duration</span>
                                 </div>
                                 <InputTextArea @bind-Value="AiResponse" class="form-control form-control-sm" style="field-sizing: content;" />
                             </div>
@@ -137,7 +137,6 @@
 }
 
 
-
 @code {
     [CascadingParameter] AppState? App { get; set; }
     [Parameter] public Chronicle? Entity { get; set; }
@@ -145,7 +144,89 @@
 
     readonly Stopwatch Stopwatch = new();
     string Title => Entity?.Id == 0 ? "New" : "Update";
+
+    bool ShowAiPrompt = true;
     bool IsAiBusy = false;
+
+    List<AiPromptTemplate>? AiPromptTemplates;
+    string DisplayPrompt = string.Empty;
+    int aiPromptId;
+    int AiPromptId
+    {
+        get => aiPromptId;
+        set
+        {
+            if (aiPromptId == value) return;
+            aiPromptId = value;
+            RecalculatePrompt();
+        }
+    }
+
+    string? AiResponse;
+    AiResult? AiResult;
+
+
+    protected override void OnInitialized() => AiPromptTemplates = PromptRepository.Templates;
+
+    protected override void OnParametersSet()
+    {
+        if (Entity is null) return;
+
+        AiResponse = null;
+        AiResult = null;
+
+        if (aiPromptId == 0)
+        {
+            aiPromptId = 2;
+            RecalculatePrompt();
+        }
+        else RecalculatePrompt();
+    }
+
+    void RecalculatePrompt()
+    {
+        if (Entity is null) return;
+        var template = AiPromptTemplates?.FirstOrDefault(t => t.Id == aiPromptId);
+        if (template == null) return;
+
+        string currentYear = DateTime.Now.Year.ToString();
+        string dateContext = Entity.Date.HasValue ? Entity.Date.Value.ToShortDateString() : $"{Entity.Day}. {Entity.Month}. {Entity.Year}.";
+        string prompt = template.Prompt.Replace("{{CURRENT_YEAR}}", currentYear).Replace("{{DATE}}", dateContext).Replace("{{CONTENT}}", Entity.Content);
+        DisplayPrompt = prompt;
+    }
+
+    async Task ApplyAi()
+    {
+        if (string.IsNullOrWhiteSpace(Entity?.Content)) return;
+        if (string.IsNullOrWhiteSpace(DisplayPrompt)) return;
+        string? duration;
+        // StartTimer(ref IsAiBusy);
+        var timer = BusyMonitor.Start(ref IsAiBusy);
+
+        var result = await AiService.EnhanceWithGemmaAsync(DisplayPrompt);
+        if (!result.Success)
+        {
+            // duration = StopTimer(ref IsAiBusy);
+            duration = timer.Stop(ref IsAiBusy);
+            await App!.ShowNotify($"Ai failed to process the request: {result.Message}", "error", $"Ai need {duration}");
+            return;
+        }
+
+        // duration = StopTimer(ref IsAiBusy);
+        duration = timer.Stop(ref IsAiBusy);
+        AiResult = result.Data;
+        AiResult?.Duration = duration;
+
+        // OVO JE TRIK: Pretvorimo cijeli objekt (sa statistikom) natrag u lijepi string
+        AiResponse = JsonSerializer.Serialize(result.Data, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+
+        Entity.Title = result?.Data?.Title;
+        Entity.EnhancedContent = result?.Data?.EnhancedContent;
+        if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
+        Entity.Note = result?.Data?.InternalNote;
+
+        await App!.ShowNotify($"AiModel: {result?.Data.ModelName}  |  Tokeni: {result?.Data.ResponseTokens}", "success", $"AiThink {duration}");
+    }
 
     async Task HandleValidSubmit()
     {
@@ -166,6 +247,17 @@
         }
     }
 
+    async Task HandleBack()
+    {
+        AiResponse = null;
+        AiResult = null;
+        DisplayPrompt = string.Empty;
+        aiPromptId = 0;
+
+        await OnBack.InvokeAsync();
+    }
+
+    #region Some old AI Magic (not used)
     async Task ApplyAiMagic()
     {
         if (string.IsNullOrWhiteSpace(Entity?.Content)) return;
@@ -208,87 +300,22 @@
             await App!.ShowToast($"Failed to generate enhanced content: {ex.Message}", "error");
         }
     }
-
-
-    List<AiPromptTemplate>? AiPromptTemplates;
-    AiPromptTemplate? AiPromptTemplate;
-    int aiPromptId;
-    int AiPromptId
-    {
-        get => aiPromptId;
-        set
-        {
-            if (aiPromptId == value) return;
-            aiPromptId = value;
-            AiPromptTemplate = AiPromptTemplates?.FirstOrDefault(s => s.Id == value);
-        }
-    }
-
-    bool ShowAiPrompt = true;
-    string? AiResponse;
-    AiResult? AiResult;
-
-    protected override void OnParametersSet()
-    {
-        string currentYear = DateTime.Now.Year.ToString();
-        string dateContext = Entity.Date.HasValue ? Entity.Date.Value.ToShortDateString() : $"{Entity.Day}. {Entity.Month}. {Entity.Year}.";
-
-        AiPromptTemplates = PromptRepository.Templates;
-        var defaultTemplate = AiPromptTemplates.FirstOrDefault(x => x.Id == 2);
-        if (defaultTemplate != null)
-        {
-            AiPromptId = defaultTemplate.Id; // Ovo će okinuti setter i popuniti AiPromptTemplate
-            AiPromptTemplate = defaultTemplate; // Ako setter ne okida kod inicijalizacije (ponekad), ručno popuni:
-            AiPromptTemplate.Prompt = AiPromptTemplate?.Prompt.Replace("{{CURRENT_YEAR}}", currentYear).Replace("{{DATE}}", dateContext).Replace("{{CONTENT}}", Entity.Content) ?? "";
-        }
-    }
-
-    async Task ApplyAi()
-    {
-        if (string.IsNullOrWhiteSpace(Entity?.Content)) return;
-        if (string.IsNullOrWhiteSpace(AiPromptTemplate?.Prompt)) return;
-        string? duration;
-        StartTimer(ref IsAiBusy);
-
-        var result = await AiService.EnhanceWithGemmaAsync(AiPromptTemplate.Prompt);
-        if (!result.Success)
-        {
-            duration = StopTimer(ref IsAiBusy);
-            await App!.ShowNotify($"AiGemma failed to process the request: {result.Message}", "error", $"AiGemma took {duration}");
-            return;
-        }
-
-        duration = StopTimer(ref IsAiBusy);
-        AiResult = result.Data;
-        AiResult?.ResponseTime = duration;
-                
-        // OVO JE TRIK: Pretvorimo cijeli objekt (sa statistikom) natrag u lijepi string
-        AiResponse = JsonSerializer.Serialize(result.Data, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
-
-        Entity.Title = result?.Data?.Title;
-        Entity.EnhancedContent = result?.Data?.EnhancedContent;
-        if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
-        Entity.Note = result?.Data?.InternalNote;
-                
-        await App!.ShowNotify($"AiGemma Ok!", "success", $"AiGemma took {duration}");
-    }
-
-
+    #endregion
 
     #region Timer
-    void StartTimer(ref bool workingFlag)
-    {
-        workingFlag = true;
-        Stopwatch.Restart();
-    }
+    // void StartTimer(ref bool workingFlag)
+    // {
+    //     workingFlag = true;
+    //     Stopwatch.Restart();
+    // }
 
-    string StopTimer(ref bool workingFlag)
-    {
-        Stopwatch.Stop();
-        workingFlag = false;
-        var ms = Stopwatch.ElapsedMilliseconds;
-        return ms > 1000 ? $"{ms / 1000.0:F2} s" : $"{ms} ms";
-    }
+    // string StopTimer(ref bool workingFlag)
+    // {
+    //     Stopwatch.Stop();
+    //     workingFlag = false;
+    //     var ms = Stopwatch.ElapsedMilliseconds;
+    //     return ms > 1000 ? $"{ms / 1000.0:F2} s" : $"{ms} ms";
+    // }
     #endregion
 
 }
