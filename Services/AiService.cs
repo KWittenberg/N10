@@ -296,5 +296,24 @@ public class AiService(IConfiguration config)
             return false;
         }
     }
+
+    public async Task<(bool IsAvailable, string Message)> CheckModelAvailabilityAsync(string modelName)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+            // Pokušavamo dohvatiti info o modelu. Ako pukne 404, znači da ga nema ili nemamo pristup.
+            await client.Models.GetAsync(modelName);
+            return (true, "✅ Online");
+        }
+        catch (Google.GenAI.ClientError e)
+        {
+            return (false, $"❌ {e.Message}"); // Vjerojatno 404 Not Found
+        }
+        catch (Exception ex)
+        {
+            return (false, $"⚠️ Error: {ex.Message}");
+        }
+    }
     #endregion
 }

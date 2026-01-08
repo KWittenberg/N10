@@ -11,7 +11,7 @@
             <div class="d-flex justify-content-end align-items-end gap-2">
                 @if (AiPromptId != 0)
                 {
-                    <button class="btn btn-sm btn-warning rounded-pill" type="button" @onclick="ApplyAi" disabled="@IsAiBusy">
+                    <button class="btn btn-sm btn-outline-light rounded-pill" type="button" @onclick="ApplyAi" disabled="@IsAiBusy">
                         <span class="@(IsAiBusy ? "spinner-border spinner-border-sm me-2" : "")"></span><span>@(IsAiBusy ? "Working..." : "✨ AiMagic")</span>
                     </button>
                 }
@@ -124,7 +124,7 @@
                             <div class="pt-2 rounded border bg-transparent20">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="ms-3 p-sm text-core">AiResponse:</span>
-                                    <span class="me-3 p-sm">Model: @AiResult?.ModelName | AiDuration: @AiResult?.Duration</span>
+                                    <span class="me-3 p-sm">Model: @AiResult?.ModelName | AiThink: @AiResult?.Duration</span>
                                 </div>
                                 <InputTextArea @bind-Value="AiResponse" class="form-control form-control-sm" style="field-sizing: content;" />
                             </div>
@@ -225,7 +225,7 @@
         if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
         Entity.Note = result?.Data?.InternalNote;
 
-        await App!.ShowNotify($"AiModel: {result?.Data.ModelName}  |  Tokeni: {result?.Data.ResponseTokens}", "success", $"AiThink {duration}");
+        await App!.ShowNotify($"AiModel: {result?.Data.ModelName} | Tokens: {result?.Data.ResponseTokens}", "success", $"AiThink {duration}");
     }
 
     async Task HandleValidSubmit()
