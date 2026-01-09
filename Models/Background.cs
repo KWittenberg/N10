@@ -24,6 +24,8 @@ public class Background
         new("Desert", "img/bg/6.Northern Light.jpg"),
         new("Sunset", "img/bg/7.Sunset.jpg"),
         new("Kinetic", "img/bg/8.Kinetic.jpg"),
-        new("Simple Gray", "img/bg/9.Simple Gray.jpg")
+        new("Simple Gray", "img/bg/9.Simple Gray.jpg"),
+        new("Grunge Blue", "img/bg/10.Grunge Blue.webp"),
+        new("Golden Dust", "img/bg/11.Golden Dust.webp")
     ];
 }

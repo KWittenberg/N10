@@ -3,7 +3,8 @@
     justify-content: space-between;
     align-items: center;
     height: 2rem;
-    /*background-color: rgba(var(--bs-black-rgb), 0.1);*/
+    /*background-color: var(--cf-theme-850);*/
+    /*background-color: rgba(var(--bs-black-rgb), 0.2);*/
     /*border-bottom: 1px solid #d6d5d5;*/
 }
 
@@ -21,7 +22,10 @@
 
 /* START - Code Foundry */
 .navStyle {
-    background-color: var(--cf-theme-850); /* Applies a theme-specific background color */
+    background-color: rgb(from var(--cf-theme-900) r g b / 0.4);
+    /*background-color: var(--cf-theme-850);*/ /* Applies a theme-specific background color */
+    /* Ovo kaže: "Pomiješaj moju boju s prozirnom, tako da moje boje ostane 50%" */
+    /*background-color: color-mix(in srgb, var(--cf-theme-850), transparent 50%);*/
 }
 
 .nav-item {

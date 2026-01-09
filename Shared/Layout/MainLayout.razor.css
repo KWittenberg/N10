@@ -21,7 +21,8 @@ main {
 
 .sidebar {
     /*background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);*/
-    background-color: rgba(var(--bs-black-rgb), 0.2);
+    /*background-color: rgba(var(--bs-black-rgb), 0.2);*/
+    background-color: rgb(from var(--cf-theme-900) r g b / 0.4);
 }
 
 
