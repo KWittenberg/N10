@@ -4,18 +4,15 @@
 <!-- Post Modal Component -->
 <div class="modal fade @ShowClass" style="display: @(Chronicle is not null ? "block" : "none"); background: rgba(0,0,0,0.50); backdrop-filter: blur(4px);" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-
         <div class="modal-content text-white border-0 bg-transparent">
 
             <!-- 1. HEADER -->
             <div class="modal-header d-flex justify-content-between align-items-center border-0 w-100">
                 <button type="button" class="btn btn-outline-secondary rounded-circle p-2" style="width: 40px; height: 40px;" @onclick="Close"><i class="bi bi-x-lg"></i></button>
-
-                <button type="button" class="btn btn-primary rounded-pill px-3 fw-bold" @onclick="@(string.IsNullOrEmpty(PreviewImageSrc) ? GenerateImage : PostToFacebook)">
-                    @(string.IsNullOrEmpty(PreviewImageSrc) ? "Generate Image" : "Post to Facebook")
+                <button type="button" class="px-3 btn btn-primary rounded-pill" @onclick="@(string.IsNullOrEmpty(PreviewImageSrc) ? GenerateImage : PostToFacebook)" disabled="@IsWorking">
+                    <span class="@(IsWorking ? "spinner-border spinner-border-sm me-2" : "")"></span>
+                    <span>@(string.IsNullOrEmpty(PreviewImageSrc) ? "Generate Image" : "Post to Facebook")</span>
                 </button>
-
-                @* <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" @onclick="PostToFacebook">POST <i class="bi bi-send-fill ms-2"></i></button> *@
             </div>
 
             <!-- 2. BODY (Tekst) -->
@@ -57,6 +54,8 @@
     string PreviewImageSrc = string.Empty; // Ovdje spremamo Base64 string za prikaz
     byte[]? ImageBytes = null; // Ovdje spremamo bajtove slike za slanje na Facebook
 
+    bool IsWorking = false;
+
     protected override void OnParametersSet()
     {
         if (Chronicle is null) return;
@@ -82,6 +81,8 @@
 
         try
         {
+            var timer = BusyMonitor.Start(ref IsWorking);
+            StateHasChanged();
             // 2. DOHVATI STREAM REFERENCU (Ne ruši SignalR!)
             var dataReference = await jsModule.InvokeAsync<IJSStreamReference>("getCardImageStream", "capture-target");
 
@@ -101,6 +102,8 @@
                 PreviewImageSrc = $"data:image/jpeg;base64,{base64}";
                 StateHasChanged();
             }
+            var duration = timer.Stop(ref IsWorking);
+            await App!.ShowNotify($"Image Created!", "success", $"Took {duration}");
         }
         catch (Exception ex)
         {
@@ -113,11 +116,13 @@
         if (ImageBytes is null) await GenerateImage();
         if (ImageBytes is not null)
         {
+            var timer = BusyMonitor.Start(ref IsWorking);
             var result = await MetaService.PostToFacebookAsync(PostText, ImageBytes);
 
             if (result.Success)
             {
-                await App!.ShowToast("Objava uspješno poslana!", "success");
+                var duration = timer.Stop(ref IsWorking);
+                await App!.ShowNotify("Objava uspješno poslana!", "success", $"Took {duration}");
                 Close();
             }
             else await App!.ShowToast("Error: " + result.Message, "error");
