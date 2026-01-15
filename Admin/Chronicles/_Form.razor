@@ -60,21 +60,9 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 rounded bg-gradient">
-                        <div class="p-2 px-3">
-                            <span class="ms-1 p-sm">AiModel</span>
-                            <InputSelect @bind-Value="SelectedModelId" class="form-select form-select-sm">
-                                @foreach (var item in AiModelRepository.AiModels)
-                                {
-                                    <option value="@item">@item</option>
-                                }
-                                @* <option value="gemma-3-27b-it">Gemma 3 (Unlimited)</option>
-                                <option value="gemini-2.0-flash-lite-preview-02-05">Gemini 2.0 Flash Lite (Smart)</option>
-                                <option value="gemini-3-flash-preview">Gemini 3 Flash (20/day)</option> *@
-                            </InputSelect>
-                        </div>
-                        @if (AiPromptTemplates is not null && AiPromptTemplates.Any())
-                        {
+                    @if (AiPrompts is not null && AiPrompts.Any())
+                    {
+                        <div class="mt-4 rounded bg-gradient">
                             <div class="p-2 px-3">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="ms-1 p-sm">AiPrompt</span>
@@ -83,7 +71,7 @@
                                     </span>
                                 </div>
                                 <InputSelect @bind-Value="AiPromptId" class="form-select form-select-sm">
-                                    @foreach (var item in AiPromptTemplates)
+                                    @foreach (var item in AiPrompts)
                                     {
                                         <option value="@item.Id">@item.Name</option>
                                     }
@@ -96,8 +84,8 @@
                                     <InputTextArea @bind-Value="DisplayPrompt" class="pt-0 form-control bg-gradient" style="font-size: 0.5rem;" rows="46" />
                                 </div>
                             }
-                        }
-                    </div>
+                        </div>
+                    }
                 </div>
                 <!-- Right -->
                 <div class="p-2 col-12 col-md-8">
@@ -163,7 +151,8 @@
     bool ShowAiPrompt = true;
     bool IsAiBusy = false;
 
-    List<AiPromptTemplate>? AiPromptTemplates;
+    List<AiPrompt>? AiPrompts => AiPromptRepository.AiPrompts;
+    AiPrompt? AiPrompt;
     string DisplayPrompt = string.Empty;
     int aiPromptId;
     int AiPromptId
@@ -177,12 +166,9 @@
         }
     }
 
-    string? SelectedModelId;
     string? AiResponse;
     AiResult? AiResult;
 
-
-    protected override void OnInitialized() => AiPromptTemplates = PromptRepository.Templates;
 
     protected override void OnParametersSet()
     {
@@ -193,7 +179,7 @@
 
         if (aiPromptId == 0)
         {
-            aiPromptId = 2;
+            aiPromptId = 1;
             RecalculatePrompt();
         }
         else RecalculatePrompt();
@@ -202,12 +188,14 @@
     void RecalculatePrompt()
     {
         if (Entity is null) return;
-        var template = AiPromptTemplates?.FirstOrDefault(t => t.Id == aiPromptId);
-        if (template == null) return;
+        // var template = AiPrompts?.FirstOrDefault(t => t.Id == aiPromptId);
+        // if (template == null) return;
+        AiPrompt = AiPrompts?.FirstOrDefault(t => t.Id == aiPromptId);
+        if (AiPrompt is null) return;
 
         string currentYear = DateTime.Now.Year.ToString();
         string dateContext = Entity.Date.HasValue ? Entity.Date.Value.ToShortDateString() : $"{Entity.Day}. {Entity.Month}. {Entity.Year}.";
-        string prompt = template.Prompt.Replace("{{CURRENT_YEAR}}", currentYear).Replace("{{DATE}}", dateContext).Replace("{{CONTENT}}", Entity.Content);
+        string prompt = AiPrompt.UserPrompt.Replace("{{CURRENT_YEAR}}", currentYear).Replace("{{DATE}}", dateContext).Replace("{{CONTENT}}", Entity.Content);
         DisplayPrompt = prompt;
     }
 
@@ -215,23 +203,22 @@
     {
         if (string.IsNullOrWhiteSpace(Entity?.Content)) return;
         if (string.IsNullOrWhiteSpace(DisplayPrompt)) return;
-        string? duration;
-        // StartTimer(ref IsAiBusy);
+        Result<AiResult>? result;
+        bool isGemma = AiPrompt.ModelId.Contains("gemma", StringComparison.OrdinalIgnoreCase);
+
         var timer = BusyMonitor.Start(ref IsAiBusy);
 
-        var result = await AiService.EnhanceWithAiAsync(DisplayPrompt, SelectedModelId);
+        if (isGemma) result = await AiService.EnhanceWithAiGemmaAsync(DisplayPrompt, AiPrompt.ModelId);
+        else result = await AiService.EnhanceWithAiGeminiAsync(AiPrompt.SystemPrompt, AiPrompt.UserPrompt, AiPrompt.ModelId, AiPromptRepository.ChronicleSchema);
+
         if (!result.Success)
         {
-            // duration = StopTimer(ref IsAiBusy);
-            duration = timer.Stop(ref IsAiBusy);
-            await App!.ShowNotify($"Ai failed to process the request: {result.Message}", "error", $"Ai need {duration}");
+            await App!.ShowNotify($"Ai failed to process the request: {result.Message}", "error", $"Ai need {timer.Stop(ref IsAiBusy)}");
             return;
         }
 
-        // duration = StopTimer(ref IsAiBusy);
-        duration = timer.Stop(ref IsAiBusy);
         AiResult = result.Data;
-        AiResult?.Duration = duration;
+        AiResult?.Duration = timer.Stop(ref IsAiBusy);
 
         // OVO JE TRIK: Pretvorimo cijeli objekt (sa statistikom) natrag u lijepi string
         AiResponse = JsonSerializer.Serialize(result.Data, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
@@ -241,7 +228,7 @@
         if (Enum.IsDefined(typeof(ChronicleType), result?.Data?.SuggestedTypeId)) Entity.Type = (ChronicleType)result?.Data?.SuggestedTypeId;
         Entity.Note = result?.Data?.InternalNote;
 
-        await App!.ShowNotify($"AiModel: {result?.Data.ModelName} | Tokens: {result?.Data.ResponseTokens}", "success", $"AiThink {duration}");
+        await App!.ShowNotify($"AiModel: {result?.Data.ModelName} | Tokens: {result?.Data.ResponseTokens}", "success", $"AiThink {AiResult?.Duration}");
     }
 
     async Task HandleValidSubmit()
@@ -316,22 +303,6 @@
             await App!.ShowToast($"Failed to generate enhanced content: {ex.Message}", "error");
         }
     }
-    #endregion
-
-    #region Timer
-    // void StartTimer(ref bool workingFlag)
-    // {
-    //     workingFlag = true;
-    //     Stopwatch.Restart();
-    // }
-
-    // string StopTimer(ref bool workingFlag)
-    // {
-    //     Stopwatch.Stop();
-    //     workingFlag = false;
-    //     var ms = Stopwatch.ElapsedMilliseconds;
-    //     return ms > 1000 ? $"{ms / 1000.0:F2} s" : $"{ms} ms";
-    // }
     #endregion
 
 }

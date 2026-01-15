@@ -12,6 +12,101 @@ public class AiService(IConfiguration config)
     readonly string ModelGeminiTest = "gemini-3-flash-preview";
 
 
+
+
+    #region Ai Gemma and Gemini
+    public async Task<Result<AiResult?>> EnhanceWithAiGemmaAsync(string userPrompt, string modelId)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+
+            var config = new GenerateContentConfig { Temperature = 0.7f };
+            List<Content> content = [new() { Role = "user", Parts = [new Part { Text = userPrompt }] }];
+
+            var response = await client.Models.GenerateContentAsync(modelId, content, config);
+
+            return ParseResponse(response, modelId);
+        }
+        catch (Exception ex)
+        {
+            return Result<AiResult?>.Error($"Gemma Error: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<AiResult?>> EnhanceWithAiGeminiAsync(string systemPrompt, string userPrompt, string modelId, Schema? responseSchema)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+
+            // Gemini: Koristimo SystemInstruction i Schema Config
+            var config = new GenerateContentConfig
+            {
+                Temperature = 0.7f,
+                SystemInstruction = new Content { Parts = [new Part { Text = systemPrompt }] }
+            };
+
+            // Ako smo dobili shemu izvana, koristimo je
+            if (responseSchema != null)
+            {
+                config.ResponseMimeType = "application/json";
+                config.ResponseSchema = responseSchema;
+            }
+
+            List<Content> content = [new() { Role = "user", Parts = [new Part { Text = userPrompt }] }];
+
+            var response = await client.Models.GenerateContentAsync(modelId, content, config);
+
+            return ParseResponse(response, modelId);
+        }
+        catch (Exception ex)
+        {
+            return Result<AiResult?>.Error($"Gemini Error: {ex.Message}");
+        }
+    }
+
+    private Result<AiResult?> ParseResponse(GenerateContentResponse response, string modelName)
+    {
+        if (response?.Candidates == null || response.Candidates.Count == 0) return Result<AiResult?>.Error("Empty response.");
+
+        try
+        {
+            string rawJson = response.Candidates[0].Content.Parts[0].Text;
+
+            rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
+            int start = rawJson.IndexOf('{');
+            int end = rawJson.LastIndexOf('}');
+            if (start >= 0 && end > start) rawJson = rawJson.Substring(start, end - start + 1);
+
+            var aiData = JsonSerializer.Deserialize<AiResult>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+            if (aiData is null) return Result<AiResult?>.Error("Failed to deserialize JSON.");
+
+            aiData.ModelName = ModelGemma;
+            aiData.PromptTokens = response.UsageMetadata?.PromptTokenCount ?? 0;
+            aiData.ResponseTokens = response.UsageMetadata?.CandidatesTokenCount ?? 0;
+            aiData.TotalTokens = response.UsageMetadata?.TotalTokenCount ?? 0;
+
+            // HACK: Ako iz nekog razloga tokeni nisu dostupni, napravi grubu procjenu
+            if (aiData.ResponseTokens == 0 && !string.IsNullOrEmpty(rawJson))
+            {
+                aiData.ResponseTokens = rawJson.Length / 4; // Gruba procjena
+                aiData.TotalTokens = (aiData.PromptTokens ?? 0) + aiData.ResponseTokens;
+            }
+
+            return Result<AiResult?>.Ok(aiData);
+        }
+        catch (Exception ex)
+        {
+            return Result<AiResult?>.Error($"Parsing Error: {ex.Message}");
+        }
+    }
+    #endregion
+
+
+
+
+
     public async Task<Result<AiResult?>> EnhanceWithAiAsync(string prompt, string modelId)
     {
         try
