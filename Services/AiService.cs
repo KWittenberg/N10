@@ -9,6 +9,170 @@ public class AiService(IConfiguration config)
     readonly string modelId = "gemma-3-27b-it"; // gemma-3-27b-it   gemini-2.5-flash
     readonly string ModelGemma = "gemma-3-27b-it";
     readonly string ModelGemini = "gemini-2.5-flash";
+    readonly string ModelGeminiTest = "gemini-3-flash-preview";
+
+
+    public async Task<Result<AiResult?>> EnhanceWithAiAsync(string prompt, string modelId)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+
+            // 1. OSNOVNA KONFIGURACIJA (Vrijedi za sve)
+            var config = new GenerateContentConfig
+            {
+                Temperature = 0.7f
+            };
+
+            // 2. DETEKCIJA MOĆI MODELA
+            // Gemma ne podržava 'ResponseSchema' polje u ovom API-ju, Gemini podržava.
+            bool supportsSchema = !modelId.Contains("gemma", StringComparison.OrdinalIgnoreCase);
+
+            if (supportsSchema)
+            {
+                // Ako je Gemini, uključimo Turbo mod za JSON
+                config.ResponseMimeType = "application/json";
+                config.ResponseSchema = new Schema
+                {
+                    Type = Google.GenAI.Types.Type.OBJECT,
+                    Properties = new Dictionary<string, Schema>
+                {
+                    { "Title", new Schema { Type = Google.GenAI.Types.Type.STRING } },
+                    { "EnhancedContent", new Schema { Type = Google.GenAI.Types.Type.STRING } },
+                    { "SuggestedTypeId", new Schema { Type = Google.GenAI.Types.Type.INTEGER } },
+                    { "InternalNote", new Schema { Type = Google.GenAI.Types.Type.STRING, Nullable = true } }
+                },
+                    Required = new List<string> { "Title", "EnhancedContent", "SuggestedTypeId", "InternalNote" }
+                };
+            }
+
+            // 3. POZIV
+            List<Content> content = [new() { Role = "user", Parts = [new Part { Text = prompt }] }];
+            var response = await client.Models.GenerateContentAsync(modelId, content, config);
+
+            if (response?.Candidates == null || response.Candidates.Count == 0)
+                return Result<AiResult?>.Error("Empty response.");
+
+            // 4. OBRADA REZULTATA (Ista za sve)
+            string rawJson = response.Candidates[0].Content.Parts[0].Text;
+
+            // Gemma voli markdown, Gemini nekad vrati čisti JSON, nekad markdown.
+            // Ovo čišćenje ne šteti nikome, a spašava Gemmu.
+            rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
+            int start = rawJson.IndexOf('{');
+            int end = rawJson.LastIndexOf('}');
+            if (start >= 0 && end > start) rawJson = rawJson.Substring(start, end - start + 1);
+
+            // 5. DESERIJALIZACIJA
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+            var aiData = JsonSerializer.Deserialize<AiResult>(rawJson, options);
+            if (aiData is null) return Result<AiResult?>.Error("Failed to deserialize JSON.");
+
+            // MAPIRANJE TOKENA
+            aiData.ModelName = modelId;
+            aiData.PromptTokens = response.UsageMetadata?.PromptTokenCount ?? 0;
+            aiData.ResponseTokens = response.UsageMetadata?.CandidatesTokenCount ?? 0;
+            aiData.TotalTokens = response.UsageMetadata?.TotalTokenCount ?? 0;
+
+            // HACK ZA TOKENE (Ako API vrati 0)
+            if (aiData.ResponseTokens == 0 && !string.IsNullOrEmpty(rawJson))
+            {
+                aiData.ResponseTokens = rawJson.Length / 4;
+                aiData.TotalTokens = (aiData.PromptTokens ?? 0) + aiData.ResponseTokens;
+            }
+
+            return Result<AiResult?>.Ok(aiData);
+        }
+        catch (Google.GenAI.ClientError ce) { return Result<AiResult?>.Error($"Google API Error: {ce.Message}"); }
+        catch (JsonException) { return Result<AiResult?>.Error("AI je vratio neispravan JSON format."); }
+        catch (Exception ex)
+        {
+            if (ex.InnerException != null) return Result<AiResult?>.Error($"AiError: {ex.Message} - Inner: {ex.InnerException.Message}");
+            return Result<AiResult?>.Error($"AiError: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<AiResult?>> EnhanceWithGemmaNewAsync(string prompt)
+    {
+        try
+        {
+            using var client = new Client(apiKey: apiKey);
+
+            // 1. DEFINIRANJE SHEME (Ovo je novo u v0.10.0)
+            // Ovime prisiljavamo model da vrati točno ova polja.
+            var resultSchema = new Schema
+            {
+                Type = Google.GenAI.Types.Type.OBJECT,
+                Properties = new Dictionary<string, Schema>
+            {
+                { "Title", new Schema { Type = Google.GenAI.Types.Type.STRING } },
+                { "EnhancedContent", new Schema { Type = Google.GenAI.Types.Type.STRING } },
+                { "SuggestedTypeId", new Schema { Type = Google.GenAI.Types.Type.INTEGER } },
+                { "InternalNote", new Schema { Type = Google.GenAI.Types.Type.STRING, Nullable = true } }
+            },
+                // Koja polja su obavezna?
+                Required = new List<string> { "Title", "EnhancedContent", "SuggestedTypeId" }
+            };
+
+            // 2. CONFIG (Ubacujemo shemu)
+            var config = new GenerateContentConfig
+            {
+                ResponseMimeType = "application/json", // Obavezno uz shemu
+                ResponseSchema = resultSchema,         // <--- EVO GA!
+                Temperature = 0.7f
+            };
+
+            List<Content> content = [new() { Role = "user", Parts = [new Part { Text = prompt }] }];
+
+            // 3. POZIV (Gemma + Config sa Shemom)
+            var response = await client.Models.GenerateContentAsync(ModelGeminiTest, content, config);
+
+            if (response?.Candidates == null || response.Candidates.Count == 0)
+                return Result<AiResult?>.Error($"AiError: Safety block or empty response");
+
+            // Izvlačenje teksta
+            string rawJson = response.Candidates[0].Content.Parts[0].Text;
+
+            // Čišćenje (I dalje ostavljamo za svaki slučaj, iako Schema ovo obično rješava)
+            rawJson = rawJson.Replace("```json", "").Replace("```", "").Trim();
+            int start = rawJson.IndexOf('{');
+            int end = rawJson.LastIndexOf('}');
+            if (start >= 0 && end > start) rawJson = rawJson.Substring(start, end - start + 1);
+
+            // DESERIJALIZACIJA
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            var aiData = JsonSerializer.Deserialize<AiResult>(rawJson, options);
+            if (aiData is null) return Result<AiResult?>.Error("Failed to deserialize JSON.");
+
+            // MAPIRANJE TOKENA
+            aiData.ModelName = ModelGeminiTest;
+            aiData.PromptTokens = response.UsageMetadata?.PromptTokenCount ?? 0;
+            aiData.ResponseTokens = response.UsageMetadata?.CandidatesTokenCount ?? 0;
+            aiData.TotalTokens = response.UsageMetadata?.TotalTokenCount ?? 0;
+
+            // HACK ZA TOKENE (Ako API vrati 0)
+            if (aiData.ResponseTokens == 0 && !string.IsNullOrEmpty(rawJson))
+            {
+                aiData.ResponseTokens = rawJson.Length / 4;
+                aiData.TotalTokens = (aiData.PromptTokens ?? 0) + aiData.ResponseTokens;
+            }
+
+            return Result<AiResult?>.Ok(aiData);
+        }
+        catch (Google.GenAI.ClientError ce) { return Result<AiResult?>.Error($"Google API Error: {ce.Message}"); }
+        catch (JsonException) { return Result<AiResult?>.Error("AI je vratio neispravan JSON format."); }
+        catch (Exception ex)
+        {
+            if (ex.InnerException != null) return Result<AiResult?>.Error($"AiError: {ex.Message} - Inner: {ex.InnerException.Message}");
+            return Result<AiResult?>.Error($"AiError: {ex.Message}");
+        }
+    }
+
 
 
     public async Task<Result<AiResult?>> EnhanceWithGemmaAsync(string prompt)

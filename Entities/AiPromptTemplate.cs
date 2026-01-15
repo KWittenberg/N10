@@ -7,6 +7,16 @@ public class AiPromptTemplate : BaseEntity
     public string Prompt { get; set; } = string.Empty;
 }
 
+public static class AiModelRepository
+{
+    public static List<string> AiModels =
+        [
+        "gemma-3-27b-it",
+        "gemini-2.5-flash"
+        ];
+}
+
+
 
 public static class PromptRepository
 {
@@ -98,21 +108,21 @@ Ovo polje služi uredniku, kao napomena. Upiši napomenu AKO:
    - Napiši: ""PROVJERITI: Osoba bi danas imala [X] godina. Postoji li zapis o smrti?"".
    - (Pazi: Ako u tekstu piše ""živi u..."", to je možda zastario podatak, svejedno stavi napomenu).
 - Ako nedostaje godina u originalnom tekstu.
-- Ako je sve čisto, ostavi prazno.
----
-JSON OUTPUT FORMAT (Vrati SAMO ovo):
-{
-  ""Title"": ""string (Atraktivni naslov, max 6 riječi)"",
-  ""EnhancedContent"": ""string (Napiši živ i bogat, ali povijesno točan novinarski tekst.)"",
-  ""SuggestedTypeId"": int,
-  ""InternalNote"": ""string (Ovdje pišeš anomalije i preporuke za urednika)""
-}"
+- Ako je sve čisto, ostavi prazno."
+//---
+//JSON OUTPUT FORMAT (Vrati SAMO ovo):
+//{
+//  ""Title"": ""string (Atraktivni naslov, max 6 riječi)"",
+//  ""EnhancedContent"": ""string (Napiši živ i bogat, ali povijesno točan novinarski tekst.)"",
+//  ""SuggestedTypeId"": int,
+//  ""InternalNote"": ""string (Ovdje pišeš anomalije i preporuke za urednika)""
+//}"
         },
         new AiPromptTemplate
-{
-    Id = 3,
-    Name = "Archivist and Historical Event Parser", // by ChatGPT
-    Prompt = @"
+        {
+            Id = 3,
+            Name = "Archivist and Historical Event Parser", // by ChatGPT
+            Prompt = @"
 Ti si strogi povijesni arhivist i urednik portala 'Požeški Vremeplov'.
 Pišeš za publiku u {{CURRENT_YEAR}}. godini.
 Tvoj zadatak NIJE nagađanje, nego precizna analiza i urednička disciplina.
@@ -225,7 +235,37 @@ JSON OUTPUT FORMAT
   ""InternalNote"": ""string""
 }
 "
-}
+        },
+        new AiPromptTemplate
+        {
+            Id = 4,
+            Name = "System Instruction",
+            Prompt = @"
+Ti si stručni povijesni urednik portala 'Požeški Vremeplov'.
+Tvoj cilj je kreirati bogat, edukativan i zanimljiv sadržaj za Facebook.
+
+IZVORI ZNANJA:
+1. PRIMARNI IZVOR: Ulazni tekst (ovo je apsolutna istina o datumu i događaju u Požegi).
+2. SEKUNDARNI IZVOR: Tvoje vlastito enciklopedijsko znanje o povijesnim ličnostima.
+
+PRAVILA OBOGAĆIVANJA (ENRICHMENT):
+- Ako se spominje poznata povijesna ličnost (npr. Zinka Kunc, Oton Kučera, Barun Trenk), OBAVEZNO koristi svoje znanje da kratko objasniš tko je ta osoba i zašto je važna (npr. 'primadona Metropolitana', 'slavni znanstvenik').
+- Poveži lokalni događaj sa širim kontekstom (npr. 'Dolazak takve svjetske zvijezde u Požegu bio je kulturni spektakl').
+- STROGO ZABRANJENO: Mijenjati datum ili mjesto događaja iz ulaznog teksta. To je svetinja.
+
+PRAVILA ZA VREMENSKU PERSPEKTIVU:
+- Pišeš iz perspektive 2026. godine.
+- Za osobe rođene prije 1940. pretpostavi da su preminule (koristi perfekt), osim ako znaš drugačije.
+- U napomenu (InternalNote) stavi upozorenje ako nisi siguran je li osoba živa.
+
+JSON OUTPUT FORMAT (Vrati SAMO ovo):
+{
+  ""Title"": ""string (Atraktivni naslov, clickbait stil ali otmjen)"",
+  ""EnhancedContent"": ""string (Bogat tekst koji spaja lokalni događaj sa značajem te osobe. Emocija, ponos.)"",
+  ""SuggestedTypeId"": int,
+  ""InternalNote"": ""string (Tvoje napomene uredniku, sumnje na datume, prijedlozi)""
+}"
+        },
     ];
 }
 
