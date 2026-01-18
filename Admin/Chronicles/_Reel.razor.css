@@ -1,0 +1,65 @@
+﻿#capture-target {
+    width: 540px;
+    height: 960px;
+    /*background-image: url('/img/bg/bg-image1.jpg');*/
+    background-image:
+    /* SLOJ 1: Vinjeta (Tamni rubovi, prozirna sredina) */
+    radial-gradient(circle at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%),
+    /* SLOJ 2: Zatamnjenje (Da tekst bolje iskoči, 40% crne preko svega) */
+    linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+    /* SLOJ 3: Tvoja slika (Baza) */
+    url('/img/bg/bg-image1.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bg-noise {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.04;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+');
+    pointer-events: none;
+    overflow: hidden;
+}
+
+
+/* RUDINA HEAD */
+.rudina-bg-wrapper {
+    position: absolute;
+    top: -80px;
+    right: -200px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Jako bitno! Reže sve što viri van ekrana */
+    pointer-events: none; /* Da možeš klikati kroz nju */
+    z-index: 0;
+}
+
+.rudina-big-head {
+    position: absolute;
+    top: 10%; /* Malo gore da se ne vidi rub slike */
+    right: 0; /* Malo desno da ne bude centrirana */
+    width: 100vw; /* Zauzima 60% širine ekrana (responzivno) */
+    max-width: 500px; /* Ali ne više od 900px na ogromnim ekranima */
+    object-fit: contain;
+    opacity: 0.20; /* Jako suptilno, samo da se nazire */
+    /* ROTACIJA - fiksna, ne animacija, izgleda ozbiljnije */
+    transform: rotate(-7deg);
+    /* MAGIJA: Fade-out efekt prema lijevo i dolje */
+    /* Ovo čini da slika "nestaje" u crnoj boji umjesto da ima oštar rub */
+    -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+    mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+    /* Ako želiš da se boja stopi s podlogom (blend mode) */
+    mix-blend-mode: luminosity;
+    animation: slowFloat 20s infinite ease-in-out;
+}
+
+h1 {
+    font-family: var(--kw-v-font-title);
+}
