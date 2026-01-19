@@ -21,11 +21,14 @@ else
     else
     {
         <div class="mt-3 @App?.GetContentClass()">
-            <_Table Chronicles="FiveDays" Title="5 Days" OnEdit="AddEdit" OnDelete="LoadAsync" PaginationState="PaginationState5Days" />
-            <_Table Chronicles="Chronicles" Title="@Title" OnEdit="AddEdit" OnDelete="LoadAsync" PaginationState="PaginationStateAll" />
+            <_Table Chronicles="FiveDays" Title="5 Days" OnReel="OpenReel" OnPost="OpenPost" OnEdit="AddEdit" OnDelete="LoadAsync" PaginationState="PaginationState5Days" />
+            <_Table Chronicles="Chronicles" Title="@Title" OnReel="OpenReel" OnPost="OpenPost" OnEdit="AddEdit" OnDelete="LoadAsync" PaginationState="PaginationStateAll" />
         </div>
     }
 }
+
+<_Reel Chronicle="Reel" />
+<_Post Chronicle="Post" />
 
 
 @code {
@@ -34,6 +37,8 @@ else
     List<Chronicle>? Chronicles;
     List<Chronicle>? FiveDays;
     Chronicle? Entity;
+    Chronicle? Reel;
+    Chronicle? Post;
     
     const string Title = "Chronicle";
 
@@ -78,6 +83,18 @@ else
             .ToList();
     }
 
+    async Task OpenReel(Chronicle? input)
+    {
+        Reel = input;
+        await Task.CompletedTask;
+    }
+    
+    async Task OpenPost(Chronicle? input)
+    {
+        Post = input;
+        await Task.CompletedTask;
+    }
+    
     async Task AddEdit(Chronicle? input)
     {
         Entity = input;

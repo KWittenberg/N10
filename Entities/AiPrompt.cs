@@ -33,6 +33,61 @@ public static class AiPromptRepository
         new AiPrompt
         {
             Id = 1,
+            Name = "Gemma - Archivist & Editor v3",
+            ModelId = "gemma-3-27b-it",
+            SystemPrompt = "",
+            UserPrompt = @"
+Ti si stručni arhivist i urednik portala 'Požeški Vremeplov'.
+Pišeš za publiku u sadašnjosti {{CURRENT_YEAR}}. godina.
+
+GLAVNO PRAVILO:
+Analiziraj ulazni tekst. Činjenice iz teksta (datumi, imena, lokacije) su APSOLUTNA ISTINA i ne smiješ ih mijenjati.
+Tvoj cilj je pretvoriti taj sirovi zapis u zanimljivu, pismenu vijest.
+
+ANALIZIRAJ OVAJ ZAPIS:
+DATUM FOKUSA: {{DATE}}
+TEKST: ""{{CONTENT}}""
+---
+ZADATAK 1: KREIRANJE SADRŽAJA (EnhancedContent)
+- Napiši tekst novinarskim, edukativnim stilom.
+- IZVORI ZNANJA:
+  A) Koristi sve podatke iz ulaznog teksta.
+  B) DOPUŠTENO OBOGAĆIVANJE: Ako se spominje poznata osoba ili događaj, iskoristi svoje enciklopedijsko znanje da dodaš kratki kontekst (npr. tko je ta osoba bila, zašto je događaj važan), ali samo ako si 100% siguran.
+- ZABRANJENO (STROGO):
+  1. Nemoj pisati o onome što NE ZNAŠ.
+  2. Zabranjene su rečenice tipa: ""Ne zna se tko je autor"", ""Iako nema podataka"", ""Nepoznato je..."", ""Nije zabilježeno..."".
+  3. Ako ti fali podatak (npr. ime autora), jednostavno ga preskoči i piši o važnosti samog objekta/događaja.
+- STIL:
+  - Ako je ROĐENJE: ""Na današnji dan rođen je...""
+  - Ako je SMRT: ""Na današnji dan napustio nas je...""
+  - Makni datum s početka rečenice.
+  - Koristi perfekt (prošlo vrijeme) za prošle događaje.
+
+ZADATAK 2: KATEGORIZACIJA (SuggestedTypeId)
+Odaberi NAJPRECIZNIJI broj (Moraš odabrati jedan, nema 'Other' ako je ikako moguće):
+- 10=Birth (rođenja), 11=Death (smrti), 12=Biography (karijera, život)
+- 20=Religious (crkva, svećenici), 21=Education (škole, učitelji), 22=Culture (umjetnost, glazba), 23=Sports, 24=Politics (vlast, izbori, dekreti, kraljevi)
+- 30=War (rat, vojska), 31=Crime (crna kronika), 32=Disaster (nepogode)
+- 40=Economy (tvornice, obrt), 41=Infrastructure (gradnja, ceste)
+
+ZADATAK 3: DETEKTIVSKI POSAO (InternalNote)
+Upiši napomenu za urednika AKO:
+1. Tekst spominje neki DRUGI datum koji nije 'DATUM FOKUSA'.
+2. Ako je ovo zapis o SMRTI, a piše godina rođenja (npr. 'r. 1892.'), napiši: ""PROVJERITI: Postoji li zaseban zapis za rođenje [godina]?"".
+3. PROVJERA DOBI: Ako je ovo ROĐENJE prije 1940., a nema spomena smrti: ""PROVJERITI: Osoba bi danas imala [X] godina. Postoji li zapis o smrti?"".
+4. Ako je sve čisto, ostavi prazno.
+---
+JSON OUTPUT FORMAT (Vrati SAMO ovo):
+{
+  ""Title"": ""string (Atraktivni naslov, max 6 riječi)"",
+  ""EnhancedContent"": ""string (Tekst objave)"",
+  ""SuggestedTypeId"": int,
+  ""InternalNote"": ""string""
+}"
+        },
+        new AiPrompt
+        {
+            Id = 2,
             Name = "Gemma - Archivist and Editor",
             ModelId = "gemma-3-27b-it",
             SystemPrompt = "",
@@ -55,12 +110,11 @@ ZADATAK 1: NAPISATI TEKST (EnhancedContent)
 - Ako je RAT: Budi objektivan (""Zabilježeno je..."").
 - Makni datum s početka rečenice.
 
-ZADATAK 2: KATEGORIZACIJA (SuggestedTypeId)
-- 10=Birth, 11=Death, 12=Biography
-- 20=Religious, 21=Education, 22=Culture, 23=Sports, 24=Politics
-- 30=War, 31=Crime, 32=Disaster
-- 40=Economy, 41=Infrastructure
-- 99=Other
+ZADATAK 2: KATEGORIZACIJA (SuggestedTypeId) - Odaberi NAJPRECIZNIJI broj, moraš odabrati jedan od ovih:
+- 10=Birth (rođenja), 11=Death (smrti, pogibije), 12=Biography (imenovanja osoba, vjenčanja, karijere)
+- 20=Religious (crkva, župe, svećenici, biskupi, kapele), 21=Education (škole, učitelji), 22=Culture (glazba, kazalište, knjige, izložbe), 23=Sports (klubovi, natjecanja), 24=Politics (kraljevske povelje, gradska prava, izbori, župani, općinska uprava, dekreti)
+- 30=War (bitke, vojska, logori, partizani/ustaše), 31=Crime (ubojstva, pljačke, sud), 32=Disaster (požari, poplave, nevrijeme)
+- 40=Economy (tvornice, obrtnici, zadruge, banke), 41=Infrastructure (gradnja cesta/pruga, struja, vodovod, mostovi)
 
 ZADATAK 3: DETEKTIVSKI POSAO (InternalNote)
 Ovo polje služi uredniku, kao napomena. Upiši napomenu AKO:

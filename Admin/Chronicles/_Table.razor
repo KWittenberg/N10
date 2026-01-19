@@ -60,8 +60,8 @@
                 <div class="d-flex justify-content-end align-items-center gap-2">
                     @if (context.Day == Today.Day && context.Month == Today.Month)
                     {
-                        <span @onclick="() => Reel = context" title="Reel"><i class="bi bi-r-square"></i></span>
-                        <span @onclick="() => Post = context" title="Post"><i class="bi bi-p-square"></i></span>
+                        <span @onclick="() => OnReel.InvokeAsync(context)" title="Reel"><i class="bi bi-r-square"></i></span>
+                        <span @onclick="() => OnPost.InvokeAsync(context)" title="Post"><i class="bi bi-p-square"></i></span>
                     }
                     <span @onclick="() => OnEdit.InvokeAsync(context)" title="Edit"><i class="bi bi-pencil-square"></i></span>
                     <span class="text-danger" @onclick="() => Delete(context)"><i class="bi bi-trash"></i></span>
@@ -74,8 +74,7 @@
     </div>
 </div>
 
-<_Reel Chronicle="Reel" />
-<_Post Chronicle="Post" />
+
 
 
 @code {
@@ -83,14 +82,15 @@
     [Parameter, EditorRequired] public List<Chronicle>? Chronicles { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public EventCallback<Chronicle> OnEdit { get; set; }
+    [Parameter] public EventCallback<Chronicle> OnReel { get; set; }
+    [Parameter] public EventCallback<Chronicle> OnPost { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter, EditorRequired] public PaginationState PaginationState { get; set; } = default!;
 
     DateTime Today;
     string? SearchTerm;
     Chronicle? Chronicle;
-    Chronicle? Reel;
-    Chronicle? Post;
+    
     List<Chronicle>? FilteredChronicles
     {
         get
