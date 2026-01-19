@@ -57,6 +57,7 @@ ZADATAK 1: KREIRANJE SADRŽAJA (EnhancedContent)
   1. Nemoj pisati o onome što NE ZNAŠ.
   2. Zabranjene su rečenice tipa: ""Ne zna se tko je autor"", ""Iako nema podataka"", ""Nepoznato je..."", ""Nije zabilježeno..."".
   3. Ako ti fali podatak (npr. ime autora), jednostavno ga preskoči i piši o važnosti samog objekta/događaja.
+  4. ZABRANJENO JE NAGAĐANJE: Nemoj koristiti izraze kao što su ""vjerojatno"", ""možda"", ""pretpostavlja se"", ""moguće je da"". Ako podatak ne piše, ne izvodi zaključke o postojanju građevina ili institucija.
 - STIL:
   - Ako je ROĐENJE: ""Na današnji dan rođen je...""
   - Ako je SMRT: ""Na današnji dan napustio nas je...""
